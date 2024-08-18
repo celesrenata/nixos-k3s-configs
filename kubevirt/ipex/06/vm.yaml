@@ -16,7 +16,7 @@ spec:
         - ReadWriteOnce
         resources:
           requests:
-            storage: 30G
+            storage: 50G
         storageClassName: longhorn 
       source:
         http:
@@ -40,8 +40,8 @@ spec:
           type: ""
         resources:
           requests:
-            cpu: 2
-            memory: 4G
+            cpu: 6 
+            memory: 8G
       terminationGracePeriodSeconds: 180
       volumes:
       - dataVolume:

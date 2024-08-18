@@ -19,3 +19,5 @@ cd ..
 cd 06
 ./runmefirst.sh
 cd ..
+sleep 300
+./bootstrap-ipex-fleet.sh
