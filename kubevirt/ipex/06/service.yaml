@@ -5,9 +5,14 @@ metadata:
 spec:
   ports:
     - nodePort: 31306
+      name: ssh
       port: 2306 
       protocol: TCP
       targetPort: 22
+    - nodePort: 31406
+      name: ollama
+      port: 2406
+      targetPort: 11434
   selector:
     kubevirt.io/vm: vm-ipex-06
   sessionAffinity: None
