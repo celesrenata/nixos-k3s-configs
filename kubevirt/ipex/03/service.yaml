@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: vm-ipex-03 
+spec:
+  ports:
+    - nodePort: 31303
+      port: 2303 
+      protocol: TCP
+      targetPort: 22
+  selector:
+    kubevirt.io/vm: vm-ipex-03
+  sessionAffinity: None
+  type: LoadBalancer
+status:
+  loadBalancer: {}
+

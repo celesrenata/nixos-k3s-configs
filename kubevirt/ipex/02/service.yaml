@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: vm-ipex-02 
+spec:
+  ports:
+    - nodePort: 31302
+      port: 2302 
+      protocol: TCP
+      targetPort: 22
+  selector:
+    kubevirt.io/vm: vm-ipex-02
+  sessionAffinity: None
+  type: LoadBalancer
+status:
+  loadBalancer: {}
+

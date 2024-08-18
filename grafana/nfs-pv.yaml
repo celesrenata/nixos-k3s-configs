@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: grafana 
+spec:
+  persistentVolumeReclaimPolicy: Retain
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+    - ReadOnlyMany
+    - ReadWriteMany
+  storageClassName: ""
+  nfs:
+    path: /volume2/Kubernetes/grafana/data     # The path to your config
+    server: 192.168.42.8     # Your NFS server with Media
+  mountOptions:
+    - vers=4
+    - minorversion=1
+    - noac

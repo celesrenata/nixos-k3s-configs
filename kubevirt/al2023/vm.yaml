@@ -1,0 +1,70 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  creationTimestamp: null
+  labels:
+    kubevirt.io/vm: vm-fedora-datavolume
+  name: amazon-linux
+spec:
+  dataVolumeTemplates:
+  - metadata:
+      creationTimestamp: null
+      name: amazon-linux-volume
+    spec:
+      storage:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 100G
+        storageClassName: longhorn 
+      source:
+        http:
+          url: https://cdn.amazonlinux.com/al2023/os-images/2023.5.20240805.0/kvm/al2023-kvm-2023.5.20240805.0-kernel-6.1-x86_64.xfs.gpt.qcow2 
+  running: true
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: amazon-linux 
+    spec:
+      domain:
+        devices:
+          gpus:
+          - deviceName: intel.com/sriov-gpudevice
+            name: gpu1
+          disks:
+          - disk:
+              bus: virtio
+            name: datavolumevolume
+        machine:
+          type: ""
+        resources:
+          requests:
+            cpu: 4
+            memory: 8G
+      terminationGracePeriodSeconds: 180
+      volumes:
+      - dataVolume:
+          name: amazon-linux-volume 
+        name: datavolumevolume
+      - cloudInitNoCloud:
+          userData: |-
+            #cloud-config
+            resize_rootfs: true
+            hostname: intel-ollama-1 
+            manage_etc_hosts: true
+            users:
+            - name: celes
+              groups: wheel
+              sudo: ['ALL=(ALL) NOPASSWD:ALL']
+              shell: /bin/bash
+              ssh-authorized-keys:
+                - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEqvp+XbCqCMFZiflp+2gkRjORFp2RkN5o+LvRb2kjL9 celes@esnixi
+              package_update: true
+              packages:
+               - git
+               - vim
+              runcmd:
+               - systemctl enable sshd.service
+        name: cloudinit
+status: {}

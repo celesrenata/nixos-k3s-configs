@@ -12,14 +12,50 @@
       ./iscsi.nix
       ./virtualisation.nix
     ];
-
+  # Enable Flakes.
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nixpkgs.config.allowUnfree = true;
+  nixpkgs.overlays = [
+    (import ./pkgs/overlay.nix)
+    (import ./overlays/i915-sriov-dkms.nix)
+    (import ./overlays/intel-gfx-sriov.nix)
+    (import ./overlays/kernel-6.9.nix)
+    (import ./overlays/intel-firmware.nix)
+  ];
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = false;
   boot.loader.grub.device = "nodev";
   boot.loader.grub.efiSupport = true;
-  boot.kernelPackages = pkgs.linuxPackages_latest;
+  boot.kernelPackages = pkgs.kernel69;
+  boot.kernelModules = [ "i915" ];
+  boot.initrd.availableKernelModules = [ "i915" ];
   boot.supportedFilesystems = [ "nfs" ];
+  boot.kernelParams = [
+    "intel_iommu=on"
+    "iommu=pt"
+    "i915.enable_guc=3"
+    "i915.max_vfs=7"
+    "i915.force_probe=7d55"
+  ];
+  boot.extraModulePackages = with pkgs; [ intel-gfx-sriov ];
+  hardware.graphics = {
+    enable = true;
+    extraPackages = with pkgs; [
+     #intel-compute-runtime.drivers
+     #intel-media-driver 
+     #vpl-gpu-rt          # for newer GPUs on NixOS >24.05 or unstable
+      # onevpl-intel-gpu  # for newer GPUs on NixOS <= 24.05
+     #intel-vaapi-driver
+      # intel-media-sdk   # for older GPUs
+    ];
+  };
+  hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
+  hardware.enableRedistributableFirmware = true;
+  hardware.enableAllFirmware = true;
+  hardware.firmware = [
+    pkgs.linux-firmwareOverride
+  ];
 
   # Reset
   services.etcd.enable = false;
@@ -44,20 +80,27 @@
   '';
   time.timeZone = "America/Los_Angeles";
 
-  # DistCC.
-  services.distccd = {
+  # Virtualisation
+  systemd.services.intel-gfx-sriov = {
     enable = true;
-    allowedClients = [
-      "192.168.42.0/25"
-      "172.16.1.0/24"
-      "192.168.0.0/25"
-      "10.1.1.0/24"
-    ];
-    stats.enable = true;
-    zeroconf = true;
+    description = "enable vGPUs";
+    serviceConfig = {
+      User = "root";
+      Type = "oneshot";
+      RemainAfterExit = "yes";
+      ExecStart = [
+        "${pkgs.bash}/bin/bash ${pkgs.intel-gfx-sriov-service}/scripts/configvfs.sh -e"
+      ];
+      ExecStop = [
+        "${pkgs.bash}/bin/bash ${pkgs.intel-gfx-sriov-service}/scripts/configvfs.sh -d"
+      ];
+    };
+    wantedBy = [ "multi-user.target" ];
   };
 
-  # Virtualisation
+  #virtualisation.kvmgt = {
+  #  enable = true;
+  #};
   virtualisation.libvirtd = {
     enable = true;
     qemu = {
@@ -90,6 +133,13 @@
     screen
     nfs-utils
     openiscsi
+    nvtopPackages.intel
+    intel-gpu-tools
+    conda
+    kubevirt
+    nix-index
+    #oneDNN
+    #ollama-sycl
   ];
 
   # CA Certificate
@@ -104,6 +154,24 @@
     name = "${config.networking.hostName}-initiatorhost"; 
   };
 
+#  services.ollama = {
+#    enable = true;
+#    package = pkgs.ollama-sycl;
+#    # acceleration = "intel";
+#    models = "/opt/ollama/models";
+#    environmentVariables = {
+#      OLLAMA_INTEL_GPU = "1";
+#      OLLAMA_DEBUG = "1";
+#      OLLAMA_MAX_LOADED_MODELS = "2";
+#      ZES_ENABLE_SYSMAN = "1";
+#      OLLAMA_NUM_GPU = "999";
+##       no_proxy = "localhost,127.0.0.1";
+##       ZES_ENABLE_SYSMAN = "1";
+#      SYCL_CACHE_PERSISTENT = "1";
+#      SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS = "1";
+#    };
+#  };
+
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.users.celes = {
     isNormalUser = true;
@@ -113,7 +181,7 @@
     isNormalUser = true;
   };
 
-  system.stateVersion = "24.05"; # Did you read the comment?
+  system.stateVersion = "24.11"; # Did you read the comment?
 
 }
 

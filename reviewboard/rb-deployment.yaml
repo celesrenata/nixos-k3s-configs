@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.32.0 (HEAD)
+  labels:
+    io.kompose.service: reviewboard
+  name: reviewboard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: reviewboard
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.32.0 (HEAD)
+      labels:
+        io.kompose.network/reviewboard-default: "true"
+        io.kompose.service: reviewboard
+    spec:
+      containers:
+        - name: reviewboard
+          image: beanbag/reviewboard:latest
+          env:
+          - name: DOMAIN
+            value: cr.celestium.life
+          - name: NGINX_HOST
+            value: cr.celestium.life
+          - name: COMPANY
+            value: celestium.life
+          - name: DATABASE_TYPE
+            value: mysql
+          - name: DATABASE_SERVER
+            value: 10.1.1.2
+          - name: DATABASE_USERNAME
+            value: reviewboard
+          - name: DATABASE_PASSWORD
+            value: PSCh4ng3me!
+          - name: DATABASE_NAME
+            value: reviewboard
+          - name: MEMCACHED_SERVER
+            value: "memcached-service.docker-reviewboard.svc.cluster.local:11211"
+          ports:
+            - containerPort: 8080
+              hostPort: 8080
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /site
+              name: rb-data
+      restartPolicy: Always
+      volumes:
+        - name: rb-data
+          persistentVolumeClaim:
+            claimName: rb-data-pvc

@@ -12,6 +12,12 @@
       ./iscsi.nix
       ./virtualisation.nix
     ];
+  # Enable Flakes.
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+
+  nixpkgs.overlays = [  
+    (import ./overlays/intel-gfx-sriov.nix)
+  ];
 
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
@@ -20,7 +26,25 @@
   boot.loader.grub.efiSupport = true;
   boot.kernelPackages = pkgs.linuxPackages_latest;
   boot.supportedFilesystems = [ "nfs" ];
-
+  boot.kernelParams = [
+    "i915.force_probe=7d55"
+    "intel_iommu=on"
+    "i915.enable_gvt=1"
+    "xe.force_probe=7d55"
+  ];
+  boot.extraModprobeConfig = "options i915 enable_guc=3 max_vfs=7";
+  hardware.opengl = {
+    enable = true;
+    extraPackages = with pkgs; [
+      intel-media-driver
+      intel-vaapi-driver
+      # vpl-gpu-rt          # for newer GPUs on NixOS >24.05 or unstable
+      onevpl-intel-gpu  # for newer GPUs on NixOS <= 24.05
+      # intel-media-sdk   # for older GPUs
+    ];
+  };
+  environment.sessionVariables = { LIBVA_DRIVER_NAME = "iHD"; }; # Force intel-media-driver
+  services.xserver.videoDrivers = [ "xe" ];
   # Reset
   # services.etcd.enable = false;
   # KUBELET_PATH=$(mount | grep kubelet | cut -d' ' -f3);
@@ -34,7 +58,7 @@
   ##### services.etcd.enable = true;
   
   # Networking
-  networking.hostName = "gremlin-1";
+  networking.hostName = "gremlin-2";
   services.rpcbind.enable = true;
   services.openssh.enable = true;
   services.openssh.settings.PermitRootLogin = "yes";
@@ -44,20 +68,26 @@
   '';
   time.timeZone = "America/Los_Angeles";
 
-  # DistCC.
-  services.distccd = {
-    enable = true;
-    allowedClients = [
-      "192.168.42.0/25"
-      "172.16.1.0/24"
-      "192.168.0.0/25"
-      "10.1.1.0/24"
-    ];
-    stats.enable = true;
-    zeroconf = true;
-  };
-
   # Virtualisation
+  systemd.services.intel-gfx-sriov = {
+    enable = true;
+    description = "enable vGPUs";
+    serviceConfig = {
+      User = "root";
+      Type = "oneshot";
+      RemainAfterExit = "yes";
+      ExecStart = [
+        "${pkgs.bash}/bin/bash ${pkgs.intel-gfx-sriov}/scripts/configvfs.sh -e"
+      ];
+      ExecStop = [
+        "${pkgs.bash}/bin/bash ${pkgs.intel-gfx-sriov}/scripts/configvfs.sh -d"
+      ];
+    };
+    wantedBy = [ "multi-user.target" ];
+  };
+  virtualisation.kvmgt = {
+    enable = true;
+  };
   virtualisation.libvirtd = {
     enable = true;
     qemu = {
@@ -90,6 +120,10 @@
     screen
     nfs-utils
     openiscsi
+    nvtopPackages.intel
+    intel-gpu-tools
+    kubevirt
+    nix-index
   ];
 
   # CA Certificate
@@ -113,7 +147,7 @@
     isNormalUser = true;
   };
 
-  system.stateVersion = "24.05"; # Did you read the comment?
+  system.stateVersion = "24.11"; # Did you read the comment?
 
 }
 

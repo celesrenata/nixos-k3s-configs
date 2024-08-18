@@ -1,0 +1,47 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: prometheus-http
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    traefik.ingress.kubernetes.io/router.middlewares: default-redirectscheme@kubernetescrd
+  labels:
+    app: prometheus
+spec:
+  rules:
+    - host: prometheus.celestium.life
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: prometheus-kube-prometheus-prometheus 
+                port:
+                  number: 9090 
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: prometheus-https
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    cert-manager.io/cluster-issuer: ca-issuer
+  labels:
+    app: prometheus
+spec:
+  rules:
+    - host: prometheus.celestium.life
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: prometheus-kube-prometheus-prometheus 
+                port:
+                  number: 9090
+  tls:
+    - hosts:
+        - prometheus.celestium.life
+      secretName: prometheus-cert

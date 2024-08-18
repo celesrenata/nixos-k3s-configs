@@ -1,0 +1,73 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  creationTimestamp: null
+  labels:
+    kubevirt.io/vm: vm-ipex-04
+  name: vm-ipex-04
+spec:
+  dataVolumeTemplates:
+  - metadata:
+      creationTimestamp: null
+      name: vm-ipex-04-volume
+    spec:
+      storage:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 30G
+        storageClassName: longhorn 
+      source:
+        http:
+          url: https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img 
+  running: true
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: vm-ipex-04 
+    spec:
+      domain:
+        devices:
+          gpus:
+            - deviceName: intel.com/sriov-gpudevice
+              name: gpu1
+          disks:
+          - disk:
+              bus: virtio
+            name: datavolumevolume-ipex-04
+        machine:
+          type: ""
+        resources:
+          requests:
+            cpu: 2
+            memory: 4G
+      terminationGracePeriodSeconds: 180
+      volumes:
+      - dataVolume:
+          name: vm-ipex-04-volume 
+        name: datavolumevolume-ipex-04
+      - cloudInitNoCloud:
+          userData: |-
+            #cloud-config
+            resize_rootfs: true
+            hostname: ollama-ipex-04 
+            manage_etc_hosts: true
+            users:
+            - name: celes
+              groups: wheel
+              sudo: ['ALL=(ALL) NOPASSWD:ALL']
+              shell: /bin/bash
+              ssh-authorized-keys:
+                - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEqvp+XbCqCMFZiflp+2gkRjORFp2RkN5o+LvRb2kjL9 celes@esnixi
+              package_update: true
+              package_upgrade: true
+              packages:
+               - git
+               - vim
+               - gpg-agent
+               - wget
+              runcmd:
+               - systemctl enable sshd.service
+        name: cloudinit
+status: {}

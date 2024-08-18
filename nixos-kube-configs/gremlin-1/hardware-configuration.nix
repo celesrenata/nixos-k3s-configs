@@ -4,56 +4,41 @@
 { config, lib, pkgs, modulesPath, ... }:
 
 {
-  imports = [ ];
+  imports =
+    [ (modulesPath + "/installer/scan/not-detected.nix")
+    ];
 
-  boot.initrd.availableKernelModules = [ "ata_piix" "vmw_pvscsi" "sd_mod" "sr_mod" ];
+  boot.initrd.availableKernelModules = [ "xhci_pci" "thunderbolt" "nvme" "usbhid" "rtsx_pci_sdmmc" ];
   boot.initrd.kernelModules = [ ];
-  boot.kernelModules = [ ];
+  boot.kernelModules = [ "kvm-intel" ];
   boot.extraModulePackages = [ ];
 
   fileSystems."/" =
-    { device = "/dev/disk/by-uuid/7ebe2df8-5a4a-4e06-bbd4-b1fc352a5eed";
+    { device = "/dev/disk/by-uuid/1a40248d-07ee-4c6c-af00-2ac53592e20a";
       fsType = "btrfs";
       options = [ "compress=zstd" "subvol=root" ];
     };
 
   fileSystems."/home" =
-    { device = "/dev/disk/by-uuid/7ebe2df8-5a4a-4e06-bbd4-b1fc352a5eed";
+    { device = "/dev/disk/by-uuid/1a40248d-07ee-4c6c-af00-2ac53592e20a";
       fsType = "btrfs";
       options = [ "compress=zstd" "subvol=home" ];
     };
 
-  fileSystems."/var/lib" =
-    { device = "/dev/disk/by-uuid/7ebe2df8-5a4a-4e06-bbd4-b1fc352a5eed";
-      fsType = "btrfs";
-      options = [ "compress=zstd" "subvol=varlib" ];
-    };
-
-  fileSystems."/boot" =
-    { device = "/dev/disk/by-uuid/E79E-4F25";
-      fsType = "vfat";
-      options = [ "fmask=0022" "dmask=0022" ];
-    };
-
   fileSystems."/nix" =
-    { device = "/dev/disk/by-uuid/7ebe2df8-5a4a-4e06-bbd4-b1fc352a5eed";
+    { device = "/dev/disk/by-uuid/1a40248d-07ee-4c6c-af00-2ac53592e20a";
       fsType = "btrfs";
       options = [ "compress=zstd" "subvol=nix" ];
     };
 
-  fileSystems."/kubedata-local" =
-    { device = "/dev/disk/by-uuid/7ebe2df8-5a4a-4e06-bbd4-b1fc352a5eed";
-      fsType = "btrfs";
-      options = [ "compress=zstd" "subvol=kubedata" ];
-    };
-
-  fileSystems."/kubedata-remote" =
-    { device = "192.168.42.8:/volume2/Kubernetes";
-      fsType = "nfs";
+  fileSystems."/boot" =
+    { device = "/dev/disk/by-uuid/9A12-26E9";
+      fsType = "vfat";
+      options = [ "fmask=0022" "dmask=0022" ];
     };
 
   swapDevices =
-    [ { device = "/dev/disk/by-uuid/2453a43f-9c4c-4ce5-b0f2-cfc69a972828"; }
+    [ { device = "/dev/disk/by-uuid/55afed83-bf58-477c-8787-21dab58c310d"; }
     ];
 
   # Enables DHCP on each ethernet and wireless interface. In case of scripted networking
@@ -61,7 +46,9 @@
   # still possible to use this option, but it's recommended to use it in conjunction
   # with explicit per-interface declarations with `networking.interfaces.<interface>.useDHCP`.
   networking.useDHCP = lib.mkDefault true;
-  # networking.interfaces.ens33.useDHCP = lib.mkDefault true;
+  # networking.interfaces.enp171s0.useDHCP = lib.mkDefault true;
+  # networking.interfaces.enp172s0.useDHCP = lib.mkDefault true;
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
+  hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
 }

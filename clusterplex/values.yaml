@@ -1,0 +1,129 @@
+global:
+  plexImage:
+    tag: latest 
+    imagePullPolicy: IfNotPresent
+  timezone: America/Los_Angeles
+  
+  sharedStorage:
+    transcode:
+      enabled: true
+      storageClass: "-"
+      existingClaim: clusterplex-transcode
+      subPath: "clusterplex"
+    media:
+      enabled: true
+      storageClass: "-"
+      existingClaim: clusterplex-media-pvc
+
+    additionalMediaVolumes:
+      cache:
+        enabled: true
+        existingClaim: clusterplex-cache-pvc
+        mountPath: /config/Library/Application Support/Plex Media Server/Cache
+      drivers:
+        enabled: true
+        existingClaim: clusterplex-drivers-pvc
+        mountPath: /config/Library/Application Support/Plex Media Server/Drivers
+
+pms:
+  enabled: true
+  securityContext:
+    privileged: true
+  env:
+    FFMPEG_HWACCEL: vaapi
+    TRANSCODE_OPERATING_MODE: remote
+    PLEX_CLAIM:
+      valueFrom:
+        secretKeyRef:
+          name: plex-claim-token
+          key: claim_token
+  
+  config:
+    transcoderVerbose: 1
+    transcodeOperatingMode: remote
+    version: docker
+    port: 32400
+    localRelayEnabled: true
+    relayPort: 32499
+    pmsIP: ""
+
+
+  serviceConfig:
+    type: LoadBalancer
+    externalTrafficPolicy:
+    annotations: {}
+    labels: {}
+
+  ingressConfig:
+    enabled: false
+    annotations:
+      {}
+
+    labels: {}
+
+    ingressClassName: # "nginx"
+    hosts:
+      - # -- Host address. Helm template can be passed.
+        host: chart-example.local
+        ## Configure the paths for the host
+        paths:
+          - # -- Path.  Helm template can be passed.
+            path: /
+            pathType: Prefix
+            service:
+              # -- Overrides the service name reference for this path
+              name:
+              # -- Overrides the service port reference for this path
+              port:
+
+    tls: []
+
+  configVolume:
+    enabled: true
+    existingClaim: clusterplex-pms-config
+    storageClass: "-"
+    accessMode: ReadWriteMany
+    size: 10Gi
+    retain: true
+  healthProbes:
+
+    startup: true
+
+    readiness: true
+
+    liveness: true
+
+  resources:
+    requests:
+      # -- CPU Request amount
+      cpu: 2000m
+
+      # Memory Request Amount
+      memory: 2Gi
+
+    limits:
+      # -- CPU Limit amount
+      cpu: 4000m
+
+      # -- Memory Limit amount
+      memory: 4Gi
+      
+      #orchestrator:
+      #enableGrafanaDashboard: true
+      #prometheusServiceMonitor:
+      #enabled: true
+
+worker:
+  env:
+    FFMPEG_HWACCEL: vaapi
+  securityContext:
+    privileged: true
+  resources:
+    requests:
+      cpu: 2
+      memory: 3Gi
+      intel.com/sriov-gpudevice: "1"
+    limits:
+      cpu: 4
+      memory: 4Gi
+      intel.com/sriov-gpudevice: "1" 

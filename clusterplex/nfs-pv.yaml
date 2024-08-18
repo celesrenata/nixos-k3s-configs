@@ -5,7 +5,7 @@ metadata:
 spec:
   persistentVolumeReclaimPolicy: Retain
   capacity:
-    storage: 1000Gi
+    storage: 10000Gi
   accessModes:
     - ReadWriteOnce
     - ReadOnlyMany
@@ -34,6 +34,49 @@ spec:
   storageClassName: ""
   nfs:
     path: /volume2/Kubernetes/clusterplex/data     # The path to your config 
+    server: 192.168.42.8     # Your NFS server with Media
+  mountOptions:
+    - vers=4
+    - minorversion=1
+    - noac
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: clusterplex-cache
+spec:
+  persistentVolumeReclaimPolicy: Retain
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+    - ReadOnlyMany
+    - ReadWriteMany
+  storageClassName: ""
+  nfs:
+    path: /volume2/Kubernetes/clusterplex/data/Library/Application Support/Plex Media Server/Cache     # The path to your config
+    server: 192.168.42.8     # Your NFS server with Media
+  mountOptions:
+    - vers=4
+    - minorversion=1
+    - noac
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: clusterplex-drivers
+spec:
+  persistentVolumeReclaimPolicy: Retain
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+    - ReadOnlyMany
+    - ReadWriteMany
+  storageClassName: ""
+  nfs:
+    path: /volume2/Kubernetes/clusterplex/data/Library/Application Support/Plex Media Server/Drivers
+    # The path to your config
     server: 192.168.42.8     # Your NFS server with Media
   mountOptions:
     - vers=4

@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: arch-linux-ssh 
+spec:
+  ports:
+    - nodePort: 31902
+      port: 2222 
+      protocol: TCP
+      targetPort: 22
+  selector:
+    kubevirt.io/vm: arch-linux
+  sessionAffinity: None
+  type: LoadBalancer
+status:
+  loadBalancer: {}
+

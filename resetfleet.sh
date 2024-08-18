@@ -3,10 +3,11 @@
 # Define Variables
 
 ## Hosts defines the kube cluster, use the cluster leader as first hots
-HOSTS="gremlin-1,gremlin-2,gremlin-3"
+#HOSTS="gremlin-1,gremlin-2,gremlin-3"
+HOSTS="10.1.1.12,10.1.1.13,10.1.1.14"
 
 ## Switches used by PSSH
-PSSH_OPTIONS="--user root -h /tmp/resetfleet -t 0 -O StrictHostKeyChecking=no"
+PSSH_OPTIONS="--user root -h /tmp/resetfleet -t 0 -O StrictHostKeyChecking=no -O ConnectionAttempts=3"
 
 ## Commands to iterate with PSSH before reboot
 COMMANDS='cp /etc/nixos/configuration.nix /etc/nixos/configuration.nix.bak

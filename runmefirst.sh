@@ -2,17 +2,28 @@
 
 # Kubernetes Projects to Activate
 PROJECTS='dashboard
+kyverno
 longhorn
 traefik
 cert-manager
 grafana
 phpmyadmin
 prometheus
+intel
+homeassistant
 mariadb
 flame
 wordpress
-clusterplex'
+unifi
+kubevirt
+clusterplex
+sleep
+sleep
+kubevirt/al2023
+kubevirt/arch
+kubevirt/ipex'
 
+#intel
 # Build Project List
 readarray -t PROJECT_LIST <<<"$PROJECTS"; declare -p PROJECT_LIST;
 

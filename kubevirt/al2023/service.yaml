@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: amazon-linux-ssh 
+spec:
+  ports:
+    - nodePort: 31903
+      port: 2223 
+      protocol: TCP
+      targetPort: 22
+  selector:
+    kubevirt.io/vm: amazon-linux
+  sessionAffinity: None
+  type: LoadBalancer
+status:
+  loadBalancer: {}
+

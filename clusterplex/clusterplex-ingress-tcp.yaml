@@ -1,0 +1,12 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: plex-ingress-tcp
+spec:
+  entryPoints:
+    - plextcp
+  routes:
+    - match: ClientIP(`192.168.0.0/16`,`10.0.0.0/8`, `172.0.0.0/8`)
+      services:
+        - name: clusterplex-pms 
+          port: 32400
