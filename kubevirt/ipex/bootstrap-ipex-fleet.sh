@@ -20,6 +20,7 @@ sudo apt install -y intel-basekit intel-renderkit
 sudo gpasswd -a ${USER} render
 sudo reboot'
 COMMANDS2='curl -fsSL https://ollama.com/install.sh | sh
+ollama pull llama3.1
 sudo systemctl stop ollama
 wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh
 chmod +x Miniforge3-Linux-x86_64.sh
@@ -27,9 +28,7 @@ chmod +x Miniforge3-Linux-x86_64.sh
 yes | miniforge3/bin/conda create -n llm-cpp python=3.11
 miniforge3/bin/conda init
 source ~/miniforge3/etc/profile.d/conda.sh && conda activate llm-cpp && pip install --pre --upgrade ipex-llm[cpp]
-nohup bash -c "(export no_proxy=localhost,127.0.0.1 && export ZES_ENABLE_SYSMAN=1 && export OLLAMA_NUM_GPU=999 && export OLLAMA_HOST=0.0.0.0 && source /opt/intel/oneapi/setvars.sh --force && export SYCL_CACHE_PERSISTENT=1 && export SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS=1 && export ONEAPI_DEVICE_SELECTOR=level_zero:0 && ollama serve) &> /tmp/ollama.log" &
-sleep 10
-ollama pull llama3.1'
+nohup bash -c "(export no_proxy=localhost,127.0.0.1 && export ZES_ENABLE_SYSMAN=1 && export OLLAMA_NUM_GPU=999 && export OLLAMA_HOST=0.0.0.0 && source /opt/intel/oneapi/setvars.sh --force && export SYCL_CACHE_PERSISTENT=1 && export SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS=1 && export ONEAPI_DEVICE_SELECTOR=level_zero:0 && ollama serve) &> /tmp/ollama.log" &'
 
 # Build Host list
 readarray -td, HOST_LIST <<<"$HOSTS"; declare -p HOST_LIST;
