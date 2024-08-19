@@ -17,7 +17,6 @@ unifi
 kubevirt
 clusterplex
 sleep
-sleep
 kubevirt/ipex'
 
 #intel
@@ -32,5 +31,5 @@ for cmd in "${PROJECT_LIST[@]}"; do
     cd ${cmd}
     ./runmefirst.sh
     cd ..
-    sleep 10
+    sleep 20
 done
