@@ -19,14 +19,14 @@ sudo wget https://github.com/intel-gpu/intel-gpu-firmware/raw/main/firmware/mtl_
 sudo wget https://github.com/intel-gpu/intel-gpu-firmware/raw/main/firmware/mtl_guc_70.6.4.bin -O /lib/firmware/i915/mtl_guc_70.6.4.bin
 sudo wget https://github.com/intel-gpu/intel-gpu-firmware/raw/main/firmware/mtl_huc_8.4.3_gsc.bin -O /lib/firmware/i915/mtl_huc_8.4.3_gsc.bin
 sudo update-initramfs -u -k all
-sudo reboot'
+sudo reboot || true'
 
 COMMANDS[1]='git clone https://github.com/strongtz/i915-sriov-dkms
 sudo apt install build-* dkms -y
 cd i915-sriov-dkms && sudo dkms add .
 cd i915-sriov-dkms && sudo dkms install -m i915-sriov-dkms -v $(cat VERSION) --force
 sudo update-initramfs -u
-sudo reboot'
+sudo reboot || true'
 
 COMMANDS[2]='sudo gpasswd -a ${USER} render
 newgrp render
@@ -40,15 +40,15 @@ chmod +x Miniforge3-Linux-x86_64.sh
 ./Miniforge3-Linux-x86_64.sh -b
 yes | miniforge3/bin/conda create -n llm-cpp python=3.11
 miniforge3/bin/conda init
-sudo reboot'
+sudo reboot || true'
 
 COMMANDS[3]='source ~/miniforge3/etc/profile.d/conda.sh && conda activate llm-cpp && pip install --pre --upgrade ipex-llm[cpp]
-mkdir llama-cpp
-cd llama-cpp && init-ollama && init-llama-cpp'
+mkdir llama-cpp -p
+cd llama-cpp && conda activate llm-cpp && init-ollama && init-llama-cpp'
 
-COMMANDS_OLLAMA_SERVE='nohup bash -c "(export no_proxy=localhost,127.0.0.1 && export ZES_ENABLE_SYSMAN=1 && export OLLAMA_NUM_GPU=999 && export OLLAMA_HOST=0.0.0.0 && source /opt/intel/oneapi/setvars.sh --force && export SYCL_CACHE_PERSISTENT=1 && export SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS=1 && export ONEAPI_DEVICE_SELECTOR=level_zero:0 && ./ollama serve) &> /tmp/ollama.log" &'
+COMMANDS_OLLAMA_SERVE='nohup bash -c "(cd llama-cpp && conda activate llm-cpp && export no_proxy=localhost,127.0.0.1 && export ZES_ENABLE_SYSMAN=1 && export OLLAMA_NUM_GPU=999 && export OLLAMA_HOST=0.0.0.0 && source /opt/intel/oneapi/setvars.sh --force && export SYCL_CACHE_PERSISTENT=1 && export SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS=1 && export ONEAPI_DEVICE_SELECTOR=level_zero:0 && ./ollama serve) &> /tmp/ollama.log" &'
 
-COMMANDS_OLLAMA_MODEL='./ollama pull llama2'
+COMMANDS_OLLAMA_MODEL='cd llama-cpp && ./ollama pull llama2'
 
 # Build Host list
 readarray -td, HOST_LIST <<<"$HOSTS"; declare -p HOST_LIST;
@@ -96,6 +96,7 @@ fi
 for c in $(seq $i ${#COMMANDS[@]}); do
   waitForReboot
   runCommands "${COMMANDS[$c]}"
+  sleep 30
 done
 
 runCommands "$COMMANDS_OLLAMA_SERVE" &
