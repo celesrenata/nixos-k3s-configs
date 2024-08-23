@@ -46,7 +46,7 @@ COMMANDS[3]='source ~/miniforge3/etc/profile.d/conda.sh && conda activate llm-cp
 mkdir llama-cpp -p
 source ~/miniforge3/etc/profile.d/conda.sh && conda activate llm-cpp && cd llama-cpp && init-ollama && init-llama-cpp'
 
-COMMANDS[4]='nohup bash -c "(source ~/miniforge3/etc/profile.d/conda.sh && cd llama-cpp && conda activate llm-cpp && export no_proxy=localhost,127.0.0.1 && export ZES_ENABLE_SYSMAN=1 && export OLLAMA_NUM_GPU=999 && export OLLAMA_HOST=0.0.0.0 && source /opt/intel/oneapi/setvars.sh --force && export SYCL_CACHE_PERSISTENT=1 && export SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS=1 && export ONEAPI_DEVICE_SELECTOR=level_zero:0 && ./ollama serve) &> /tmp/ollama.log" &'
+COMMANDS[4]='nohup bash -c "(source ~/miniforge3/etc/profile.d/conda.sh && cd llama-cpp && conda activate llm-cpp && export no_proxy=localhost,127.0.0.1 && export ZES_ENABLE_SYSMAN=1 && export OLLAMA_NUM_GPU=999 && export OLLAMA_HOST=0.0.0.0 && source /opt/intel/oneapi/setvars.sh --force && export SYCL_CACHE_PERSISTENT=1 && export SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS=1 && export ONEAPI_DEVICE_SELECTOR=level_zero:0 && ./ollama serve &)" > /tmp/ollama.log 2>&1 &'
 
 COMMANDS[5]='source ~/miniforge3/etc/profile.d/conda.sh && cd llama-cpp && conda activate llm-cpp && ./ollama pull llama2'
 
