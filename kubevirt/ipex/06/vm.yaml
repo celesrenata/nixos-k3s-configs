@@ -16,11 +16,11 @@ spec:
         - ReadWriteOnce
         resources:
           requests:
-            storage: 50G
+            storage: 60G
         storageClassName: longhorn 
       source:
         http:
-          url: https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img 
+          url: https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64.img
   running: true
   template:
     metadata:
@@ -40,8 +40,8 @@ spec:
           type: ""
         resources:
           requests:
-            cpu: 6 
-            memory: 8G
+            cpu: 8 
+            memory: 32G
       terminationGracePeriodSeconds: 180
       volumes:
       - dataVolume:
