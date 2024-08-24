@@ -22,32 +22,30 @@ HOSTS="10.1.1.12:2301,10.1.1.12:2302,10.1.1.12:2303,10.1.1.12:2304,10.1.1.12:230
 PSSH_OPTIONS="-h /tmp/resetfleet -t 0 -O StrictHostKeyChecking=no -O ConnectionAttempts=3"
 
 # Commands to iterate with PSSH
-COMMANDS[0]='sudo add-apt-repository ppa:canonical-kernel-team/ppa -y
-sudo apt-get update
-sudo snap install btop
-sudo apt install linux-headers-6.5.0-45-generic linux-image-6.5.0-45-generic linux-modules-extra-6.5.0-45-generic linux-headers-6.5.0-45-generic linux-hwe-6.5-tools-6.5.0-45 -y
+COMMANDS[0]='sudo snap install btop
+sudo apt install -y linux-modules-extra-6.8.0-41-generic
 echo "options i915 force_probe=7d55 enable_guc=3" | sudo tee -a /etc/modprobe.d/i915.conf
-sudo apt install -y linux-firmware
+sudo mkdir -p /lib/firmware/i915
 sudo wget https://github.com/intel-gpu/intel-gpu-firmware/raw/main/firmware/mtl_gsc_102.0.0.1511.bin -O /lib/firmware/i915/mtl_gsc_102.0.0.1511.bin
 sudo wget https://github.com/intel-gpu/intel-gpu-firmware/raw/main/firmware/mtl_guc_70.6.4.bin -O /lib/firmware/i915/mtl_guc_70.6.4.bin
 sudo wget https://github.com/intel-gpu/intel-gpu-firmware/raw/main/firmware/mtl_huc_8.4.3_gsc.bin -O /lib/firmware/i915/mtl_huc_8.4.3_gsc.bin
-sudo update-initramfs -u -k all
-sudo shutdown -r now &'
-
-COMMANDS[1]='git clone https://github.com/strongtz/i915-sriov-dkms
+git clone https://github.com/strongtz/i915-sriov-dkms
 sudo apt install build-* dkms -y
 cd i915-sriov-dkms && sudo dkms add .
 cd i915-sriov-dkms && sudo dkms install -m i915-sriov-dkms -v $(cat VERSION) --force
 sudo update-initramfs -u
 sudo shutdown -r now &'
 
-COMMANDS[2]='sudo gpasswd -a ${USER} render
+COMMANDS[1]='sudo gpasswd -a ${USER} render
 newgrp render
-sudo apt-get install -y hwinfo
 wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | gpg --dearmor | sudo tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null
 echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
+wget -qO - https://repositories.intel.com/gpu/intel-graphics.key | sudo gpg --yes --dearmor --output /usr/share/keyrings/intel-graphics.gpg
+echo "deb [arch=amd64,i386 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu jammy client" | sudo tee /etc/apt/sources.list.d/intel-gpu-jammy.list
 sudo apt update
-sudo apt install intel-oneapi-common-vars intel-oneapi-common-oneapi-vars intel-oneapi-diagnostics-utility intel-oneapi-compiler-dpcpp-cpp intel-oneapi-dpcpp-ct intel-oneapi-mkl intel-oneapi-mkl-devel intel-oneapi-mpi intel-oneapi-mpi-devel intel-oneapi-dal intel-oneapi-dal-devel intel-oneapi-ippcp intel-oneapi-ippcp-devel intel-oneapi-ipp intel-oneapi-ipp-devel intel-oneapi-tlt intel-oneapi-ccl intel-oneapi-ccl-devel intel-oneapi-dnnl-devel intel-oneapi-dnnl intel-oneapi-tcm-1.0 -y
+sudo apt install -y intel-opencl-icd intel-level-zero-gpu level-zero intel-level-zero-gpu-raytracing intel-media-va-driver-non-free libmfx1 libmfxgen1 libvpl2 libegl-mesa0 libegl1-mesa libegl1-mesa-dev libgbm1 libgl1-mesa-dev libgl1-mesa-dri libglapi-mesa libgles2-mesa-dev libglx-mesa0 libigdgmm12 libxatracker2 mesa-va-drivers mesa-vdpau-drivers mesa-vulkan-drivers va-driver-all vainfo hwinfo clinfo'
+
+COMMANDS[2]='sudo apt install intel-oneapi-common-vars intel-oneapi-common-oneapi-vars intel-oneapi-diagnostics-utility intel-oneapi-compiler-dpcpp-cpp intel-oneapi-dpcpp-ct intel-oneapi-mkl intel-oneapi-mkl-devel intel-oneapi-mpi intel-oneapi-mpi-devel intel-oneapi-dal intel-oneapi-dal-devel intel-oneapi-ippcp intel-oneapi-ippcp-devel intel-oneapi-ipp intel-oneapi-ipp-devel intel-oneapi-tlt intel-oneapi-ccl intel-oneapi-ccl-devel intel-oneapi-dnnl-devel intel-oneapi-dnnl intel-oneapi-tcm-1.0 -y
 wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh
 chmod +x Miniforge3-Linux-x86_64.sh
 ./Miniforge3-Linux-x86_64.sh -b
@@ -55,14 +53,14 @@ yes | miniforge3/bin/conda create -n llm-cpp python=3.11
 miniforge3/bin/conda init
 sudo shutdown -r now &'
 
-COMMANDS[3]='source ~/miniforge3/etc/profile.d/conda.sh && conda activate llm-cpp && pip install --pre --upgrade ipex-llm[cpp]
+COMMANDS[3]='source ~/miniforge3/etc/profile.d/conda.sh && conda activate llm-cpp && pip install --pre --upgrade ipex-llm[cpp] && pip install transformers && pip install trl
 mkdir llama-cpp -p
 source ~/miniforge3/etc/profile.d/conda.sh && conda activate llm-cpp && cd llama-cpp && init-ollama && init-llama-cpp'
 
-# This mess will spawn IPEX-LLM based ollama, detach and leave it active
 COMMANDS[4]='nohup bash -c "(source ~/miniforge3/etc/profile.d/conda.sh && cd llama-cpp && conda activate llm-cpp && export no_proxy=localhost,127.0.0.1 && export ZES_ENABLE_SYSMAN=1 && export OLLAMA_NUM_GPU=999 && export OLLAMA_HOST=0.0.0.0 && source /opt/intel/oneapi/setvars.sh --force && export SYCL_CACHE_PERSISTENT=1 && export SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS=1 && export ONEAPI_DEVICE_SELECTOR=level_zero:0 && ./ollama serve &)" > /tmp/ollama.log 2>&1 &'
 
-COMMANDS[5]='source ~/miniforge3/etc/profile.d/conda.sh && cd llama-cpp && conda activate llm-cpp && ./ollama pull llama2'
+COMMANDS[5]='source ~/miniforge3/etc/profile.d/conda.sh && cd llama-cpp && conda activate llm-cpp && ./ollama pull llama2
+source ~/miniforge3/etc/profile.d/conda.sh && cd llama-cpp && conda activate llm-cpp && ./ollama pull llama3.1'
 
 # Build Host list
 readarray -td, HOST_LIST <<<"$HOSTS"; declare -p HOST_LIST;
