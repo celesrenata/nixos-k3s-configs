@@ -1,14 +1,27 @@
 #!/usr/bin/env bash
 
-# Define Variables
+# This script is used to calibrate the VMs at a greater length than cloud-init can provide sanely
+## You can skip to any command group by passing it to the script manually
+## Examples:
+## ./bootstrap-fleet.sh 0
+## This will skip to COMMANDS[0]
+## ./bootstrap-fleet.sh 3
+## This will skip to COMMANDS[3]
 
+# Define Variables
 ## Hosts defines the ollama-ipex fleet, use the cluster leader as proxy
+## Examples
+## HOSTS="10.1.1.12,10.1.1.13,10.1.1.14"
+## HOSTS="10.1.1.12:2031,10.1.1.12:2302,10.1.1.12:2303,10.1.1.12:2304,10.1.1.12:2305,10.1.1.12:2306"
 HOSTS="10.1.1.12:2301,10.1.1.12:2302,10.1.1.12:2303,10.1.1.12:2304,10.1.1.12:2305,10.1.1.12:2306"
 
-## Switches used by PSSH
+# Switches used by PSSH
+## -h = hostsfile
+## -t = timeout
+## -0 = ssh passthrough options
 PSSH_OPTIONS="-h /tmp/resetfleet -t 0 -O StrictHostKeyChecking=no -O ConnectionAttempts=3"
 
-## Commands to iterate with PSSH before reboot
+# Commands to iterate with PSSH
 COMMANDS[0]='sudo add-apt-repository ppa:canonical-kernel-team/ppa -y
 sudo apt-get update
 sudo snap install btop
@@ -46,6 +59,7 @@ COMMANDS[3]='source ~/miniforge3/etc/profile.d/conda.sh && conda activate llm-cp
 mkdir llama-cpp -p
 source ~/miniforge3/etc/profile.d/conda.sh && conda activate llm-cpp && cd llama-cpp && init-ollama && init-llama-cpp'
 
+# This mess will spawn IPEX-LLM based ollama, detach and leave it active
 COMMANDS[4]='nohup bash -c "(source ~/miniforge3/etc/profile.d/conda.sh && cd llama-cpp && conda activate llm-cpp && export no_proxy=localhost,127.0.0.1 && export ZES_ENABLE_SYSMAN=1 && export OLLAMA_NUM_GPU=999 && export OLLAMA_HOST=0.0.0.0 && source /opt/intel/oneapi/setvars.sh --force && export SYCL_CACHE_PERSISTENT=1 && export SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS=1 && export ONEAPI_DEVICE_SELECTOR=level_zero:0 && ./ollama serve &)" > /tmp/ollama.log 2>&1 &'
 
 COMMANDS[5]='source ~/miniforge3/etc/profile.d/conda.sh && cd llama-cpp && conda activate llm-cpp && ./ollama pull llama2'
@@ -56,7 +70,6 @@ printf '%s\n' "${HOST_LIST[@]}" > /tmp/resetfleet
 echo
 echo "Bootstrap Ollama Fleet:"
 printf '%s\n' "${HOST_LIST[@]}"
-sleep 10
 
 # Wait for hosts to come online
 waitForReboot () {
@@ -86,22 +99,18 @@ runCommands () {
   done
 }
 
-# Iterate PSSH Tasks
-echo "Installing Kernel, Kernel Modules Intel Dependencies and starting Ollama"
+# Detect if user wants to fastforward commands
 if [ -z "$1" ]; then
   i=0
 else
   i=$1
 fi
+
+# Iterate PSSH Tasks
+echo "Installing Kernel, Kernel Modules Intel Dependencies and starting Ollama"
 for c in $(seq $i $(expr ${#COMMANDS[@]} - 1)); do
   waitForReboot
   sleep 10
   runCommands "${COMMANDS[$c]}"
   sleep 30
 done
-
-#runCommands "$COMMANDS_OLLAMA_SERVE" &
-
-#sleep 20
-#runCommands "$COMMANDS_OLLAMA_MODEL"
-
