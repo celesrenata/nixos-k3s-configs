@@ -63,7 +63,6 @@ COMMANDS[4]='source ~/miniforge3/etc/profile.d/conda.sh && conda activate llm-cp
 source ~/miniforge3/etc/profile.d/conda.sh && conda activate llm-cpp && yes | pip install --pre --upgrade ipex-llm[cpp] && pip install transformers && pip install trl
 source ~/miniforge3/etc/profile.d/conda.sh && conda activate llm-cpp
 wget https://raw.githubusercontent.com/intel-analytics/ipex-llm/main/python/llm/example/GPU/HuggingFace/LLM/llama3.1/generate.py
-source ~/miniforge3/etc/profile.d/conda.sh && conda activate llm-cpp && huggingface-cli login --token "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"
 cd llama-cpp && wget https://huggingface.co/lmstudio-community/Meta-Llama-3-8B-Instruct-GGUF/resolve/main/Meta-Llama-3-8B-Instruct-Q4_K_M.gguf'
 
 COMMANDS[5]='source ~/miniforge3/etc/profile.d/conda.sh && conda activate llm-cpp && source /opt/intel/oneapi/setvars.sh && cd llama-cpp && ZES_ENABLE_SYSMAN=1 ./main -m Meta-Llama-3-8B-Instruct-Q4_K_M.gguf -n 32 --prompt "Once upon a time, there existed a little girl who liked to have adventures. She wanted to go to places and meet new people, and have fun doing something" -t 8 -e -ngl 33 --color --no-mmap > /tmp/llama.cpp'
