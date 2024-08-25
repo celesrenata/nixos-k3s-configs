@@ -19,7 +19,8 @@ HOSTS="10.1.1.12:2301,10.1.1.12:2302,10.1.1.12:2303,10.1.1.12:2304,10.1.1.12:230
 ## -h = hostsfile
 ## -t = timeout
 ## -0 = ssh passthrough options
-PSSH_OPTIONS="-h /tmp/resetfleet -t 0 -O StrictHostKeyChecking=no -O ConnectionAttempts=3"
+## -p = parallelism (3 at a time)
+PSSH_OPTIONS="-h /tmp/resetfleet -t 0 -p 3 -O StrictHostKeyChecking=no -O ConnectionAttempts=3"
 
 # Commands to iterate with PSSH
 COMMANDS[0]='sudo snap install btop
@@ -46,6 +47,7 @@ sudo apt update
 sudo apt install -y intel-opencl-icd intel-level-zero-gpu level-zero intel-level-zero-gpu-raytracing intel-media-va-driver-non-free libmfx1 libmfxgen1 libvpl2 libegl-mesa0 libegl1-mesa libegl1-mesa-dev libgbm1 libgl1-mesa-dev libgl1-mesa-dri libglapi-mesa libgles2-mesa-dev libglx-mesa0 libigdgmm12 libxatracker2 mesa-va-drivers mesa-vdpau-drivers mesa-vulkan-drivers va-driver-all vainfo hwinfo clinfo'
 
 COMMANDS[2]='sudo apt install intel-oneapi-common-vars intel-oneapi-common-oneapi-vars intel-oneapi-diagnostics-utility intel-oneapi-compiler-dpcpp-cpp intel-oneapi-dpcpp-ct intel-oneapi-mkl intel-oneapi-mkl-devel intel-oneapi-mpi intel-oneapi-mpi-devel intel-oneapi-dal intel-oneapi-dal-devel intel-oneapi-ippcp intel-oneapi-ippcp-devel intel-oneapi-ipp intel-oneapi-ipp-devel intel-oneapi-tlt intel-oneapi-ccl intel-oneapi-ccl-devel intel-oneapi-dnnl-devel intel-oneapi-dnnl intel-oneapi-tcm-1.0 -y
+sudo apt install -y intel-basekit
 wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh
 chmod +x Miniforge3-Linux-x86_64.sh
 ./Miniforge3-Linux-x86_64.sh -b
@@ -57,10 +59,14 @@ COMMANDS[3]='source ~/miniforge3/etc/profile.d/conda.sh && conda activate llm-cp
 mkdir llama-cpp -p
 source ~/miniforge3/etc/profile.d/conda.sh && conda activate llm-cpp && cd llama-cpp && init-ollama && init-llama-cpp'
 
-COMMANDS[4]='nohup bash -c "(source ~/miniforge3/etc/profile.d/conda.sh && cd llama-cpp && conda activate llm-cpp && export no_proxy=localhost,127.0.0.1 && export ZES_ENABLE_SYSMAN=1 && export OLLAMA_NUM_GPU=999 && export OLLAMA_HOST=0.0.0.0 && source /opt/intel/oneapi/setvars.sh --force && export SYCL_CACHE_PERSISTENT=1 && export SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS=1 && export ONEAPI_DEVICE_SELECTOR=level_zero:0 && ./ollama serve &)" > /tmp/ollama.log 2>&1 &'
+COMMANDS[4]='source ~/miniforge3/etc/profile.d/conda.sh && conda activate llm-cpp && yes | pip install --pre --upgrade ipex-llm[xpu] --extra-index-url https://pytorch-extension.intel.com/release-whl/stable/xpu/us/
+source ~/miniforge3/etc/profile.d/conda.sh && conda activate llm-cpp && yes | pip install --pre --upgrade ipex-llm[cpp] && pip install transformers && pip install trl
+source ~/miniforge3/etc/profile.d/conda.sh && conda activate llm-cpp
+wget https://raw.githubusercontent.com/intel-analytics/ipex-llm/main/python/llm/example/GPU/HuggingFace/LLM/llama3.1/generate.py
+source ~/miniforge3/etc/profile.d/conda.sh && conda activate llm-cpp && huggingface-cli login --token "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"
+cd llama-cpp && wget https://huggingface.co/lmstudio-community/Meta-Llama-3-8B-Instruct-GGUF/resolve/main/Meta-Llama-3-8B-Instruct-Q4_K_M.gguf'
 
-COMMANDS[5]='source ~/miniforge3/etc/profile.d/conda.sh && cd llama-cpp && conda activate llm-cpp && ./ollama pull llama2
-source ~/miniforge3/etc/profile.d/conda.sh && cd llama-cpp && conda activate llm-cpp && ./ollama pull llama3.1'
+COMMANDS[5]='source ~/miniforge3/etc/profile.d/conda.sh && conda activate llm-cpp && source /opt/intel/oneapi/setvars.sh && cd llama-cpp && ZES_ENABLE_SYSMAN=1 ./main -m Meta-Llama-3-8B-Instruct-Q4_K_M.gguf -n 32 --prompt "Once upon a time, there existed a little girl who liked to have adventures. She wanted to go to places and meet new people, and have fun doing something" -t 8 -e -ngl 33 --color --no-mmap > /tmp/llama.cpp'
 
 # Build Host list
 readarray -td, HOST_LIST <<<"$HOSTS"; declare -p HOST_LIST;

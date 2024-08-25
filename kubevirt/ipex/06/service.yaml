@@ -9,7 +9,7 @@ spec:
       port: 2306 
       protocol: TCP
       targetPort: 22
-    - nodePort: 31406
+    - nodePort: 31408
       name: ollama
       port: 2406
       targetPort: 11434
