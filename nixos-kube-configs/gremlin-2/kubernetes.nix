@@ -5,19 +5,14 @@
     k3s
     kubernetes-helm
   ];
+
   # Kubernetes Service
   services.k3s = {
     enable = true;
     role = "server";
-    token = "532a3cf6ea"; 
+    token = "532a3cf6ea";
     serverAddr = "https://10.1.1.12:6443";
   };
-
-  # MySQL
-  #services.mysql = {
-  #  enable = true;
-  #  package = pkgs.mariadb;
-  #};
 
   # Storage Service
   virtualisation.containerd = {

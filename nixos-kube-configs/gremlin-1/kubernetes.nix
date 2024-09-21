@@ -5,6 +5,7 @@
     k3s
     kubernetes-helm
   ];
+
   # Kubernetes Service
   services.k3s = {
     enable = true;
@@ -12,12 +13,6 @@
     token = "532a3cf6ea"; 
     clusterInit = true;
   };
-
-  # MySQL
-  #services.mysql = {
-  #  enable = true;
-  #  package = pkgs.mariadb;
-  #};
 
   # Storage Service
   virtualisation.containerd = {

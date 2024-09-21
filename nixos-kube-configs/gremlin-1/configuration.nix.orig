@@ -14,11 +14,11 @@
     ];
   # Enable Flakes.
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
-  nixpkgs.config.allowUnfree = true;
+
   nixpkgs.overlays = [
-    (import ./pkgs/overlay.nix)
     (import ./overlays/intel-gfx-sriov.nix)
   ];
+
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = false;
@@ -27,28 +27,25 @@
   boot.kernelPackages = pkgs.linuxPackages_latest;
   boot.supportedFilesystems = [ "nfs" ];
   boot.kernelParams = [
+    "i915.force_probe=7d55"
     "intel_iommu=on"
-    "iommu=pt"
-    "i915.enable_guc=3"
-    "i915.max_vfs=7"
-    "vfio-pci.enable_sriov=1"
+    "i915.enable_gvt=1"
+    "xe.force_probe=7d55"
   ];
-  boot.extraModprobeConfig = "options vfio-pci ids=8086:7d55 disable_vga=1";
-  services.xserver.videoDrivers = [ "xe" ];
+  boot.extraModprobeConfig = "options i915 enable_guc=3 max_vfs=7";
   hardware.opengl = {
     enable = true;
+
     extraPackages = with pkgs; [
-      intel-compute-runtime.drivers
-      intel-media-driver 
+      intel-media-driver
+      intel-vaapi-driver
       # vpl-gpu-rt          # for newer GPUs on NixOS >24.05 or unstable
       onevpl-intel-gpu  # for newer GPUs on NixOS <= 24.05
-      intel-vaapi-driver
       # intel-media-sdk   # for older GPUs
     ];
   };
-  hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
   environment.sessionVariables = { LIBVA_DRIVER_NAME = "iHD"; }; # Force intel-media-driver
-
+  services.xserver.videoDrivers = [ "xe" ];
   # Reset
   # services.etcd.enable = false;
   # KUBELET_PATH=$(mount | grep kubelet | cut -d' ' -f3);
@@ -62,7 +59,7 @@
   ##### services.etcd.enable = true;
   
   # Networking
-  networking.hostName = "gremlin-1";
+  networking.hostName = "gremlin-3";
   services.rpcbind.enable = true;
   services.openssh.enable = true;
   services.openssh.settings.PermitRootLogin = "yes";
@@ -89,7 +86,6 @@
     };
     wantedBy = [ "multi-user.target" ];
   };
-
   virtualisation.kvmgt = {
     enable = true;
   };
@@ -127,11 +123,7 @@
     openiscsi
     nvtopPackages.intel
     intel-gpu-tools
-    conda
-    kubevirt
     nix-index
-    oneDNN
-    ollama-sycl
   ];
 
   # CA Certificate
@@ -144,24 +136,6 @@
   services.openiscsi = {
     enable = true;
     name = "${config.networking.hostName}-initiatorhost"; 
-  };
-
-  services.ollama = {
-    enable = true;
-    package = pkgs.ollama-sycl;
-    # acceleration = "intel";
-    models = "/opt/ollama/models";
-    environmentVariables = {
-      OLLAMA_INTEL_GPU = "1";
-      OLLAMA_DEBUG = "1";
-      OLLAMA_MAX_LOADED_MODELS = "2";
-      ZES_ENABLE_SYSMAN = "1";
-      OLLAMA_NUM_GPU = "999";
-#       no_proxy = "localhost,127.0.0.1";
-#       ZES_ENABLE_SYSMAN = "1";
-      SYCL_CACHE_PERSISTENT = "1";
-      SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS = "1";
-    };
   };
 
   # Define a user account. Don't forget to set a password with ‘passwd’.

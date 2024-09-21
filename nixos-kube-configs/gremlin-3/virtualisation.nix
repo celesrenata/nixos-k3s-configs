@@ -1,7 +1,22 @@
-{ ... }:
+{ pkgs, ... }:
 {
-  config = {
-    # Enable VMWare Tools.
-    virtualisation.vmware.guest.enable = true;
+  # Virtualization
+  virtualisation.libvirtd = {
+    enable = true;
+    qemu = {
+      package = pkgs.qemu_kvm;
+      runAsRoot = true;
+      swtpm.enable = true;
+      ovmf = {
+        enable = true;
+        packages = [(pkgs.OVMF.override {
+          secureBoot = true;
+          tpmSupport = true;
+        }).fd];
+      };
+    };
   };
+  programs.virt-manager.enable = true;
+  virtualisation.docker.enable = true;
+  virtualisation.docker.storageDriver = "btrfs";
 }
