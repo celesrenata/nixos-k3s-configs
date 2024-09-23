@@ -9,13 +9,13 @@ releases:
   - name: longhorn
     namespace: longhorn-system
     chart: longhorn/longhorn
-    version: 1.6.2
+    version: 1.7.1
     needs:
       - kyverno/kyverno
   - name: kyverno
     namespace: kyverno
     chart: kyverno/kyverno
-    version: 3.2.3
+    version: 3.2.6
   - name: longhorn-admission-hooks
     namespace: longhorn-system
     chart: bedag/raw
