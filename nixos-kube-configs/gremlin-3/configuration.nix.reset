@@ -18,6 +18,7 @@
 
   # Enable Flakes.
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.settings.cores = 8;
   nixpkgs.config.allowUnfree = true;
   nixpkgs.overlays = [
     (import ./overlays/i915-sriov-dkms.nix)

@@ -3,7 +3,7 @@ kind: VirtualMachine
 metadata:
   creationTimestamp: null
   labels:
-    kubevirt.io/vm: vm-fedora-datavolume
+    kubevirt.io/vm: arch-linux
   name: arch-linux
 spec:
   dataVolumeTemplates:
@@ -16,18 +16,22 @@ spec:
         - ReadWriteOnce
         resources:
           requests:
-            storage: 100G
+            storage: 512G
         storageClassName: longhorn 
       source:
         http:
-          url: https://gitlab.archlinux.org/archlinux/arch-boxes/-/package_files/7169/download 
-  running: true
+          url: https://geo.mirror.pkgbuild.com/images/latest/Arch-Linux-x86_64-cloudimg.qcow2
+  running: false 
   template:
     metadata:
       labels:
         kubevirt.io/vm: arch-linux 
     spec:
       domain:
+        cpu:
+          sockets: 1
+          cores: 6
+          threads: 2
         devices:
           gpus:
           - deviceName: intel.com/sriov-gpudevice
@@ -35,18 +39,18 @@ spec:
           disks:
           - disk:
               bus: virtio
-            name: datavolumevolume
+            name: arch-data-volume-pv
         machine:
           type: ""
         resources:
           requests:
-            cpu: 4
-            memory: 8G
+            cpu: 12
+            memory: 32G
       terminationGracePeriodSeconds: 180
       volumes:
       - dataVolume:
           name: arch-linux-volume 
-        name: datavolumevolume
+        name: arch-data-volume-pv
       - cloudInitNoCloud:
           userData: |-
             #cloud-config

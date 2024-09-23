@@ -39,12 +39,13 @@ for cmd in "${COMMAND_LIST[@]}"; do
     sleep 10
 done
 
+sleep 60
 # Wait for hosts to reboot
 while [ "$active" != "true" ]; do
     active=false
     count=0
     for i in $(cat /tmp/resetfleet); do
-        ping -c 3 $i > /dev/null
+        ssh-ping -c 3 -i 5 $i > /dev/null
 	if [ $? -eq 0 ]; then
 	    count=$((count+1))
 	fi
@@ -66,5 +67,5 @@ sleep 10
 
 # Copy Config
 echo "Executing: cat /etc/rancher/k3s/k3s.yaml"
-pssh -i --user root -h /tmp/resetfleet1 -t 0 -O StrictHostKeyChecking=no 'cat /etc/rancher/k3s/k3s.yaml' | sed "s/127\.0\.0\.1/$(cat /tmp/resetfleet1)/g" | sed '1d' > ~/.kube/config
+pssh -i --user root -h /tmp/resetfleet1 -t 0 -O StrictHostKeyChecking=no 'cat /etc/rancher/k3s/k3s.yaml' | sed "s/127\.0\.0\.1/$(cat /tmp/resetfleet1)/g" | sed '1d' | sed '/^Stderr/d' > ~/.kube/config
 echo "config written!"

@@ -17,12 +17,15 @@ unifi
 kubevirt
 clusterplex
 sleep
-kubevirt/ipex'
+kubevirt/al2023
+kubevirt/arch
+kubevirt/ipex-1x
+kubevirt/winvm-2'
 
 #intel
 # Build Project List
 readarray -t PROJECT_LIST <<<"$PROJECTS"; declare -p PROJECT_LIST;
-
+CWD=$(pwd)
 # Run fleet install
 for cmd in "${PROJECT_LIST[@]}"; do
     echo -e "\e[32m##################\e[0m"
@@ -30,6 +33,6 @@ for cmd in "${PROJECT_LIST[@]}"; do
     echo -e "\e[32m##################\e[0m"
     cd ${cmd}
     ./runmefirst.sh
-    cd ..
+    cd ${CWD}
     sleep 20
 done

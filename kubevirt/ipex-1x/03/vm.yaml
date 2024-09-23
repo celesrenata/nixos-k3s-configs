@@ -16,7 +16,7 @@ spec:
         - ReadWriteOnce
         resources:
           requests:
-            storage: 80G
+            storage: 128G
         storageClassName: longhorn 
       source:
         http:
@@ -28,6 +28,10 @@ spec:
         kubevirt.io/vm: vm-ipex-03 
     spec:
       domain:
+        cpu:
+          sockets: 1
+          cores: 2
+          threads: 4
         devices:
           gpus:
             - deviceName: intel.com/sriov-gpudevice
@@ -40,8 +44,8 @@ spec:
           type: ""
         resources:
           requests:
-            cpu: 8
-            memory: 32G
+            cpu: 4 
+            memory: 24G
       terminationGracePeriodSeconds: 180
       volumes:
       - dataVolume:

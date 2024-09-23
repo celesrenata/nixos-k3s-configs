@@ -3,20 +3,20 @@ kind: VirtualMachine
 metadata:
   creationTimestamp: null
   labels:
-    kubevirt.io/vm: vm-ipex-01
-  name: vm-ipex-01
+    kubevirt.io/vm: vm-ipex-02
+  name: vm-ipex-02
 spec:
   dataVolumeTemplates:
   - metadata:
       creationTimestamp: null
-      name: vm-ipex-01-volume
+      name: vm-ipex-02-volume
     spec:
       storage:
         accessModes:
         - ReadWriteOnce
         resources:
           requests:
-            storage: 80G
+            storage: 128G
         storageClassName: longhorn 
       source:
         http:
@@ -25,33 +25,37 @@ spec:
   template:
     metadata:
       labels:
-        kubevirt.io/vm: vm-ipex-01 
+        kubevirt.io/vm: vm-ipex-02 
     spec:
       domain:
-        devices:
+        cpu:
+          sockets: 1
+          cores: 2
+          threads: 4
+        devices: 
           gpus:
             - deviceName: intel.com/sriov-gpudevice
               name: gpu1
           disks:
           - disk:
               bus: virtio
-            name: datavolumevolume-ipex-01
+            name: datavolumevolume-ipex-02
         machine:
           type: ""
         resources:
           requests:
-            cpu: 8
-            memory: 32G
+            cpu: 4 
+            memory: 24G
       terminationGracePeriodSeconds: 180
       volumes:
       - dataVolume:
-          name: vm-ipex-01-volume 
-        name: datavolumevolume-ipex-01
+          name: vm-ipex-02-volume 
+        name: datavolumevolume-ipex-02
       - cloudInitNoCloud:
           userData: |-
             #cloud-config
             resize_rootfs: true
-            hostname: ollama-ipex-01 
+            hostname: ollama-ipex-02 
             manage_etc_hosts: true
             users:
             - name: celes
@@ -63,10 +67,10 @@ spec:
               package_update: true
               package_upgrade: true
               packages:
-               - git
-               - vim
                - gpg-agent
                - wget
+               - git
+               - vim
               runcmd:
                - systemctl enable sshd.service
         name: cloudinit
