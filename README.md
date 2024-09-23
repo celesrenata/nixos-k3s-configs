@@ -8,6 +8,7 @@
 * Grafana
 * Intel SR-IOV Plugins
 * Kubevirt
+  * Ubuntu 24.04 IPEX Ollama
 * Kyverno
 * MariaDB
 * PHPMyAdmin
@@ -53,17 +54,18 @@ Login to and add your own ssh configs to your account, root, and nixremote accou
 
 ## Ensuring Cluster is Happy
 1. I have included automation scripts for resetting the fleet to known good states as well as scripts to deploy all the services I have figured out!
-2. `./resetfleet.sh.gremlin`
+2. `./resetfleet.sh`
 
 ## Edit the Cluster Deployments
 Each script is controlled by a `runmefirst.sh` file in the directory of the service, and is stood up by the following automation script:
-* `./runmefirst.sh.gremlin`
+* `./runmefirst.sh`
 * Edit this file to turn off deployments you do not desire for your Cluster
 
 ## Ollama via IPEX
 Ollama is controlled via the IPEX fleet within the `kubevirt` directory
 If you have more than 32GB of ram per Node you can then use Ipex-LLM Ollama!
-`kubevirt/ipex/runmefirst.sh`
+`kubevirt/ipex-1x/runmefirst.sh`
 
 ## TODO
-Verify with 96GB of RAM that OneAPI properly functions within Ubuntu VMs.
+* Rebuild Unifi Controller
+* Resolve Problem (43) in Win11 when passing SR-IOV Intel graphics to it.
