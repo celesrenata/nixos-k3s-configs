@@ -11,13 +11,6 @@
        # intel-media-sdk   # for older GPUs
     ];
   };
-  hardware.nvidia.vgpu = {
-    enable = true;
-    pinKernel = false;
-    fastapi-dls = {
-      enable = true;
-    };
-  };
   hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
   hardware.enableRedistributableFirmware = true;
   hardware.enableAllFirmware = true;
