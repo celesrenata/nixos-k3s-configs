@@ -17,7 +17,7 @@
   boot.initrd.kernelModules = [ "vmd" "md_mod" "raid0" ];
   
   # See Kernel Overlay
-  boot.kernelPackages = pkgs.kernel69;
+  boot.kernelPackages = pkgs.kernel611;
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
   boot.kernelModules = [ "i915" ];
   boot.supportedFilesystems = [ "nfs" ];
@@ -30,6 +30,10 @@
     "i915.max_vfs=7"
     "i915.force_probe=7d55"
     "boot.shell_on_fail"
+    "hugepagesz=1G"
+    "hugepages=2"
+    "hugepagesz=2M"
+    "hugepages=512"
   ];
   
   # SR-IOV Module

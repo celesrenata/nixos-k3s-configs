@@ -25,13 +25,14 @@ spec:
   template:
     metadata:
       labels:
-        kubevirt.io/vm: vm-ipex-02 
+        kubevirt.io/vm: vm-ipex-02
+        prometheus.kubevirt.io: "node-exporter"
     spec:
       domain:
         cpu:
           sockets: 1
-          cores: 2
-          threads: 4
+          cores: 4
+          threads: 2
         devices: 
           gpus:
             - deviceName: intel.com/sriov-gpudevice
@@ -44,8 +45,8 @@ spec:
           type: ""
         resources:
           requests:
-            cpu: 4 
-            memory: 24G
+            cpu: 0.1
+            memory: 16G
       terminationGracePeriodSeconds: 180
       volumes:
       - dataVolume:

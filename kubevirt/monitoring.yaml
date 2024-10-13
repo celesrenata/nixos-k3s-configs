@@ -1,0 +1,16 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: kubevirt-node-exporters-servicemonitor
+  labels:
+    prometheus.kubevirt.io: "node-exporter"
+    release: prometheus
+spec:
+  namespaceSelector:
+    any: true
+  selector:
+    matchLabels:
+      prometheus.kubevirt.io: "node-exporter"
+  endpoints:
+  - port: metrics
+    interval: 15s

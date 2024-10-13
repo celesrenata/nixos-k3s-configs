@@ -1,0 +1,4 @@
+Intel graphics passthrough is failing with the notorious Problem 43.
+The solution as far as I can tell, as I have done literally everything else, is to create a sidecar that creates the following environment variable available to the kubevirt qemu pod:
+MDEV_PCI_RESOURCE_INTEL_COM_SRIOV-GPUDEVICE="0000:00:02.0"
+Figure that out and let me know how to add it as I've been struggling!

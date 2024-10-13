@@ -1,25 +1,10 @@
 { ... }:
 {
-  nix.buildMachines = [
-    {
-      hostName = "gremlin-1";
-      systems = ["x86_64-linux"];
-      protocol = "ssh-ng";
-      maxJobs = 4;
-      speedFactor = 2;
-      supportedFeatures = [ "nixos-test" ];
-    }
-    {
-      hostName = "gremlin-2";
-      systems = ["x86_64-linux"];
-      protocol = "ssh-ng";
-      maxJobs = 4;
-      speedFactor = 2;
-      supportedFeatures = [ "nixos-test" ];
-    } 
- ];
   nix.distributedBuilds = true;
-  nix.extraOptions = ''
-    builders-use-substitutes = true
-  '';
+  nix.settings.system-features = [
+    "kvm"
+    "big-parallel"
+    "nixos-test"
+    "benchmark"
+  ];
 }

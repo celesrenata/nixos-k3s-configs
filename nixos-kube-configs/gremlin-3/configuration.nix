@@ -11,20 +11,24 @@
       ./hardware-configuration.nix
       ./iscsi.nix
       ./kubernetes.nix
+      ./monitoring.nix
       ./networking.nix
       ./remote-build.nix
+      ./ups.nix
       ./virtualisation.nix
     ];
 
   # Enable Flakes.
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
-  nix.settings.core = 8;
+  nix.settings.cores = 12;
   nixpkgs.config.allowUnfree = true;
   nixpkgs.overlays = [
+    #(import ./overlays/distcc.nix)
     (import ./overlays/i915-sriov-dkms.nix)
     (import ./overlays/intel-firmware.nix)
     (import ./overlays/intel-gfx-sriov.nix)
-    (import ./overlays/kernel-6.6.nix)
+    (import ./overlays/kernel.nix)
+    #(import ./overlays/libuv.nix)
   ];
 
   # VMD Array
@@ -49,6 +53,18 @@
         gateway = [ "10.1.1.1" ];
       };
     };
+  };
+
+  # DistCC.
+  services.distccd = {
+    enable = true;
+    allowedClients = [
+      "192.168.42.0/25"
+      "10.1.1.0/24"
+      "10.42.0.0/16"
+    ];
+    stats.enable = true;
+    zeroconf = true;
   }; 
 
   # Reset Cluster
@@ -85,6 +101,7 @@
     nvtopPackages.intel
     intel-gpu-tools
     nix-index
+    gcc14
   ];
 
   # CA Certificate

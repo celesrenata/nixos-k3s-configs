@@ -6,9 +6,11 @@ metadata:
 spec:
   configuration:
     developerConfiguration:
+      cpuAllocationRatio: 10
       featureGates:
         - GPU
         - HostDevices
+        - Sidecar
     permittedHostDevices:
       pciHostDevices:
       - pciVendorSelector: "8086:7d55"

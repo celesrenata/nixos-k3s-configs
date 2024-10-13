@@ -1,0 +1,110 @@
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  #annotations:
+  #  kubevirt.io/allow-pod-bridge-network-live-migration: true
+  labels:
+    kubevirt.io/vm: windows-nfs
+  name: windows-nfs
+spec:
+  runStrategy: Manual
+  template:
+    metadata:
+      annotations:
+        hooks.kubevirt.io/hookSidecars: '[{"args": ["--version", "v1alpha2"],
+        "image": "quay.io/kubevirt/sidecar-shim:20241011_b6c9562696",
+        "configMap": {"name": "intel-vgpu-configmap", "key": "intel-vgpu-pci-location.sh", 
+        "hookPath": "/usr/bin/onDefineDomain"}}]'
+      labels:
+        kubevirt.io/vm: windows-nfs
+        prometheus.kubevirt.io: "node-exporter"
+    spec:
+      domain:
+        clock:
+          timer:
+            hyperv: {}
+            hpet:
+              present: false
+            pit:
+              tickPolicy: delay
+            rtc:
+              tickPolicy: catchup
+          utc: {}
+        cpu:
+          sockets: 1
+          cores: 4
+          threads: 2
+          model: host-passthrough
+        #memory:
+        #  hugepages:
+        #    pageSize: "2Mi"
+        devices:
+          autoattachGraphicsDevice: false
+          gpus:
+          - deviceName: intel.com/sriov-gpudevice
+            name: gpu0
+          disks:
+          - disk:
+              bus: virtio
+            name: pvcdisk
+          - cdrom:
+              bus: sata
+            name: winiso
+          - cdrom:
+              bus: sata
+            name: virtioiso
+          - cdrom:
+              bus: sata
+            name: arciso
+          tpm: {}
+          interfaces:
+            - name: podnet
+              masquerade: {} # connect using masquerade mode
+              ports:
+                - port: 3389 # allow incoming traffic on port 80 to get into the virtual machine
+        features:
+          acpi:
+            enabled: true
+          apic:
+            enabled: true
+          hyperv:
+            relaxed: {}
+            spinlocks:
+              spinlocks: 8191
+            vapic: {}
+            vendorid:
+              enabled: true
+              vendorid: GenuineIntel 
+          kvm:
+            hidden: true
+          smm: {}
+        firmware:
+          bootloader:
+            efi:
+              secureBoot: true
+          uuid: 5d307ca9-b3ef-428c-8861-06e72d69f223
+        machine:
+          type: q35
+        resources:
+          requests:
+            cpu: 1
+            memory: 16Gi
+      networks:
+      - name: podnet
+        pod: {}
+      terminationGracePeriodSeconds: 360
+      volumes:
+      - name: pvcdisk
+        persistentVolumeClaim:
+          claimName: disk-windows-nfs-pvc
+      - name: winiso
+        persistentVolumeClaim:
+          claimName: win11cd-pvc
+      - name: virtioiso
+        persistentVolumeClaim:
+          claimName: virtio-drivers-pvc
+      - name: arciso
+        persistentVolumeClaim:
+          claimName: intel-arc-drivers-pvc
+

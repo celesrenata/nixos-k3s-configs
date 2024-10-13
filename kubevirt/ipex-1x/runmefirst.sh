@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 kubectl create namespace ollama-ipex
+kubectl apply -f monitoring.yaml -n ollama-ipex
 sleep 5
 #find . -type d -exec cd {}; ./runmefirst.sh; cd .. \;
 cd 01

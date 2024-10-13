@@ -5,14 +5,14 @@ metadata:
 spec:
   persistentVolumeReclaimPolicy: Retain
   capacity:
-    storage: 1Gi
+    storage: 10Gi
   accessModes:
     - ReadWriteOnce
     - ReadOnlyMany
     - ReadWriteMany
   storageClassName: ""
   nfs:
-    path: /volume2/Kubernetes/grafana/data     # The path to your config
+    path: /volume1/Kubernetes/grafana/data     # The path to your config
     server: 192.168.42.8     # Your NFS server with Media
   mountOptions:
     - vers=4

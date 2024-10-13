@@ -16,7 +16,7 @@ spec:
         - ReadWriteOnce
         resources:
           requests:
-            storage: 512G
+            storage: 128G
         storageClassName: longhorn 
       source:
         http:
@@ -25,12 +25,13 @@ spec:
   template:
     metadata:
       labels:
-        kubevirt.io/vm: arch-linux 
+        kubevirt.io/vm: arch-linux
+        prometheus.kubevirt.io: "node-exporter" 
     spec:
       domain:
         cpu:
           sockets: 1
-          cores: 6
+          cores: 4 
           threads: 2
         devices:
           gpus:
@@ -44,8 +45,8 @@ spec:
           type: ""
         resources:
           requests:
-            cpu: 12
-            memory: 32G
+            cpu: 0.1
+            memory: 16G
       terminationGracePeriodSeconds: 180
       volumes:
       - dataVolume:

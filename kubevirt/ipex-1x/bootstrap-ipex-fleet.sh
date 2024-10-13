@@ -9,6 +9,8 @@ PSSH_OPTIONS="-h /tmp/resetfleet -p 3 -t 0 -O StrictHostKeyChecking=no -O Connec
 
 ## Commands to iterate with PSSH before reboot
 read -r -d '' COMMANDS[0] << EEOF
+sudo apt update
+sudo apt install -y prometheus-node-exporter
 sudo snap install btop
 sudo apt install -y linux-headers-6.8.0-41-generic linux-headers-6.8.0-41 linux-image-6.8.0-41-generic linux-modules-6.8.0-41-generic linux-tools-6.8.0-41-generic linux-modules-extra-6.8.0-41-generic 
 sudo apt-mark hold linux-headers-6.8.0-41-generic linux-headers-6.8.0-41 linux-image-6.8.0-41-generic linux-modules-6.8.0-41-generic linux-tools-6.8.0-41-generic linux-modules-extra-6.8.0-41-generic 
@@ -56,7 +58,7 @@ source ~/miniforge3/etc/profile.d/conda.sh && conda activate llm-cpp && cd llama
 
 COMMANDS[5]='source ~/miniforge3/etc/profile.d/conda.sh && conda activate llm-cpp && yes | pip install --pre --upgrade ipex-llm[xpu] --extra-index-url https://pytorch-extension.intel.com/release-whl/stable/xpu/us/
 source ~/miniforge3/etc/profile.d/conda.sh && conda activate llm-cpp && yes | pip install --pre --upgrade ipex-llm[cpp] && pip install transformers && pip install trl
-nohup bash -c "(source ~/miniforge3/etc/profile.d/conda.sh && cd llama-cpp && conda activate llm-cpp && export no_proxy=localhost,127.0.0.1 && export ZES_ENABLE_SYSMAN=1 && export OLLAMA_NUM_GPU=999 && export OLLAMA_HOST=0.0.0.0 && source /opt/intel/oneapi/setvars.sh --force && export SYCL_CACHE_PERSISTENT=1 && export SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS=1 && export ONEAPI_DEVICE_SELECTOR=level_zero:0 CTX_NUM=8192 && ./ollama serve &)" > /tmp/ollama.log 2>&1 &'
+nohup bash -c "(source ~/miniforge3/etc/profile.d/conda.sh && cd llama-cpp && conda activate llm-cpp && export no_proxy=localhost,127.0.0.1 && export ZES_ENABLE_SYSMAN=1 && export OLLAMA_NUM_GPU=999 && export OLLAMA_HOST=0.0.0.0 && source /opt/intel/oneapi/setvars.sh --force && export SYCL_CACHE_PERSISTENT=1 && export SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS=1 && export ONEAPI_DEVICE_SELECTOR=level_zero:0 CTX_NUM=4096 && ./ollama serve &)" > /tmp/ollama.log 2>&1 &'
 
 # Build Host list
 readarray -td, HOST_LIST <<<"$HOSTS"; declare -p HOST_LIST;

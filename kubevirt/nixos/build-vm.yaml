@@ -1,0 +1,58 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  creationTimestamp: null
+  labels:
+    kubevirt.io/vm: nixos-nfs
+  name: nixos-nfs
+spec:
+  running: true 
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: nixos-nfs
+        prometheus.kubevirt.io: "node-exporter" 
+    spec:
+      domain:
+        cpu:
+          sockets: 1
+          cores: 4
+          threads: 2
+        devices:
+          autoattachGraphicsDevice: false
+          gpus:
+          - deviceName: intel.com/sriov-gpudevice
+            name: gpu1
+          disks:
+          - disk:
+              bus: virtio
+            name: nixos-nfs-data-volume-pv
+          - cdrom:
+              bus: sata
+            name: nixiso
+        machine:
+          type: q35
+        features:
+          acpi:
+            enabled: true
+          apic:
+            enabled: true
+          smm: {}
+        firmware:
+          bootloader:
+            efi:
+              secureBoot: false
+          uuid: 5d307ca9-b3ef-428c-8861-06e72d69f223
+        resources:
+          requests:
+            cpu: 0.1
+            memory: 16G
+      terminationGracePeriodSeconds: 180
+      volumes:
+      - name: nixos-nfs-data-volume-pv 
+        persistentVolumeClaim:
+          claimName: disk-nixos-nfs-pvc
+      - name: nixiso
+        persistentVolumeClaim:
+          claimName: nixos-24-05-pvc
+status: {}

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: intel-vgpu-configmap
+data:
+  intel-vgpu-pci-location.sh: |
+    #!/usr/bin/env bash
+    tempFile1=`mktemp --dry-run`
+    echo $4 | sed -e "/<alias name='ua-gpu-gpu0'\/>/{n;N;d}" > $tempFile1
+    awk '1;/<alias name='\''ua-gpu-gpu0'\''\/>/{print "      <address type='\''pci'\'' domain='\''0x0000'\'' bus='\''0x00'\'' slot='\''0x02'\'' function='\''0x0'\''/>"}' $tempFile1 

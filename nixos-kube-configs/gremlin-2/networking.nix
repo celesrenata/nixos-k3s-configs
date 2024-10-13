@@ -1,4 +1,4 @@
-{ ... }:
+{ lib, ... }:
 {
   # Networking
   systemd.network = {
@@ -28,6 +28,10 @@
       };
     };
   };
+  networking.useDHCP = lib.mkForce false;
+  networking.interfaces.enp170s0.useDHCP = lib.mkForce false;
+  networking.interfaces.enp171s0.useDHCP = lib.mkForce false;
+  
   services.rpcbind.enable = true;
   services.openssh.enable = true;
   services.openssh.settings.PermitRootLogin = "yes";

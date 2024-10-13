@@ -7,4 +7,5 @@ helm install grafana grafana/grafana -n grafana-service --create-namespace \
 kubectl apply -f . -n grafana-service
 sleep 10
 echo -en "\e[31m"
-kubectl get secret --namespace grafana-service grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo > grafana-admin-pass; echo -in "echo -en "\e[0m"
+kubectl get secret --namespace grafana-service grafana -o jsonpath="{.data.admin-password}" | base64 --decode > grafana-admin-pass; echo -en "\e[31m" $(cat grafana-admin-pass) "\e[0m"
+echo ""
