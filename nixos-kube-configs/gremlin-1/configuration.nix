@@ -16,7 +16,6 @@
       ./remote-build.nix
       ./virtualisation.nix
       ./ups.nix
-      (builtins.getFlake "https://github.com/Yeshey/nixos-nvidia-vgpu/archive/refs/heads/535.129.zip").nixosModules.nvidia-vgpu
     ];
 
   # Enable Flakes.
