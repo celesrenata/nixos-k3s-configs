@@ -19,6 +19,7 @@
     nutServer = "127.0.0.1";
     nutUser = "nutmaster";
     passwordPath = "/etc/nixos/.config/PasswordFiles/apc.pass";
+    extraFlags = [ "--web.telemetry-path=/ups" ];
   };
 
   services.telegraf = {

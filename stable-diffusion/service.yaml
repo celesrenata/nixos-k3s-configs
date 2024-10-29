@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: stable-diffusion-service
+spec:
+  selector:
+    app: stable-diffusion-webui
+  ports:
+  - name: webui
+    port: 7860
+    targetPort: 7860
+  type: ClusterIP

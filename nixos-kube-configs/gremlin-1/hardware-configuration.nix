@@ -14,25 +14,31 @@
   boot.extraModulePackages = [ ];
 
   fileSystems."/" =
-    { device = "/dev/disk/by-uuid/3d86be7a-a0a4-4a7d-8a40-6ced5045f71e";
+    { device = "/dev/disk/by-uuid/28a958f2-40c2-43a1-889c-816429007a23";
       fsType = "btrfs";
       options = [ "compress=zstd" "subvol=root" ];
     };
 
   fileSystems."/home" =
-    { device = "/dev/disk/by-uuid/3d86be7a-a0a4-4a7d-8a40-6ced5045f71e";
+    { device = "/dev/disk/by-uuid/28a958f2-40c2-43a1-889c-816429007a23";
       fsType = "btrfs";
       options = [ "compress=zstd" "subvol=home" ];
     };
 
   fileSystems."/nix" =
-    { device = "/dev/disk/by-uuid/3d86be7a-a0a4-4a7d-8a40-6ced5045f71e";
+    { device = "/dev/disk/by-uuid/28a958f2-40c2-43a1-889c-816429007a23";
       fsType = "btrfs";
       options = [ "compress=zstd" "subvol=nix" ];
     };
 
+  fileSystems."/var/lib" =
+    { device = "/dev/disk/by-uuid/28a958f2-40c2-43a1-889c-816429007a23";
+      fsType = "btrfs";
+      options = [ "compress=zstd" "subvol=varlib" ];
+    };
+
   fileSystems."/boot" =
-    { device = "/dev/disk/by-uuid/3CBB-D4CC";
+    { device = "/dev/disk/by-uuid/0AE4-FCC6";
       fsType = "vfat";
       options = [ "fmask=0022" "dmask=0022" ];
     };
@@ -44,8 +50,9 @@
   # still possible to use this option, but it's recommended to use it in conjunction
   # with explicit per-interface declarations with `networking.interfaces.<interface>.useDHCP`.
   networking.useDHCP = lib.mkDefault false;
-  networking.interfaces.enp170s0.useDHCP = lib.mkDefault false;
   networking.interfaces.enp171s0.useDHCP = lib.mkDefault false;
+  networking.interfaces.enp172s0.useDHCP = lib.mkDefault false;
+  networking.interfaces.wlp173s0f0.useDHCP = lib.mkDefault false;
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
   hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;

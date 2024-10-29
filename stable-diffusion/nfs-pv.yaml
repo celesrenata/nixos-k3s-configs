@@ -1,0 +1,113 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: sd-model 
+spec:
+  persistentVolumeReclaimPolicy: Delete
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ""
+  nfs:
+    path: /volume1/Kubernetes/stable-diffusion/models/sd     # The path to your media
+    server: 192.168.42.8     # Your NFS server with Media
+  mountOptions:
+    - vers=4
+    - minorversion=1
+    - noac
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: sd-othermodels
+spec:
+  persistentVolumeReclaimPolicy: Delete
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ""
+  nfs:
+    path: /volume1/Kubernetes/stable-diffusion/models/other     # The path to your media
+    server: 192.168.42.8     # Your NFS server with Media
+  mountOptions:
+    - vers=4
+    - minorversion=1
+    - noac
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: sd-outputs
+spec:
+  persistentVolumeReclaimPolicy: Delete
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ""
+  nfs:
+    path: /volume1/Kubernetes/stable-diffusion/outputs     # The path to your config 
+    server: 192.168.42.8     # Your NFS server with Media
+  mountOptions:
+    - vers=4
+    - minorversion=1
+    - noac
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: sd-embeddings
+spec:
+  persistentVolumeReclaimPolicy: Delete
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ""
+  nfs:
+    path: /volume1/Kubernetes/stable-diffusion/embeddings # The path to your config
+    server: 192.168.42.8     # Your NFS server with Media
+  mountOptions:
+    - vers=4
+    - minorversion=1
+    - noac
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: sd-extensions
+spec:
+  persistentVolumeReclaimPolicy: Delete
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ""
+  nfs:
+    path: /volume1/Kubernetes/stable-diffusion/extensions
+    server: 192.168.42.8     # Your NFS server with Media
+  mountOptions:
+    - vers=4
+    - minorversion=1
+    - noac
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: sd-webui-conf
+spec:
+  persistentVolumeReclaimPolicy: Delete
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ""
+  nfs:
+    path: /volume1/Kubernetes/stable-diffusion/webui
+    server: 192.168.42.8     # Your NFS server with Media
+  mountOptions:
+    - vers=4
+    - minorversion=1
+    - noac

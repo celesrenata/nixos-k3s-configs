@@ -15,8 +15,8 @@
       ./networking.nix
       ./remote-build.nix
       ./virtualisation.nix
+      ./rgb.nix
       ./ups.nix
-      (builtins.getFlake "https://github.com/Yeshey/nixos-nvidia-vgpu/archive/refs/heads/535.129.zip").nixosModules.nvidia-vgpu
     ];
 
   # Enable Flakes.
@@ -29,7 +29,7 @@
     (import ./overlays/intel-firmware.nix)
     (import ./overlays/intel-gfx-sriov.nix)
     (import ./overlays/kernel.nix)
-    #(import ./overlays/libuv.nix)
+    (import ./overlays/nvidia-container-toolkit.nix)
   ];
 
   # VMD Array
@@ -37,7 +37,6 @@
     enable = true;
     mdadmConf = "
       MAILADDR celes
-      ARRAY /dev/md126 metadata=1.2 UUID=3d86be7a-a0a4-4a7d-8a40-6ced5045f71e
     ";
   };
 
@@ -104,11 +103,7 @@
     intel-gpu-tools
     nix-index
     gcc14
-  ];
-
-  # CA Certificate
-  security.pki.certificateFiles = [
-    /kubedata-remote/certs/home.crt
+    #(callPackage ./generic-cdi.nix {})
   ];
 
   # Storage Management
@@ -128,6 +123,6 @@
     isNormalUser = true;
   };
 
-  system.stateVersion = "24.11";
+  system.stateVersion = "24.05";
 }
 

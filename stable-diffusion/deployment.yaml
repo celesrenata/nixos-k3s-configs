@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stable-diffusion-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stable-diffusion-webui
+  template:
+    metadata:
+      labels:
+        app: stable-diffusion-webui
+    spec:
+      securityContext:
+        fsGroup: 1000
+      runtimeClassName: nvidia
+      initContainers:
+      - name: download-model
+        image: alpine:3.12
+        command: ['sh', '-c', 'if [ ! -e "/models/sd-v1-4.ckpt" ]; then wget https://huggingface.co/CompVis/stable-diffusion-v-1-4-original/resolve/main/sd-v1-4.ckpt -P /models; fi; chown -R 1000:1000 /app; cp /app/stable-diffusion/outputs/webui-user.sh /app/']
+        volumeMounts:
+        - name: sd-model
+          mountPath: /models
+        - name: models
+          mountPath: /app/stable-diffusion/models
+        - name: outputs
+          mountPath: /app/stable-diffusion/outputs
+        - name: embeddings
+          mountPath: /app/stable-diffusion/embeddings
+        - name: extensions
+          mountPath: /app/stable-diffusion/extensions
+      containers:
+      - name: stable-diffusion-webui
+        image: ghcr.io/matthew-graves/stable-diffusion-webui-k8s:main
+        # imagePullPolicy: Always
+        volumeMounts:
+        - name: sd-model
+          mountPath: /models
+        - name: models
+          mountPath: /app/stable-diffusion/models
+        - name: outputs
+          mountPath: /app/stable-diffusion/outputs
+        - name: embeddings
+          mountPath: /app/stable-diffusion/embeddings
+        - name: extensions
+          mountPath: /app/stable-diffusion/extensions
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+        command: [ "/bin/bash", "webui.sh" ]
+      - name: filebrowser
+        image: filebrowser/filebrowser
+        volumeMounts:
+        - name: sd-model
+          mountPath: /srv/models
+        - name: models
+          mountPath: /srv/stable-diffusion/models
+        - name: outputs
+          mountPath: /srv/stable-diffusion/outputs
+        - name: embeddings
+          mountPath: /srv/stable-diffusion/embeddings
+        - name: extensions
+          mountPath: /srv/stable-diffusion/extensions
+      volumes:
+      - name: sd-model
+        persistentVolumeClaim:
+          claimName: sd-model-pvc
+      - name: outputs
+        persistentVolumeClaim:
+          claimName: sd-outputs-pvc
+      - name: models
+        persistentVolumeClaim:
+          claimName: sd-othermodels-pvc
+      - name: embeddings
+        persistentVolumeClaim:
+          claimName: sd-embeddings-pvc
+      - name: extensions
+        persistentVolumeClaim:
+          claimName: sd-extensions-pvc
+      - name: webui-conf
+        persistentVolumeClaim:
+          claimName: sd-webui-conf-pvc

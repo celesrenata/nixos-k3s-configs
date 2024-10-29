@@ -6,7 +6,7 @@
       intel-compute-runtime.drivers
       #intel-media-driver
       #intel-vaapi-driver
-        vpl-gpu-rt          # for newer GPUs on NixOS >24.05 or unstable
+      vpl-gpu-rt          # for newer GPUs on NixOS >24.05 or unstable
       #onevpl-intel-gpu  # for newer GPUs on NixOS <= 24.05
        # intel-media-sdk   # for older GPUs
     ];

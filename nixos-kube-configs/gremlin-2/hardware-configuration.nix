@@ -14,33 +14,33 @@
   boot.extraModulePackages = [ ];
 
   fileSystems."/" =
-    { device = "/dev/disk/by-uuid/140c445c-2ede-4c29-9fc1-e0a6286b9375";
+    { device = "/dev/disk/by-uuid/48392767-7df1-485b-9720-a4dd82e51100";
       fsType = "btrfs";
       options = [ "compress=zstd" "subvol=root" ];
     };
 
-  fileSystems."/nix" =
-    { device = "/dev/disk/by-uuid/140c445c-2ede-4c29-9fc1-e0a6286b9375";
-      fsType = "btrfs";
-      options = [ "compress=zstd" "subvol=nix" ];
-    };
-
   fileSystems."/home" =
-    { device = "/dev/disk/by-uuid/140c445c-2ede-4c29-9fc1-e0a6286b9375";
+    { device = "/dev/disk/by-uuid/48392767-7df1-485b-9720-a4dd82e51100";
       fsType = "btrfs";
       options = [ "compress=zstd" "subvol=home" ];
     };
 
-  fileSystems."/boot" =
-    { device = "/dev/disk/by-uuid/7D88-5CF1";
-      fsType = "vfat";
-      options = [ "fmask=0022" "dmask=0022" ];
+  fileSystems."/nix" =
+    { device = "/dev/disk/by-uuid/48392767-7df1-485b-9720-a4dd82e51100";
+      fsType = "btrfs";
+      options = [ "compress=zstd" "subvol=nix" ];
     };
 
-  fileSystems."/var/lib/docker/btrfs" =
-    { device = "/home/root/var/lib/docker/btrfs";
-      fsType = "none";
-      options = [ "bind" ];
+  fileSystems."/var/lib" =
+    { device = "/dev/disk/by-uuid/48392767-7df1-485b-9720-a4dd82e51100";
+      fsType = "btrfs";
+      options = [ "compress=zstd" "subvol=varlib" ];
+    };
+
+  fileSystems."/boot" =
+    { device = "/dev/disk/by-uuid/BAF7-F9DE";
+      fsType = "vfat";
+      options = [ "fmask=0022" "dmask=0022" ];
     };
 
   swapDevices = [ ];
@@ -49,13 +49,10 @@
   # (the default) this is the recommended approach. When using systemd-networkd it's
   # still possible to use this option, but it's recommended to use it in conjunction
   # with explicit per-interface declarations with `networking.interfaces.<interface>.useDHCP`.
-  networking.useDHCP = lib.mkDefault true;
-  # networking.interfaces.bond0.useDHCP = lib.mkDefault true;
-  # networking.interfaces.bonding_masters.useDHCP = lib.mkDefault true;
-  # networking.interfaces.docker0.useDHCP = lib.mkDefault true;
-  # networking.interfaces.enp170s0.useDHCP = lib.mkDefault true;
-  # networking.interfaces.enp171s0.useDHCP = lib.mkDefault true;
-  # networking.interfaces.wlp172s0f0.useDHCP = lib.mkDefault true;
+  networking.useDHCP = lib.mkDefault false;
+  networking.interfaces.enp170s0.useDHCP = lib.mkDefault false;
+  networking.interfaces.enp171s0.useDHCP = lib.mkDefault false;
+  networking.interfaces.wlp172s0f0.useDHCP = lib.mkDefault false;
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
   hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;

@@ -38,4 +38,7 @@
   
   # SR-IOV Module
   boot.extraModulePackages = with pkgs; [ intel-gfx-sriov ];
+
+  # Kubernetes FS problem solver
+  boot.kernel.sysctl."fs.inotify.max_user_instances" = 2147483647;
 }
