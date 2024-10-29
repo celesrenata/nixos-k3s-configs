@@ -3,26 +3,28 @@
 # Kubernetes Projects to Activate
 PROJECTS='dashboard
 longhorn
-cert-manager
 traefik
-grafana
-phpmyadmin
 prometheus
 influxdb2
+cert-manager
 intel
+nvidia
+grafana
+phpmyadmin
 homeassistant
 mariadb
 flame
+ollama
+open-webui
+stable-diffusion
 wordpress
 unifi
 kubevirt
 clusterplex
-sleep
+kubevirt/winvm-nfs
 kubevirt/al2023
 kubevirt/arch
-kubevirt/winvm-nfs
-kubevirt/nixos
-kubevirt/ipex-1x'
+kubevirt/nixos'
 
 #intel
 # Build Project List
