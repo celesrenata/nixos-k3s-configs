@@ -11,7 +11,7 @@
   * Amazon Linux 2023
   * Arch Linux
   * NixOS 24.05 (Intel)
-  * Ubuntu 24.04 IPEX Ollama
+  * Ubuntu 24.04 Ollama (Intel IPEX)
   * Windows 11 (Intel GPU broken)
 * Kyverno
 * Longhorn
