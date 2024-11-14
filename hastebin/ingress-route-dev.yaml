@@ -1,0 +1,15 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: hastebin-dev2-https
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`hastebin.dev.celestium.life`)
+      kind: Rule
+      services:
+        - name: hastebin
+          port: 7777
+  tls:
+    secretName: hastebin-staging

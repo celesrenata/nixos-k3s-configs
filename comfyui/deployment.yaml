@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: comfyui
+  labels:
+    helm.sh/chart: comfyui-0.1.0
+    app.kubernetes.io/name: comfyui
+    app.kubernetes.io/instance: comfyui
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: comfyui
+      app.kubernetes.io/instance: comfyui
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: comfyui-0.1.0
+        app.kubernetes.io/name: comfyui
+        app.kubernetes.io/instance: comfyui
+        app.kubernetes.io/version: "1.16.0"
+        app.kubernetes.io/managed-by: Helm
+    spec:
+      serviceAccountName: comfyui
+      securityContext:
+        {}
+      containers:
+        - name: comfyui
+          securityContext:
+            {}
+          image: "ghcr.io/celesrenata/comfyui-onprem-k8s:comfyui-5e29e7a"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 50000
+              protocol: TCP
+            - name: training
+              containerPort: 46781
+              protocol: TCP
+          #livenessProbe:
+          #  httpGet:
+          #    path: /queue
+          #    port: http
+          #readinessProbe:
+          #  httpGet:
+          #    path: /queue
+          #    port: http
+          resources:
+            limits:
+              cpu: "12"
+              nvidia.com/gpu: "1"
+          volumeMounts:
+            - name: model-storage
+              mountPath: /home/workspace/ComfyUI/models
+            - name: custom-nodes
+              mountPath: /home/workspace/ComfyUI/custom_nodes
+            - name: tmp
+              mountPath: /home/workspace/ComfyUI/input
+              subPath: input
+            - name: tmp
+              mountPath: /home/workspace/ComfyUI/output
+              subPath: output
+            - name: tmp
+              mountPath: /home/workspace/ComfyUI/temp
+              subPath: temp
+      volumes:
+        - name: model-storage
+          persistentVolumeClaim:
+            claimName: comfyui-model-pvc
+        - name: tmp
+          persistentVolumeClaim:
+            claimName: comfyui-tmp-pvc
+        - name: custom-nodes
+          persistentVolumeClaim:
+            claimName: comfyui-custom-nodes-pvc

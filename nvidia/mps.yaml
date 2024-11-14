@@ -1,6 +1,6 @@
 version: v1
 sharing:
-  timeSlicing:
+  mps:
     resources:
     - name: nvidia.com/gpu
       replicas: 10

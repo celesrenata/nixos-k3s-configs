@@ -9,7 +9,7 @@ releases:
   - name: longhorn
     namespace: longhorn-system
     chart: longhorn/longhorn
-    version: 1.7.1
+    version: 1.7.2
     needs:
       - kyverno/kyverno
   - name: kyverno

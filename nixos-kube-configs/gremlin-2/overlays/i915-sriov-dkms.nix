@@ -1,7 +1,7 @@
 prev: final:
 rec {
   intel-gfx-sriov = prev.stdenv.mkDerivation {
-    name = "intel-gfx-sriov-${prev.linuxPackages_6_10.kernel.modDirVersion}";
+    name = "intel-gfx-sriov-${prev.linuxPackages_6_6.kernel.modDirVersion}";
 
     passthru.moduleName = "intel-gfx-sriov";
 
@@ -14,21 +14,21 @@ rec {
   
     hardeningDisable = [ "pic" ];
   
-    nativeBuildInputs = final.linuxPackages_6_10.kernel.moduleBuildDependencies;
+    nativeBuildInputs = final.linuxPackages_6_6.kernel.moduleBuildDependencies;
    
     makeFlags = [
-      "KVERSION=${final.linuxPackages_6_10.kernel.modDirVersion}"
-      "KDIR=${final.linuxPackages_6_10.kernel.dev}/lib/modules/${final.linuxPackages_6_10.kernel.modDirVersion}/build"
+      "KVERSION=${final.linuxPackages_6_6.kernel.modDirVersion}"
+      "KDIR=${final.linuxPackages_6_6.kernel.dev}/lib/modules/${final.linuxPackages_6_6.kernel.modDirVersion}/build"
     ];
     buildFlags = [
-      "KERNEL_DIR=${final.linuxPackages_6_10.kernel.dev}/lib/modules/${final.linuxPackages_6_10.kernel.modDirVersion}/build"
+      "KERNEL_DIR=${final.linuxPackages_6_6.kernel.dev}/lib/modules/${final.linuxPackages_6_6.kernel.modDirVersion}/build"
     ];
     buildPhase = ''
-      make -j8 -C ${final.pkgs.kernel611.kernel.dev}/lib/modules/${final.linuxPackages_6_10.kernel.modDirVersion}/build M=$(pwd) modules
+      make -j8 -C ${final.pkgs.kernel611.kernel.dev}/lib/modules/${final.linuxPackages_6_6.kernel.modDirVersion}/build M=$(pwd) modules
     '';
   
     installPhase = ''
-      install -D i915.ko $out/lib/modules/${final.linuxPackages_6_10.kernel.modDirVersion}/kernel/drivers/gpu/drm/i915/i915.ko
+      install -D i915.ko $out/lib/modules/${final.linuxPackages_6_6.kernel.modDirVersion}/kernel/drivers/gpu/drm/i915/i915.ko
     '';
   };
 }

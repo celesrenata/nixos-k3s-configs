@@ -17,6 +17,8 @@
       ./virtualisation.nix
       ./rgb.nix
       ./ups.nix
+      #./overlays/generic-cdi.nix
+      #(builtins.getFlake "https://github.com/Yeshey/nixos-nvidia-vgpu/archive/refs/heads/535.129.zip").nixosModules.nvidia-vgpu
     ];
 
   # Enable Flakes.
@@ -24,12 +26,12 @@
   nix.settings.cores = 12;
   nixpkgs.config.allowUnfree = true;
   nixpkgs.overlays = [
-    #(import ./overlays/distcc.nix)
     (import ./overlays/i915-sriov-dkms.nix)
     (import ./overlays/intel-firmware.nix)
     (import ./overlays/intel-gfx-sriov.nix)
     (import ./overlays/kernel.nix)
     (import ./overlays/nvidia-container-toolkit.nix)
+    #(import ./overlays/generic-cdi2.nix)
   ];
 
   # VMD Array

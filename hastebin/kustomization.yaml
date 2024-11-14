@@ -1,0 +1,39 @@
+---
+kind: Kustomization
+resources:
+  - nfs-pvc.yaml
+  - nfs-pv.yaml
+  - statefulset.yaml
+  - service.yaml
+  - ingress-route.yaml
+images:
+  - name: flippinturnt/hastebin
+    newTag: latest 
+patches:
+  # Set Service to LoadBalancer and Specify IP Address to use
+  - patch: |-
+      - op: add
+        path: /spec/type
+        value: LoadBalancer
+      - op: add
+        path: /spec/loadBalancerIP
+        value: 10.1.1.12
+    target:
+      kind: Service  # Set IngressRoute Match Value for Traefik
+  # Remember to use ` (backtick) not ' (single quote) around Host
+  - patch: |-
+      - op: replace
+        path: /spec/routes/0/match
+        value: Host(`hastebin.example.com`)
+    target:
+      kind: IngressRoute  # Set Longhorn Persistent Volume Claim Size
+  - patch: |-
+      - op: replace
+        path: /spec/resources/requests/storage
+        value: 1Gi
+    target:
+      kind: PersistentVolumeClaim
+commonLabels:
+  app: hastebin
+  app.kubernetes.io/instance: hastebin
+  app.kubernetes.io/name: hastebin

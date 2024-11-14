@@ -11,12 +11,15 @@ intel
 nvidia
 grafana
 phpmyadmin
+portainer
 homeassistant
 mariadb
 flame
+hastebin
 ollama
 open-webui
-stable-diffusion
+comfyui
+OneTrainer
 wordpress
 unifi
 kubevirt

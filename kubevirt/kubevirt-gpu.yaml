@@ -11,8 +11,12 @@ spec:
         - GPU
         - HostDevices
         - Sidecar
+        - DisableMDEVConfiguration
     permittedHostDevices:
       pciHostDevices:
       - pciVendorSelector: "8086:7d55"
         resourceName: "intel.com/sriov-gpudevice"
+        externalResourceProvider: false
+      - pciVendorSelector: "10DE:22BC"
+        resourceName: "nvidia.com/gpu"
         externalResourceProvider: false
