@@ -2,15 +2,22 @@
 ## Featuring the Following Projects
 * Cert Manager
 * Cluster Plex
+* ComfyUI (Nvidia)
 * Dashboard
-* Longhorn
 * Flame
 * Grafana
 * Intel SR-IOV Plugins
 * Kubevirt
+  * Amazon Linux 2023
+  * Arch Linux
+  * NixOS 24.05 (Intel)
   * Ubuntu 24.04 IPEX Ollama
+  * Windows 11 (Intel GPU broken)
 * Kyverno
+* Longhorn
 * MariaDB
+* Nvidia Container Plugins
+* Nvidia Containerd Toolkit
 * PHPMyAdmin
 * Portainer
 * Prometheus
@@ -20,14 +27,14 @@
 * Wordpress
 
 ## Prerequisites
-* 3x Intel 13th Gen Processors with the 185H or similar. I use BeeLink.
-   * Will also work on ARC dGPUs with a little fiddling
-* Seperate VLAN for your Kube Cluster
+* 3x Intel 14th Gen Processors with the 185H or similar. I use BeeLink 3x GTi14(s).
+   * Will also work on ARC dGPUs with a little fiddling.
+* Seperate VLAN for your Kube Cluster.
 
 ## Installation
 * Contained in the repo are the main configurations required to build out each host.
 1. [Build a ThumbDrive or PXE Boot NixOS 24.05](https://wiki.nixos.org/wiki/NixOS_Installation_Guide)
-   * Complete steps through SWAP setup
+   * Complete steps through SWAP setup.
 3. `sudo nix-channel --update`
 4. `git clone https://github.com/celesrenata/nixos-k3s-configs/`
 5. `sudo nixos-generate-config --root /mnt`
