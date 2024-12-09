@@ -1,0 +1,77 @@
+---
+apiVersion: mongodbcommunity.mongodb.com/v1
+kind: MongoDBCommunity
+metadata:
+  name: unifi-mongodb
+spec:
+#  containers:
+#    volumeMounts:
+#    - name: mongo-ps
+#      mountPath: /data/db
+  members: 1 
+  type: ReplicaSet
+  version: "6.0.19"
+  security:
+    authentication:
+      modes: ["SCRAM-SHA-1"]
+  users:
+    - name: unifi
+      db: admin
+      passwordSecretRef: # a reference to the secret that will be used to generate the user's password
+        name: unifi-user
+      roles:
+        - name: clusterAdmin
+          db: admin
+        - name: readWriteAnyDatabase
+          db: admin
+        - name: dbAdminAnyDatabase
+          db: admin 
+      scramCredentialsSecretName: my-scram 
+  additionalMongodConfig:
+    storage.wiredTiger.engineConfig.journalCompressor: zlib
+ # volumes:
+ # - name: mongo-ps
+ #   persistentVolumeClaim:
+ #     claimName: unifi-data-pvc
+# the user credentials will be generated from this secret
+# once the credentials are generated, this secret is no longer required
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: unifi-user
+type: Opaque
+stringData:
+  password: unifi
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: unifi-mongo-ca
+spec:
+  secretName: unifi-mongodb-ca
+  commonName: "*.unifi-mongodb-svc.unifi-service.cluster.local"
+  dnsNames:
+    - "*.unifi-mongodb-svc.unifi-service.cluster.local"
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  isCA: true
+  issuerRef:
+    name: ca-issuer
+    kind: ClusterIssuer
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: unifi-mongodb-tls
+spec:
+  secretName: unifi-mongodb-tls
+  commonName: "*.unifi-mongodb-svc.unifi-service.cluster.local"
+  dnsNames:
+    - unifi-mongodb-svc.unifi-service.celestium.life
+    - unifi-mongodb-svc.unifi-service
+    - unifi-mongodb-0.celestium.life
+  issuerRef:
+    name: ca-issuer
+    kind: ClusterIssuer
