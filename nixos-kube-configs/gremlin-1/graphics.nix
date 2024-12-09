@@ -23,7 +23,7 @@ in rec {
   };
   hardware.nvidia = {
     open = true;
-    package = config.boot.kernelPackages.nvidiaPackages.production;
+    package = config.boot.kernelPackages.nvidiaPackages.stable;
     nvidiaSettings = true;
   };
   hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
