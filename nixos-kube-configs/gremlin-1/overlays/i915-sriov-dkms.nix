@@ -1,34 +1,34 @@
 prev: final:
 rec {
   intel-gfx-sriov = prev.stdenv.mkDerivation {
-    name = "intel-gfx-sriov-${prev.linuxPackages.kernel.modDirVersion}";
+    name = "intel-gfx-sriov-${prev.kernelPXP.kernel.modDirVersion}";
 
     passthru.moduleName = "intel-gfx-sriov";
 
     src = prev.fetchFromGitHub {
-      owner = "strongtz";
+      owner = "bbaa-bbaa";
       repo = "i915-sriov-dkms";
-      rev = "52020b4f469f9bd40c48e296e9a3e826a11df177";
-      sha256 = "sha256-YwPf8G1v4cVy/EEG3iMKe2wXIYrJY+l+7YZ95kE7T1s=";
+      rev = "07cc8896d28687cbe6416e64373fc21d8b383423";
+      sha256 = "sha256-RVSXLx17ZFjGO1G/g/crAkdBAyGlEqM0iPFDRwnynzc=";
     };
   
     hardeningDisable = [ "pic" ];
   
-    nativeBuildInputs = final.linuxPackages.kernel.moduleBuildDependencies;
+    nativeBuildInputs = prev.kernelPXP.kernel.moduleBuildDependencies;
    
     makeFlags = [
-      "KVERSION=${final.linuxPackages.kernel.modDirVersion}"
-      "KDIR=${final.linuxPackages.kernel.dev}/lib/modules/${final.linuxPackages_6_10.kernel.modDirVersion}/build"
+      "KVERSION=${prev.kernelPXP.kernel.modDirVersion}"
+      "KDIR=${prev.kernelPXP.kernel.dev}/lib/modules/${prev.kernelPXP.kernel.modDirVersion}/build"
     ];
     buildFlags = [
-      "KERNEL_DIR=${final.linuxPackages.kernel.dev}/lib/modules/${final.linuxPackages_6_10.kernel.modDirVersion}/build"
+      "KERNEL_DIR=${prev.kernelPXP.kernel.dev}/lib/modules/${prev.kernelPXP.kernel.modDirVersion}/build"
     ];
     buildPhase = ''
-      make -j8 -C ${final.pkgs.kernel611.kernel.dev}/lib/modules/${final.linuxPackages_6_10.kernel.modDirVersion}/build M=$(pwd) modules
+      make -j8 -C ${prev.pkgs.kernelPXP.kernel.dev}/lib/modules/${prev.kernelPXP.kernel.modDirVersion}/build M=$(pwd) modules
     '';
   
     installPhase = ''
-      install -D i915.ko $out/lib/modules/${final.linuxPackages_6_10.kernel.modDirVersion}/kernel/drivers/gpu/drm/i915/i915.ko
+      install -D i915.ko $out/lib/modules/${prev.kernelPXP.kernel.modDirVersion}/kernel/drivers/gpu/drm/i915/i915.ko
     '';
   };
 }

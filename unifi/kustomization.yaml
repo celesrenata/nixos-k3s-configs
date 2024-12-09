@@ -6,7 +6,7 @@ resources:
   - service.yaml
   - ingress-route.yaml
 images:
-  - name: linuxserver/unifi-controller
+  - name: linuxserver/unifi-network-application
     newTag: latest 
 patches:
   # Set Service to LoadBalancer and Specify IP Address to use

@@ -2,8 +2,16 @@
 # your system. Help is available in the configuration.nix(5) man page, on
 # https://search.nixos.org/options and in the NixOS manual (`nixos-help`).
 
-{ config, pkgs, ... }:
-{
+{ config, lib, pkgs, ... }:
+let
+    pinnedNixPkgs = import (pkgs.fetchFromGitHub {
+      owner = "nixos";
+      repo = "nixpkgs";
+      rev = "459c32e47ea9506113ae61c4a35a45f8a830dba1";
+      hash = "sha256-yaU0Jcam1FXjPcGK9hlA/LRoms24JdU1XNPJ1BlM2q0=";
+    }) { config.allowUnfree = true; };
+in
+rec {
   imports =
     [ # Include the results of the hardware scan.
       ./boot.nix
@@ -24,19 +32,17 @@
   nixpkgs.config.allowUnfree = true;
   nixpkgs.overlays = [
     #(import ./overlays/distcc.nix)
-    (import ./overlays/i915-sriov-dkms.nix)
-    (import ./overlays/intel-firmware.nix)
     (import ./overlays/intel-gfx-sriov.nix)
+    (import ./overlays/intel-firmware.nix)
+    (import ./overlays/i915-sriov-dkms.nix)
     (import ./overlays/kernel.nix)
-    #(import ./overlays/libuv.nix)
   ];
 
-  # VMD Array
+# VMD Array
   boot.swraid = {
     enable = true;
     mdadmConf = "
       MAILADDR celes
-      ARRAY /dev/md126 metadata=1.2 UUID=f1db127f-3533-49b7-9307-263bdcad4b58
     ";
   };
 
@@ -102,11 +108,6 @@
     intel-gpu-tools
     nix-index
     gcc14
-  ];
-
-  # CA Certificate
-  security.pki.certificateFiles = [
-    /kubedata-remote/certs/home.crt
   ];
 
   # Storage Management

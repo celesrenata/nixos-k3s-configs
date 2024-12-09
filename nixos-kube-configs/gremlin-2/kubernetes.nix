@@ -44,4 +44,8 @@
     #"--disable servicelb"
     #"--disable traefik"
   ];
+
+  security.pam.loginLimits = [
+    {domain = "*"; item = "memlock"; type = "-"; value = "unlimited";}
+  ];
 }

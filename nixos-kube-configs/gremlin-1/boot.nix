@@ -17,7 +17,7 @@
   boot.initrd.kernelModules = [ "vmd" "md_mod" "raid0" ];
   
   # See Kernel Overlay
-  boot.kernelPackages = pkgs.kernel611;
+  boot.kernelPackages = pkgs.kernelPXP;
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
   boot.kernelModules = [ "i915" ];
   boot.supportedFilesystems = [ "nfs" ];
@@ -38,4 +38,7 @@
   
   # SR-IOV Module
   boot.extraModulePackages = with pkgs; [ intel-gfx-sriov ];
+
+  # Kubernetes FS problem solver
+  boot.kernel.sysctl."fs.inotify.max_user_instances" = 2147483647;
 }

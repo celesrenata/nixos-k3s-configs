@@ -28,7 +28,6 @@
     (import ./overlays/intel-firmware.nix)
     (import ./overlays/intel-gfx-sriov.nix)
     (import ./overlays/kernel.nix)
-    #(import ./overlays/libuv.nix)
   ];
 
   # VMD Array
@@ -36,7 +35,6 @@
     enable = true;
     mdadmConf = "
       MAILADDR celes
-      ARRAY /dev/md126 metadata=1.2 UUID=d7221e65-1aab-4b19-8bc2-c292deaf94f7
     ";
   };
 
@@ -65,7 +63,7 @@
     ];
     stats.enable = true;
     zeroconf = true;
-  }; 
+  };
 
   # Reset Cluster
   # services.etcd.enable = false;
@@ -104,11 +102,6 @@
     gcc14
   ];
 
-  # CA Certificate
-  security.pki.certificateFiles = [
-    /kubedata-remote/certs/home.crt
-  ];
-
   # Storage Management
   nix.optimise.automatic = true;
   nix.optimise.dates = [ "03:45" ];
@@ -126,6 +119,6 @@
     isNormalUser = true;
   };
 
-  system.stateVersion = "24.11";
+  system.stateVersion = "24.05";
 }
 

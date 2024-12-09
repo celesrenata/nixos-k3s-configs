@@ -49,7 +49,7 @@ let
       links = extraConfig: (runCommand "distcc-links" { passthru.gcc = gcc14.cc; }
         ''
           mkdir -p $out/bin
-          if [ -x "${prev.gcc14.cc}/bin/gcc" ]; then
+          if [ -x "${gcc14.cc}/bin/gcc" ]; then
             cat > $out/bin/gcc << EOF
             #!${runtimeShell}
             ${extraConfig}
