@@ -11,7 +11,7 @@ helm upgrade -i nvdp nvdp/nvidia-device-plugin \
                                       --create-namespace \
                                       --set gfd.enabled=true \
 				      --set runtimeClassName=nvidia \
-				      --set-file config.map.config=mps.yaml
+				      --set-file config.map.config=time-slice.yaml
 
 helm upgrade -i dcgm-exporter gpu-helm-charts/dcgm-exporter \
 	                              --namespace dcgm-exporter \

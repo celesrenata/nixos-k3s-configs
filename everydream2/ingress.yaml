@@ -1,0 +1,47 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: supervisor
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: default-comfyui-stripprefix@kubernetescrd
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    cert-manager.io/cluster-issuer: ca-issuer
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: ed2.celestium.life
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: supervisor
+                port:
+                  number: 28888
+    - host: ed2.dev.celestium.life
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: supervisor
+                port:
+                  number: 28888
+  tls:
+    - hosts:
+        - ed2.celestium.life
+        - ed2.dev.celestium.life
+      secretName: ed2-cert
+---
+# Source: comfyui/templates/ingress.yaml
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: comfyui-stripprefix
+spec:
+  stripPrefix:
+    prefixes:
+      - /assets
+      - /lab

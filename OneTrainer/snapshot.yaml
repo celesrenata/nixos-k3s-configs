@@ -1,0 +1,15 @@
+apiVersion: longhorn.io/v1beta1
+kind: RecurringJob
+metadata:
+  name: onetrainer-snapshot
+  namespace: longhorn-system 
+spec:
+  cron: "0 */2 * * *"
+  task: "snapshot"
+  groups:
+  - onetrainer-service
+  retain: 40
+  concurrency: 2
+  labels:
+    label/1: a
+    label/2: b

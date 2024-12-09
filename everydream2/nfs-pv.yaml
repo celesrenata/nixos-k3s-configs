@@ -1,28 +1,8 @@
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: onetrainer-home
-spec:
-  persistentVolumeReclaimPolicy: Delete
-  capacity:
-    storage: 1000Gi
-  accessModes:
-    - ReadWriteOnce
-    - ReadOnlyMany
-    - ReadWriteMany
-  storageClassName: ""
-  nfs:
-    path: /volume1/Kubernetes/onetrainer/home     # The path to your config 
-    server: 192.168.42.8     # Your NFS server with Media
-  mountOptions:
-    - vers=4
-    - minorversion=1
-    - noac
 ---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: onetrainer-models
+  name: ed2-model
 spec:
   persistentVolumeReclaimPolicy: Delete
   capacity:
@@ -43,7 +23,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: onetrainer-tmp
+  name: ed2-tmp
 spec:
   persistentVolumeReclaimPolicy: Delete
   capacity:

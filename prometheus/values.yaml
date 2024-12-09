@@ -1,0 +1,19 @@
+prometheus:
+  enabled: true
+  prometheusSpec:
+    additionalScrapeConfigs: |
+      - job_name: prometheus
+        static_configs:
+          - targets:
+            - 10.1.1.12:9000
+            - 10.1.1.12:9400
+            - 10.1.1.12:9199
+            - 10.1.1.13:9000
+            - 10.1.1.14:9000
+            - 192.168.42.1:9100
+            - 192.168.42.8:9100
+            - 192.168.42.254:9100
+            - 192.168.42.201:9100
+      - job_name: myapp
+        static_configs: 
+          - targets: ["myapp-service:3000"]

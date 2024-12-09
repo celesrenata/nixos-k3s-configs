@@ -17,7 +17,7 @@
   boot.initrd.kernelModules = [ "vmd" "md_mod" "raid0" ];
   
   # See Kernel Overlay
-  boot.kernelPackages = pkgs.kernel611;
+  boot.kernelPackages = pkgs.kernelPXP;
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
   boot.kernelModules = [ "i915" ];
   boot.supportedFilesystems = [ "nfs" ];

@@ -8,12 +8,12 @@ while read id username hash groups; do
         # Create group
         addgroup --gid $id $username
         # Create user
-        useradd -m -u $id -s /bin/bash -g $username $username
+        useradd -m -u $id -s /bin/bash -g $username -d /workspace $username
         # Set password
         echo "$username:$hash" | /usr/sbin/chpasswd -e
         # Add supplemental groups
         if [ $groups ]; then
                 usermod -aG $groups $username
         fi
-	chown -R $username /home/workspace
+	chown -R $username /workspace
 done < /etc/users.list

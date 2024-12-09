@@ -25,7 +25,9 @@
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   nix.settings.cores = 12;
   nixpkgs.config.allowUnfree = true;
+
   nixpkgs.overlays = [
+    #(import ./overlays/distcc.nix)
     (import ./overlays/i915-sriov-dkms.nix)
     (import ./overlays/intel-firmware.nix)
     (import ./overlays/intel-gfx-sriov.nix)
@@ -61,15 +63,14 @@
   services.distccd = {
     enable = true;
     allowedClients = [
-      "192.168.42.0/24"
+      "192.168.42.0/25"
       "10.1.1.0/24"
       "10.42.0.0/16"
     ];
-    logLevel = "debug";
     stats.enable = true;
     zeroconf = true;
-  }; 
- 
+  };
+
   # Reset Cluster
   # services.etcd.enable = false;
   # KUBELET_PATH=$(mount | grep kubelet | cut -d' ' -f3);
@@ -101,7 +102,9 @@
     screen
     nfs-utils
     openiscsi
+    nvidia-container-toolkit
     nvtopPackages.intel
+    nvtopPackages.nvidia
     intel-gpu-tools
     nix-index
     gcc14
@@ -125,6 +128,6 @@
     isNormalUser = true;
   };
 
-  system.stateVersion = "24.05";
+  system.stateVersion = "24.11";
 }
 

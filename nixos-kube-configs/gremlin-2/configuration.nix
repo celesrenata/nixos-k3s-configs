@@ -28,7 +28,6 @@
     (import ./overlays/intel-firmware.nix)
     (import ./overlays/intel-gfx-sriov.nix)
     (import ./overlays/kernel.nix)
-    #(import ./overlays/libuv.nix)
   ];
 
   # VMD Array
@@ -64,7 +63,7 @@
     ];
     stats.enable = true;
     zeroconf = true;
-  }; 
+  };
 
   # Reset Cluster
   # services.etcd.enable = false;

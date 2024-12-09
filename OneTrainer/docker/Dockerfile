@@ -32,6 +32,12 @@ RUN make
 RUN mkdir -p /tmp/so
 RUN cp src/.libs/*.so /tmp/so
 
+WORKDIR /tmp
+RUN git clone https://github.com/aristocratos/btop.git
+WORKDIR /tmp/btop
+RUN gmake PREFIX=/usr && gmake install && gmake setuid
+
+
 FROM nvidia/cuda:12.5.0-runtime-ubuntu22.04
 ENV TZ=America/Los_Angeles
 ENV DEBIAN_FRONTEND noninteractive
@@ -47,6 +53,7 @@ RUN apt -y full-upgrade && apt-get install -y \
   ca-certificates \
   crudini \
   firefox \
+  kitty \
   less \
   locales \
   openssh-server \
@@ -56,6 +63,7 @@ RUN apt -y full-upgrade && apt-get install -y \
   uuid-runtime \
   vim \
   vlc \
+  rsync \
   wget \
   xauth \
   xautolock \
@@ -72,6 +80,7 @@ RUN apt -y full-upgrade && apt-get install -y \
   xorgxrdp \
   xprintidle \
   xrdp \
+  nvidia-cuda-toolkit \
   $ADDITIONAL_PACKAGES && \
   apt remove -y light-locker xscreensaver && \
   apt autoremove -y && \
@@ -99,13 +108,9 @@ RUN mkdir /var/run/dbus && \
 RUN apt update && apt-get install fonts-droid-fallback ttf-wqy-zenhei ttf-wqy-microhei fonts-arphic-ukai fonts-arphic-uming -y
 RUN apt update && apt install curl htop neofetch python3-pip python3-tk python-is-python3 libjpeg-dev p7zip-full gcc g++ fonts-noto-cjk-extra -y
 
-WORKDIR /home/workspace
+WORKDIR /workspace
 
 #RUN curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj bin/micromamba
-
-ENV PYTHON=python3.10
-ENV ONETRAINER_PATH=/home/workspace/
-ENV PATH="$PATH:$ONETRAINER_PATH"
 
 # python
 RUN apt-get update \
@@ -127,7 +132,7 @@ RUN git clone https://github.com/Nerogar/OneTrainer.git
 
 # RUN
 ENV PYTHON=python3.10
-ENV ONETRAINER_PATH=/home/workspace/
+ENV ONETRAINER_PATH=/workspace/OneTrainer
 ENV PATH="$PATH:$ONETRAINER_PATH"
 WORKDIR $ONETRAINER_PATH
 

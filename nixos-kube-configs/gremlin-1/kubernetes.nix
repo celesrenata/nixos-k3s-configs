@@ -67,7 +67,7 @@
   virtualisation = {
     docker = {
       enable = true;
-      package = pkgs.docker_25;
+      package = pkgs.docker_26;
       enableNvidia = true;
     };
   };
@@ -111,4 +111,7 @@
         };
     };
   };
+  security.pam.loginLimits = [
+    {domain = "*"; item = "memlock"; type = "-"; value = "unlimited";}
+  ];
 }

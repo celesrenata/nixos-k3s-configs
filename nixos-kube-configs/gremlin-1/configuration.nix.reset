@@ -30,7 +30,7 @@
     (import ./overlays/intel-firmware.nix)
     (import ./overlays/intel-gfx-sriov.nix)
     (import ./overlays/kernel.nix)
-    (import ./overlays/nvidia-container-toolkit.nix)
+    #(import ./overlays/nvidia-container-toolkit.nix)
     #(import ./overlays/generic-cdi2.nix)
   ];
 
@@ -101,7 +101,9 @@
     screen
     nfs-utils
     openiscsi
+    nvidia-container-toolkit
     nvtopPackages.intel
+    nvtopPackages.nvidia
     intel-gpu-tools
     nix-index
     gcc14

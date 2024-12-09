@@ -3,6 +3,9 @@
 # Add users
 bash /usr/bin/create-users.sh
 
+# Clone Static Homedir
+rsync -aHx /home/workspace /
+
 # Add the ssh config if needed
 
 if [ ! -f "/etc/ssh/sshd_config" ];
