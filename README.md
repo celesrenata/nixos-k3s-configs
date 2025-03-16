@@ -138,11 +138,13 @@ We can use GPU accelerated VMs for Linux utilizing the iGPU rather than putting 
   * Do not forget to maximize your root partition before completing the partitioning wizard!
   ![Partitioner](https://github.com/celesrenata/nixos-k3s-configs/blob/nvidia/resources/partitioner.png?raw=true)
 3. Setup ssh keys to allow passwordless login as the user
-  * You can clone them from: `scp root@10.1.1.12:.ssh/. ~/.ssh/.`
+  * You can clone them from: `mkdir -p ~/.ssh && scp root@10.1.1.12:.ssh/. ~/.ssh/.`
 4. Modify your `/etc/sudoers` file
   * Replace `%sudo   ALL=(ALL:ALL) ALL` with `%sudo   ALL=(ALL:ALL) NOPASSWD: ALL`
   * This is required for installation, not after.
 4. run `./bootstrap-ubuntu-nfs.sh`
+  * Sometimes it gets stuck on shutdown, you may have to nudge it `virtctl -n vms restart ubuntu-nfs --force=true --grace-period=0`
+  * Sometimes it gets stuck on bootup, you will have to wait for it to complete
 5. Wait
 6. Login via `xfreerdp /cert:ignore /d: /u:USERNAME /v:10.1.1.12:2902 +auto-reconnect +clipboard +home-drive /scale:100 /dynamic-resolution /sound`
   * SSH is available from port `2901`
@@ -153,7 +155,30 @@ We can use GPU accelerated VMs for Linux utilizing the iGPU rather than putting 
   * ![Proxy Deploy Daemon Install](https://github.com/celesrenata/nixos-k3s-configs/blob/nvidia/resources/docker-proxy.png?raw=true)
 2. Configure the manual install daemon
   * ![Docker Manual Daemon Install](https://github.com/celesrenata/nixos-k3s-configs/blob/nvidia/resources/docker-manual-install.png?raw=true)
+3. From Gremlin-1 as a user
+  1. `sudo docker pull ghcr.io/celesrenata/llm2`
+  2. `/etc/nixos/scripts/start-llm2-container.sh`
+4. From your desktop
+  1. `kubectl -n startup-nextcloud get pods`
+  2. Identify the primary nextcloud instance (eg. splinter-nextcloud-6f7f7988d8-8kj4q)
+  3. `kubectl -n startup-nextcloud exec --stdin --tty splinter-nextcloud-6f7f7988d8-8kj4q -- /bin/bash`
+  4. `mkdir scripts && cd scripts`
+  5. ```bash
+cat << EOF > setup-manual-llm2.sh
+#!/usr/bin/env bash
+runuser -u www-data -- php ../occ app_api:app:unregister llm2
+runuser -u www-data -- php ../occ app_api:app:register llm2 manual_install --json-info "{\"id\":\"llm2\",\"name\":\"Local large language model\",\"daemon_config_name\":\"manual_install\",\"version\":\"2.3.3\",\"secret\":\"PSCh4ng3me!!\",\"port\":9080}"
+EOF
+```
+  6. `chmod +x setup-manual-llm2.sh`
+  7. `./setup-manual-llm2.sh`
+    * This will launch the installation of llm2 modified to work with the latest nvidia drivers and to use Llama 3.2 3B Q4_K_S gguf model.
+  8. Watch it install
+    1. `sudo docker ps`
+    2. Identify the Container ID running the Image: `ghcr.io/celesrenata/llm2:latest`
+    3. `sudo docker logs CONTAINERID -f`
+  9. Verify functionality after ensuring it has fully installed after 5 minutes.
 
 ## TODO
 * Resolve Problem (43) in Win11 when passing SR-IOV Intel graphics to it.
-* Write Ubuntu Intel Arc Build Process
+* Resolve Ubuntu-NFS randomly getting stuck on boot and shutdown

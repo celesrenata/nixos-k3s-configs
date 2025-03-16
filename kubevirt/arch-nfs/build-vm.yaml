@@ -19,6 +19,7 @@ spec:
           cores: 8 
           threads: 2
         devices:
+          # Uncomment the following line when you're ready to disable KVM based Graphics for SR-IOV
           #autoattachGraphicsDevice: false
           gpus:
           - deviceName: intel.com/sriov-gpudevice
