@@ -148,6 +148,8 @@ We can use GPU accelerated VMs for Linux utilizing the iGPU rather than putting 
 5. Wait
 6. Login via `xfreerdp /cert:ignore /d: /u:USERNAME /v:10.1.1.12:2902 +auto-reconnect +clipboard +home-drive /scale:100 /dynamic-resolution /sound`
   * SSH is available from port `2901`
+* You should have something like this when complete!
+  ![Ubuntu-NFS](https://github.com/celesrenata/nixos-k3s-configs/blob/nvidia/resources/ubuntu-nfs.png?raw=true)
 
 ## Setup NextCloud
 ### Setup Daemons
@@ -164,12 +166,12 @@ We can use GPU accelerated VMs for Linux utilizing the iGPU rather than putting 
   3. `kubectl -n startup-nextcloud exec --stdin --tty splinter-nextcloud-6f7f7988d8-8kj4q -- /bin/bash`
   4. `mkdir scripts && cd scripts`
   5. ```bash
-cat << EOF > setup-manual-llm2.sh
-#!/usr/bin/env bash
-runuser -u www-data -- php ../occ app_api:app:unregister llm2
-runuser -u www-data -- php ../occ app_api:app:register llm2 manual_install --json-info "{\"id\":\"llm2\",\"name\":\"Local large language model\",\"daemon_config_name\":\"manual_install\",\"version\":\"2.3.3\",\"secret\":\"PSCh4ng3me!!\",\"port\":9080}"
-EOF
-```
+        cat << EOF > setup-manual-llm2.sh
+        #!/usr/bin/env bash
+        runuser -u www-data -- php ../occ app_api:app:unregister llm2
+        runuser -u www-data -- php ../occ app_api:app:register llm2 manual_install --json-info "{\"id\":\"llm2\",\"name\":\"Local large language model\",\"daemon_config_name\":\"manual_install\",\"version\":\"2.3.3\",\"secret\":\"PSCh4ng3me!!\",\"port\":9080}"
+        EOF
+     ```
   6. `chmod +x setup-manual-llm2.sh`
   7. `./setup-manual-llm2.sh`
     * This will launch the installation of llm2 modified to work with the latest nvidia drivers and to use Llama 3.2 3B Q4_K_S gguf model.
