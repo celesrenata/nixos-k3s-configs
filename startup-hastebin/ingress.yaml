@@ -1,0 +1,47 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hastebin-http
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    traefik.ingress.kubernetes.io/router.middlewares: default-redirectscheme@kubernetescrd
+  labels:
+    app: hastebin
+spec:
+  rules:
+    - host: hastebin.startup.celestium.celestium.life
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: hastebin
+                port:
+                  number: 7777
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hastebin-https
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    cert-manager.io/cluster-issuer: startup-le-production 
+  labels:
+    app: hastebin
+spec:
+  rules:
+    - host: hastebin.startup.celestium.life
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: hastebin
+                port:
+                  number: 7777
+  tls:
+    - hosts:
+        - hastebin.startup.celestium.life
+      secretName: startup-hastebin-cert

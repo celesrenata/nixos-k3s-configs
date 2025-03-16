@@ -9,6 +9,6 @@ services:
     ports:
       - 5005:5005
     environment:
-      - PASSWORD=renata
+      - PASSWORD=PSCh4ng3me!
     restart: unless-stopped
 

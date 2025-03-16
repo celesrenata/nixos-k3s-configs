@@ -1,0 +1,35 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+# Name the Ingress resource
+  name: startup-hastebin-https
+  annotations:
+    # Use Traefik as the Ingress controller
+    spec.ingressClassName: traefik
+    # Add Cert-Manager SSL certificates as the name of the ClusterIssuer resource
+    cert-manager.io/cluster-issuer: startup-letsencrypt
+spec:
+  # TLS configuration for HTTPS
+  tls:
+    # TLS secretName used on ClusterIssuer
+     - hosts:
+        # Replace with your domain name
+        - hastebin.startupstice.celestium.life
+    secretName: startup.celestium.letsencrypt.key.tls
+  # Create Ingress routing rules
+  rules:
+  # Replace with your domain name
+  - host: hastebin.startupstice.celestium.life
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+           # Name of your service resource
+            name: hastebin
+            port:
+             # Port number to forward traffic to
+              number: 7777
+
+

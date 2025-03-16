@@ -1,13 +1,14 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: mariabackup
+  name: startup-rb-data-pvc
 spec:
-  volumeName: mariabackup
+  volumeName: startup-rb-data
   storageClassName: ""
   accessModes:
-  - ReadWriteOnce
+    - ReadWriteOnce
+    - ReadWriteMany
   resources:
     requests:
-      storage: 100Gi
+      storage: 10Gi
 status: {}

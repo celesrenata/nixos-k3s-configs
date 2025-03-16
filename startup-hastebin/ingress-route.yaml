@@ -1,0 +1,20 @@
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: hastebin-ingress-route
+  annotations:
+    spec.ingressClassName: traefik
+    cert-manager.io/cluster-issuer: startup-le-production
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`hastebin.startup.celestium.life`)
+      kind: Rule
+      services:
+      - name: hastebin
+        port: 7777
+        scheme: http
+  tls:
+    secretName: startup.celestium.letsencrypt.key.tls

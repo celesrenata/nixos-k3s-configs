@@ -1,13 +1,12 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: mariabackup
+  name: startup-hastebin-nfs-pvc
 spec:
-  volumeName: mariabackup
+  volumeName: startup-hastebin-nfs
   storageClassName: ""
   accessModes:
-  - ReadWriteOnce
+    - ReadWriteOnce
   resources:
     requests:
-      storage: 100Gi
-status: {}
+      storage: 1Gi
