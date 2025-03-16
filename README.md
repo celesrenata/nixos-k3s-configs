@@ -7,6 +7,7 @@
 * Dashboard
 * EveryDream2
 * Flame
+  ![Flame](https://github.com/celesrenata/nixos-k3s-configs/blob/nvidia/resources/flame.png?raw=true)
 * Grafana
 * Hastebin
 * Home Assistant
@@ -25,6 +26,7 @@
 * Ollama
 * OneTrainer
 * Open-WebUI (For Ollama)
+  ![Ollama](https://github.com/celesrenata/nixos-k3s-configs/blob/nvidia/resources/ollama.png?raw=true)
 * PHPMyAdmin
 * Portainer
 * Prometheus
@@ -45,10 +47,22 @@
 ### Features
 
 * Support for Nvidia Drivers Version: 570.86.16
+* Support for Latest ComfyUI and ComfUI-Manager
+  ![ComfyUI](https://github.com/celesrenata/nixos-k3s-configs/blob/nvidia/resources/comfyui.png?raw=true)
 * Support for Let's Encrypt
+* Added OneTrainer
+  ![OneTrainer](https://github.com/celesrenata/nixos-k3s-configs/blob/nvidia/resources/onetrainer.png?raw=true)
+* Added SteamVR
+  ![SteamVR](https://github.com/celesrenata/nixos-k3s-configs/blob/nvidia/resources/steamvr.mp4?raw=true)
+* Added Blender 4.3.1
+  * CUDA Support
+  * OptiX Support
+![Blender](https://github.com/celesrenata/nixos-k3s-configs/blob/nvidia/resources/beldner.png?raw=true)
 * Added startup-drawio project
 * Added startup-hastebin
 * Added startup-nextcloud
+  ![NextCloud-1](https://github.com/celesrenata/nixos-k3s-configs/blob/nvidia/resources/nextcloud-1.png?raw=true)
+  ![NextCloud-2](https://github.com/celesrenata/nixos-k3s-configs/blob/nvidia/resources/nextcloud-2.png?raw=true)
   * Added Support for Nvidia Docker Containers on Gremlin-1
   * Added Support for Self Signed email servers (we're not using it though!)
   * Added Support for deploy daemon and manual-install
@@ -56,11 +70,6 @@
   * Added Gmail SMTP Relay Support
 * Added startup-wekan
 * Added startup-wikijs
-
-### Todo
-* Add directions to setup deploy daemon w/ CUDA to Gremlin-1
-* Add directions to setup manual-install daemon w/ CUDA to Gremlin-1
-* Add directions to deploy modified llm2 container
 
 ## Prerequisites
 * 3x Intel 14th Gen Processors with the 185H or similar. I use BeeLink.
