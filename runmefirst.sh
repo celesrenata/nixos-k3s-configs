@@ -25,9 +25,9 @@ unifi
 kubevirt
 clusterplex
 kubevirt/winvm-nfs
-kubevirt/al2023
-kubevirt/arch
-kubevirt/nixos'
+kubevirt/ubuntu-nfs
+kubevirt/arch-nfs
+kubevirt/nixos-nfs'
 
 #intel
 # Build Project List

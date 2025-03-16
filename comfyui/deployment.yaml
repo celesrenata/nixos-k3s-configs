@@ -30,8 +30,8 @@ spec:
         - name: comfyui
           securityContext:
             {}
-          image: "ghcr.io/celesrenata/comfyui-onprem-k8s:comfyui-5e29e7a"
-          imagePullPolicy: IfNotPresent
+          image: "ghcr.io/celesrenata/comfyui-onprem-k8s:comfyui-39b1fc4"
+          imagePullPolicy: Always
           ports:
             - name: http
               containerPort: 50000

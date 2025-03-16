@@ -109,7 +109,17 @@ Ollama is controlled via the IPEX fleet within the `kubevirt` directory
 If you have more than 32GB of ram per Node you can then use Ipex-LLM Ollama!
 `kubevirt/ipex-1x/runmefirst.sh`
 
+## Setup SteamVR or Blender
+* Navigate to the SteamVR/Blender directory
+* `cd etc`
+* `./generate_password.sh`
+* Edit the `Makefile` to point to your own repo
+* `make docker-build`
+* `make docker-push`
+* Modify `deployment.yaml` to point to your repo
+  * Make sure to map the package to your repo
+  * Make sure to mark the package public
+ 
 ## TODO
-* Rebuild Unifi Controller
 * Resolve Problem (43) in Win11 when passing SR-IOV Intel graphics to it.
-
+* Write Ubuntu Intel Arc Build Process

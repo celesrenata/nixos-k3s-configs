@@ -1,0 +1,64 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: steamvr 
+spec:
+  ports:
+    - name: "trainer-ssh"
+      nodePort: 32754
+      port: 3901
+      protocol: TCP
+      targetPort: 22
+    - name: "trainer-rdp"
+      port: 3902
+      protocol: TCP
+      targetPort: 3389
+    - name: "steamvr1"
+      port: 27036
+      protocol: TCP
+      targetPort: 27036
+    - name: "steamvr2"
+      port: 27037
+      protocol: TCP
+      targetPort: 37037
+    - name: "steamvr3"
+      port: 10400
+      protocol: UDP
+      targetPort: 10400
+    - name: "steamvr4"
+      port: 10401
+      protocol: UDP
+      targetPort: 10401
+    - name: "alvr1"
+      port: 9943
+      protocol: TCP
+    - name: "alvr2"
+      port: 9943
+      protocol: UDP
+    - name: "alvr3"
+      port: 9944
+      protocol: TCP
+    - name: "alvr4"
+      port: 9944
+      protocol: UDP
+  selector:
+    io.kompose.service: steamvr
+  sessionAffinity: None
+  type: LoadBalancer
+status:
+  loadBalancer: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: steamvr-node-exporter
+  labels:
+    prometheus.kubevirt.io: "node-exporter"
+spec:
+  ports:
+  - name: metrics
+    port: 9100
+    targetPort: 9100
+    protocol: TCP
+  selector:
+    prometheus.kubevirt.io: "node-exporter"

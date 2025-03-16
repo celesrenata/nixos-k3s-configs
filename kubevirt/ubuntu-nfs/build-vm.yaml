@@ -1,0 +1,58 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  creationTimestamp: null
+  labels:
+    kubevirt.io/vm: ubuntu-nfs
+  name: ubuntu-nfs
+spec:
+  running: true 
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: ubuntu-nfs
+        prometheus.kubevirt.io: "node-exporter" 
+    spec:
+      domain:
+        cpu:
+          sockets: 1
+          cores: 4
+          threads: 2
+        devices:
+          autoattachGraphicsDevice: false
+          gpus:
+          - deviceName: intel.com/sriov-gpudevice
+            name: gpu1
+          disks:
+          - disk:
+              bus: virtio
+            name: ubuntu-nfs-data-volume-pv
+          - cdrom:
+              bus: sata
+            name: ubuntuiso
+        machine:
+          type: q35
+        features:
+          acpi:
+            enabled: true
+          apic:
+            enabled: true
+          smm: {}
+        firmware:
+          bootloader:
+            efi:
+              secureBoot: false
+          uuid: 5d307ca9-b3ef-428c-8861-06e72d69f223
+        resources:
+          requests:
+            cpu: 0.1
+            memory: 16G
+      terminationGracePeriodSeconds: 180
+      volumes:
+      - name: ubuntu-nfs-data-volume-pv 
+        persistentVolumeClaim:
+          claimName: disk-ubuntu-nfs-pvc
+      - name: ubuntuiso
+        persistentVolumeClaim:
+          claimName: ubuntu-server-iso-pvc
+status: {}

@@ -1,0 +1,11 @@
+persistence:
+  enabled: true
+  existingVolume: "ha-data"
+  accessMode: ReadWriteOnce
+  size: 10Gi
+  storageClass: "nfs"
+configuration:
+  enabled: true
+  trusted_proxies: [ "10.42.0.0/16" ]
+ingress:
+  enabled: true

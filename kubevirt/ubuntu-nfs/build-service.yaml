@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ubuntu-nfs-ssh 
+spec:
+  ports:
+    - name: "ssh"
+      port: 2901 
+      protocol: TCP
+      targetPort: 22
+    - name: "rdp"
+      port: 2902
+      protocol: TCP
+      targetPort: 3389
+  selector:
+    kubevirt.io/vm: ubuntu-nfs
+  sessionAffinity: None
+  type: LoadBalancer
+status:
+  loadBalancer: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ubuntu-nfs-node-exporter
+  labels:
+    prometheus.kubevirt.io: "node-exporter"
+spec:
+  ports:
+  - name: metrics
+    port: 9100
+    targetPort: 9100
+    protocol: TCP
+  selector:
+    prometheus.kubevirt.io: "node-exporter"

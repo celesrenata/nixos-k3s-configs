@@ -1,0 +1,14 @@
+version: '3.6'
+
+services:
+  flame:
+    image: pawelmalak/flame
+    container_name: flame
+    volumes:
+      - /path/to/host/data:/app/data
+    ports:
+      - 5005:5005
+    environment:
+      - PASSWORD=renata
+    restart: unless-stopped
+
