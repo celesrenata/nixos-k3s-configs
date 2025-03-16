@@ -119,6 +119,17 @@ If you have more than 32GB of ram per Node you can then use Ipex-LLM Ollama!
 * Modify `deployment.yaml` to point to your repo
   * Make sure to map the package to your repo
   * Make sure to mark the package public
+
+## Setup Ubuntu / Arch / NixOS / Win11 KubeVirts
+* Each of the VMs make use of (X)RDP and the software display isn't necessary after installation of the OSes
+1. Install the OS on each host you need
+2. Install (X)RDP Support
+3. Verify (X)RDP Connects
+4. Shutdown the VM
+5. run `kubectl -n vms get vms`
+6. run `kubectl -n vms delete vm vmname`
+7. edit the `vm.yaml` in its corresponding `kubevirt/OSNAME-nfs` directory and uncomment the designated line
+8. rerun `runmefirst.sh` in the corresponding `kubevirt/OSNAME-nfs` directory
  
 ## TODO
 * Resolve Problem (43) in Win11 when passing SR-IOV Intel graphics to it.
