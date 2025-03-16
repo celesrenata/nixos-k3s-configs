@@ -130,7 +130,14 @@ If you have more than 32GB of ram per Node you can then use Ipex-LLM Ollama!
 6. run `kubectl -n vms delete vm vmname`
 7. edit the `vm.yaml` in its corresponding `kubevirt/OSNAME-nfs` directory and uncomment the designated line
 8. rerun `runmefirst.sh` in the corresponding `kubevirt/OSNAME-nfs` directory
- 
+
+## Setup NextCloud
+### Setup Daemons
+1. Configure the proxy daemon
+  * ![Proxy Deploy Daemon Install](https://github.com/celesrenata/nixos-k3s-configs/blob/nvidia/resources/docker-manual-install.png?raw=true)
+2. Configure the manual install daemon
+  * ![Docker Manual Daemon Install](https://github.com/celesrenata/nixos-k3s-configs/blob/nvidia/resources/docker-manual-install.png?raw=true)
+
 ## TODO
 * Resolve Problem (43) in Win11 when passing SR-IOV Intel graphics to it.
 * Write Ubuntu Intel Arc Build Process
