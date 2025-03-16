@@ -131,10 +131,26 @@ If you have more than 32GB of ram per Node you can then use Ipex-LLM Ollama!
 7. edit the `vm.yaml` in its corresponding `kubevirt/OSNAME-nfs` directory and uncomment the designated line
 8. rerun `runmefirst.sh` in the corresponding `kubevirt/OSNAME-nfs` directory
 
+### Enable SR-IOV Intel Arc Support in Ubuntu
+We can use GPU accelerated VMs for Linux utilizing the iGPU rather than putting extra load on the CPU
+1. `virtctl vnc ubuntu-nfs -n vms`
+2. Complete the setup process
+  * Do not forget to maximize your root partition before completing the partitioning wizard!
+  ![Partitioner](https://github.com/celesrenata/nixos-k3s-configs/blob/nvidia/resources/partitioner.png?raw=true)
+3. Setup ssh keys to allow passwordless login as the user
+  * You can clone them from: `scp root@10.1.1.12:.ssh/. ~/.ssh/.`
+4. Modify your `/etc/sudoers` file
+  * Replace `%sudo   ALL=(ALL:ALL) ALL` with `%sudo   ALL=(ALL:ALL) NOPASSWD: ALL`
+  * This is required for installation, not after.
+4. run `./bootstrap-ubuntu-nfs.sh`
+5. Wait
+6. Login via `xfreerdp /cert:ignore /d: /u:USERNAME /v:10.1.1.12:2902 +auto-reconnect +clipboard +home-drive /scale:100 /dynamic-resolution /sound`
+  * SSH is available from port `2901`
+
 ## Setup NextCloud
 ### Setup Daemons
 1. Configure the proxy daemon
-  * ![Proxy Deploy Daemon Install](https://github.com/celesrenata/nixos-k3s-configs/blob/nvidia/resources/docker-manual-install.png?raw=true)
+  * ![Proxy Deploy Daemon Install](https://github.com/celesrenata/nixos-k3s-configs/blob/nvidia/resources/docker-proxy.png?raw=true)
 2. Configure the manual install daemon
   * ![Docker Manual Daemon Install](https://github.com/celesrenata/nixos-k3s-configs/blob/nvidia/resources/docker-manual-install.png?raw=true)
 
