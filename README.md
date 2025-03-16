@@ -63,7 +63,7 @@
 * Add directions to deploy modified llm2 container
 
 ## Prerequisites
-* 3x Intel 13th Gen Processors with the 185H or similar. I use BeeLink.
+* 3x Intel 14th Gen Processors with the 185H or similar. I use BeeLink.
    * Will also work on ARC dGPUs with a little fiddling
 * Seperate VLAN for your Kube Cluster
 
