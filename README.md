@@ -53,7 +53,7 @@
 * Added OneTrainer
   ![OneTrainer](https://github.com/celesrenata/nixos-k3s-configs/blob/nvidia/resources/onetrainer.png?raw=true)
 * Added SteamVR
-  ![SteamVR](https://github.com/celesrenata/nixos-k3s-configs/blob/nvidia/resources/steamvr.mp4?raw=true)
+  ![SteamVR](https://github.com/celesrenata/nixos-k3s-configs/blob/nvidia/resources/steamvr.png?raw=true)
 * Added Blender 4.3.1
   * CUDA Support
   * OptiX Support
