@@ -57,7 +57,7 @@
 * Added Blender 4.3.1
   * CUDA Support
   * OptiX Support
-![Blender](https://github.com/celesrenata/nixos-k3s-configs/blob/nvidia/resources/beldner.png?raw=true)
+![Blender](https://github.com/celesrenata/nixos-k3s-configs/blob/nvidia/resources/blender.png?raw=true)
 * Added startup-drawio project
 * Added startup-hastebin
 * Added startup-nextcloud
