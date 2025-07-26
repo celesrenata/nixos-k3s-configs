@@ -1,0 +1,25 @@
+# Nix build results
+result
+result-*
+
+# Hardware configuration (system-specific)
+hardware-configuration.nix
+
+# Backup files
+*.bak
+*.old
+
+# Temporary files
+.#*
+*~
+
+# Old overlays and configurations we replaced
+overlays-6.1/
+overlays/i915-sriov-dkms.nix.bak
+overlays/intel-gfx-sriov.nix.bak
+
+# Legacy files
+configuration.nix
+boot.nix
+graphics.nix
+remote-build.nix
