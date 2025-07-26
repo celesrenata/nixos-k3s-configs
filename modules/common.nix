@@ -30,7 +30,7 @@
 
   # CA Certificate
   security.pki.certificateFiles = [
-    ../.config/Certificates/home.crt
+    ./.config/Certificates/home.crt
   ];
 
   # DistCC configuration
