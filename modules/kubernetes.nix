@@ -87,26 +87,11 @@ in
       };
     }
     (lib.mkIf hasNvidia {
-      nvidia-container-toolkit-cdi-generator = {
-        description = "Generate NVIDIA CDI specs";
-        wantedBy = [ "multi-user.target" ];
-        after = [ "nvidia-container-toolkit.service" ];
-        serviceConfig = {
-          Type = "oneshot";
-          RemainAfterExit = true;
-          ExecStart = "${pkgs.nvidia-container-toolkit}/bin/nvidia-ctk cdi generate --output=/var/run/cdi/nvidia.yaml";
-        };
-        environment = {
-          LD_LIBRARY_PATH = "${config.hardware.nvidia.package}/lib";
-          PATH = lib.mkForce "${pkgs.nvidia-container-toolkit}/bin:${config.hardware.nvidia.package}/bin:/run/current-system/sw/bin";
-        };
-      };
-      
       # Ensure CDI directory exists
       nvidia-cdi-setup = {
         description = "Setup NVIDIA CDI directory";
         wantedBy = [ "multi-user.target" ];
-        before = [ "nvidia-container-toolkit-cdi-generator.service" ];
+        before = [ "nvidia-container-toolkit.service" ];
         serviceConfig = {
           Type = "oneshot";
           RemainAfterExit = true;
