@@ -2,7 +2,7 @@
 
 {
   imports = [
-    ../../hardware-configuration.nix  # You'll need to create this for gremlin-4
+    ./hardware-configuration.nix
   ];
 
   # System-specific networking (assuming next IP in sequence)
