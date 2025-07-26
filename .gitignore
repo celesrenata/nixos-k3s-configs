@@ -13,6 +13,9 @@ hardware-configuration.nix
 .#*
 *~
 
+# Certificates and sensitive config
+.config/
+
 # Old overlays and configurations we replaced
 overlays-6.1/
 overlays/i915-sriov-dkms.nix.bak
