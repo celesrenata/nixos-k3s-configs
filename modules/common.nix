@@ -28,9 +28,9 @@
     '';
   };
 
-  # CA Certificate
-  security.pki.certificateFiles = [
-    /etc/nixos/.config/Certificates/home.crt
+  # CA Certificate (conditional based on file existence)
+  security.pki.certificateFiles = lib.optionals (builtins.pathExists (./.. + "/.config/Certificates/home.crt")) [
+    (./.. + "/.config/Certificates/home.crt")
   ];
 
   # DistCC configuration
