@@ -62,11 +62,11 @@ in
               runtime_type = "io.containerd.runc.v2"
 
               [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia.options]
-                BinaryName = "${pkgs.nvidia-container-toolkit}/bin/nvidia-container-runtime"
+                BinaryName = "${pkgs.nvidia-container-toolkit.tools}/bin/nvidia-container-runtime"
                 SystemdCgroup = true
 
               [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia.env]
-                PATH = "${pkgs.nvidia-container-toolkit}/bin:${pkgs.libnvidia-container}/bin:/run/current-system/sw/bin"
+                PATH = "${pkgs.nvidia-container-toolkit.tools}/bin:${pkgs.libnvidia-container}/bin:/run/current-system/sw/bin"
 
           [plugins."io.containerd.grpc.v1.cri"]
             enable_cdi = true
@@ -157,11 +157,11 @@ in
                   priviledged_without_host_devices = false;
                   runtime_type = "io.containerd.runc.v2"; 
                   options = {
-                    BinaryName = "${pkgs.nvidia-container-toolkit}/bin/nvidia-container-runtime";
+                    BinaryName = "${pkgs.nvidia-container-toolkit.tools}/bin/nvidia-container-runtime";
                     SystemdCgroup = true;
                   };
                   env = [
-                    "PATH=${pkgs.nvidia-container-toolkit}/bin:${pkgs.libnvidia-container}/bin:/run/current-system/sw/bin"
+                    "PATH=${pkgs.nvidia-container-toolkit.tools}/bin:${pkgs.libnvidia-container}/bin:/run/current-system/sw/bin"
                   ];
                 };
               })
@@ -179,7 +179,7 @@ in
   # Ensure nvidia-container-cli and related tools are in PATH for NVIDIA nodes
   environment.variables = lib.mkIf hasNvidia {
     PATH = lib.mkAfter [ 
-      "${pkgs.nvidia-container-toolkit}/bin" 
+      "${pkgs.nvidia-container-toolkit.tools}/bin" 
       "${pkgs.libnvidia-container}/bin"
     ];
   };
