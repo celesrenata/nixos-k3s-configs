@@ -18,8 +18,8 @@ overlays-6.1/
 overlays/i915-sriov-dkms.nix.bak
 overlays/intel-gfx-sriov.nix.bak
 
-# Legacy files
-configuration.nix
-boot.nix
-graphics.nix
-remote-build.nix
+# Legacy files in root directory (not modules/)
+/configuration.nix
+/boot.nix
+/graphics.nix
+/remote-build.nix
