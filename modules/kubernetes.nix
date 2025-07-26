@@ -61,7 +61,7 @@ in
               runtime_type = "io.containerd.runc.v2"
 
               [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia.options]
-                BinaryName = "/run/current-system/sw/bin/nvidia-container-runtime"
+                BinaryName = "${pkgs.nvidia-container-toolkit}/bin/nvidia-container-runtime"
 
           [plugins."io.containerd.grpc.v1.cri"]
             enable_cdi = true
@@ -88,7 +88,30 @@ in
     }
     (lib.mkIf hasNvidia {
       nvidia-container-toolkit-cdi-generator = {
-        environment.LD_LIBRARY_PATH = "${config.hardware.nvidia.package}/lib";
+        description = "Generate NVIDIA CDI specs";
+        wantedBy = [ "multi-user.target" ];
+        after = [ "nvidia-container-toolkit.service" ];
+        serviceConfig = {
+          Type = "oneshot";
+          RemainAfterExit = true;
+          ExecStart = "${pkgs.nvidia-container-toolkit}/bin/nvidia-ctk cdi generate --output=/var/run/cdi/nvidia.yaml";
+        };
+        environment = {
+          LD_LIBRARY_PATH = "${config.hardware.nvidia.package}/lib";
+          PATH = lib.mkForce "${pkgs.nvidia-container-toolkit}/bin:${config.hardware.nvidia.package}/bin:/run/current-system/sw/bin";
+        };
+      };
+      
+      # Ensure CDI directory exists
+      nvidia-cdi-setup = {
+        description = "Setup NVIDIA CDI directory";
+        wantedBy = [ "multi-user.target" ];
+        before = [ "nvidia-container-toolkit-cdi-generator.service" ];
+        serviceConfig = {
+          Type = "oneshot";
+          RemainAfterExit = true;
+          ExecStart = "${pkgs.coreutils}/bin/mkdir -p /var/run/cdi";
+        };
       };
     })
   ];
@@ -129,7 +152,7 @@ in
                   priviledged_without_host_devices = false;
                   runtime_type = "io.containerd.runc.v2"; 
                   options = {
-                    BinaryName = "${pkgs.nvidia-container-toolkit.tools}/bin/nvidia-container-runtime";
+                    BinaryName = "${pkgs.nvidia-container-toolkit}/bin/nvidia-container-runtime";
                   };
                 };
               })
@@ -142,6 +165,11 @@ in
         ];
       };
     };
+  };
+
+  # Ensure nvidia-container-cli and related tools are in PATH for NVIDIA nodes
+  environment.variables = lib.mkIf hasNvidia {
+    PATH = lib.mkAfter [ "${pkgs.nvidia-container-toolkit}/bin" ];
   };
 
   security.pam.loginLimits = [
