@@ -30,7 +30,7 @@
 
   # CA Certificate
   security.pki.certificateFiles = [
-    ./.config/Certificates/home.crt
+    /etc/nixos/.config/Certificates/home.crt
   ];
 
   # DistCC configuration
