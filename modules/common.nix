@@ -45,8 +45,9 @@
     zeroconf = true;
   };
 
-  # Reset mode: disable etcd when in reset mode
-  services.etcd.enable = !resetMode;
+  # Disable standalone etcd - K3s uses its own embedded etcd cluster
+  # This prevents port conflicts on 2380 between standalone etcd and K3s embedded etcd
+  services.etcd.enable = false;
 
   nix.extraOptions = ''
     require-sigs = false

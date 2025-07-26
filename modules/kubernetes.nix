@@ -20,12 +20,15 @@ in
     nvidia-container-toolkit
   ];
 
-  # Kubernetes Service
+  # Kubernetes Service - conditional configuration based on hostname
   services.k3s = {
     enable = true;
     role = "server";
-    token = "532a3cf6ea"; 
-    clusterInit = true;
+    token = "532a3cf6ea";
+    # Only gremlin-1 initializes the cluster, others join it
+    clusterInit = (config.networking.hostName == "gremlin-1");
+    # Non-leader servers need to know where to connect
+    serverAddr = lib.mkIf (config.networking.hostName != "gremlin-1") "https://10.1.1.12:6443";
     extraFlags = (toString [
       "--container-runtime-endpoint unix:///run/containerd/containerd.sock"
     ]); 
