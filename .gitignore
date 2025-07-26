@@ -2,8 +2,8 @@
 result
 result-*
 
-# Hardware configuration (system-specific)
-hardware-configuration.nix
+# Hardware configuration (system-specific, but allow templates in hosts/)
+/hardware-configuration.nix
 
 # Backup files
 *.bak
