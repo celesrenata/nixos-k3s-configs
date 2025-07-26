@@ -18,6 +18,7 @@ in
     kubernetes-helm
   ] ++ lib.optionals hasNvidia [
     nvidia-container-toolkit
+    libnvidia-container  # Provides nvidia-container-cli
   ];
 
   # Kubernetes Service - conditional configuration based on hostname
@@ -154,7 +155,10 @@ in
 
   # Ensure nvidia-container-cli and related tools are in PATH for NVIDIA nodes
   environment.variables = lib.mkIf hasNvidia {
-    PATH = lib.mkAfter [ "${pkgs.nvidia-container-toolkit}/bin" ];
+    PATH = lib.mkAfter [ 
+      "${pkgs.nvidia-container-toolkit}/bin" 
+      "${pkgs.libnvidia-container}/bin"
+    ];
   };
 
   security.pam.loginLimits = [
