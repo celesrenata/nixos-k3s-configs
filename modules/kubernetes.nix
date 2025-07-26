@@ -63,6 +63,10 @@ in
 
               [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia.options]
                 BinaryName = "${pkgs.nvidia-container-toolkit}/bin/nvidia-container-runtime"
+                SystemdCgroup = true
+
+              [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia.env]
+                PATH = "${pkgs.nvidia-container-toolkit}/bin:${pkgs.libnvidia-container}/bin:/run/current-system/sw/bin"
 
           [plugins."io.containerd.grpc.v1.cri"]
             enable_cdi = true
@@ -97,6 +101,21 @@ in
           Type = "oneshot";
           RemainAfterExit = true;
           ExecStart = "${pkgs.coreutils}/bin/mkdir -p /var/run/cdi";
+        };
+      };
+
+      # Create symlinks for nvidia-container-cli in standard locations
+      nvidia-container-cli-setup = {
+        description = "Setup NVIDIA container CLI symlinks";
+        wantedBy = [ "multi-user.target" ];
+        before = [ "k3s.service" ];
+        serviceConfig = {
+          Type = "oneshot";
+          RemainAfterExit = true;
+          ExecStart = [
+            "${pkgs.coreutils}/bin/mkdir -p /usr/bin"
+            "${pkgs.coreutils}/bin/ln -sf ${pkgs.libnvidia-container}/bin/nvidia-container-cli /usr/bin/nvidia-container-cli"
+          ];
         };
       };
     })
@@ -139,7 +158,11 @@ in
                   runtime_type = "io.containerd.runc.v2"; 
                   options = {
                     BinaryName = "${pkgs.nvidia-container-toolkit}/bin/nvidia-container-runtime";
+                    SystemdCgroup = true;
                   };
+                  env = [
+                    "PATH=${pkgs.nvidia-container-toolkit}/bin:${pkgs.libnvidia-container}/bin:/run/current-system/sw/bin"
+                  ];
                 };
               })
             ];
