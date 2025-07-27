@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, inputs, ... }:
 let
   gpl_symbols_linux_615_patch = pkgs.fetchpatch {
     url = "https://github.com/CachyOS/kernel-patches/raw/914aea4298e3744beddad09f3d2773d71839b182/6.15/misc/nvidia/0003-Workaround-nv_vm_flags_-calling-GPL-only-code.patch";
@@ -16,6 +16,11 @@ let
     patches = [ gpl_symbols_linux_615_patch ];
   });
 in {
+  # Import the shared i915-sriov patched module
+  imports = [
+    ./i915-sriov-patched.nix
+  ];
+
   # Add NVIDIA-specific overlays
   nixpkgs.overlays = [
     (import ../overlays/nvidia-container-toolkit.nix)
@@ -46,13 +51,9 @@ in {
   hardware.enableRedistributableFirmware = true;
   hardware.enableAllFirmware = true;
 
-  # Custom iGPU Firmware for Arc iGPU
-  hardware.firmware = [
-    pkgs.linux-firmwareOverride
-  ];
-
-  # Enable Intel SR-IOV support via the flake (for Intel iGPU alongside NVIDIA)
-  boot.extraModulePackages = [ pkgs.i915-sriov ];
+  # Use standard Linux firmware instead of custom override
+  # Removed: pkgs.linux-firmwareOverride
+  # This uses the standard NixOS firmware packages for better stability
 
   services.xserver = {
     enable = false;

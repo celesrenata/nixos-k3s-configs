@@ -1,6 +1,11 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, inputs, ... }:
 
 {
+  # Import the shared i915-sriov patched module
+  imports = [
+    ./i915-sriov-patched.nix
+  ];
+
   # Add Intel-specific packages
   environment.systemPackages = with pkgs; [
     nvtopPackages.intel
@@ -18,11 +23,7 @@
   hardware.enableRedistributableFirmware = true;
   hardware.enableAllFirmware = true;
 
-  # Custom iGPU Firmware for Arc iGPU
-  hardware.firmware = [
-    pkgs.linux-firmwareOverride
-  ];
-
-  # Enable Intel SR-IOV support via the flake
-  boot.extraModulePackages = [ pkgs.i915-sriov ];
+  # Use standard Linux firmware instead of custom override
+  # Removed: pkgs.linux-firmwareOverride
+  # This uses the standard NixOS firmware packages for better stability
 }

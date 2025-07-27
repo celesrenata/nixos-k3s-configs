@@ -21,12 +21,11 @@
         modules = [
           ./hosts/${hostname}/configuration.nix
           ./modules/common.nix
+          # Graphics modules now include comprehensive i915-sriov patches for all systems
           (if hasNvidia then ./modules/graphics-nvidia.nix else ./modules/graphics-intel.nix)
           ./modules/networking.nix
           ./modules/virtualisation.nix
           ./modules/ups.nix
-          # Include i915-sriov module for Intel SR-IOV support
-          i915-sriov.nixosModules.default
           # Conditionally include kubernetes and monitoring based on resetMode
         ] ++ (if resetMode then [] else [
           ./modules/kubernetes.nix

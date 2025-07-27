@@ -13,16 +13,12 @@
   nix.settings.cores = 12;
   nixpkgs.config.allowUnfree = true;
 
-  # Common overlays for all systems
+  # Common overlays for all systems (removed intel-firmware overlay)
   nixpkgs.overlays = [
-    (import ../overlays/intel-firmware.nix)
     (import ../overlays/kernel.nix)
   ];
 
-  # Intel SR-IOV configuration using the official flake
-  # All systems have Intel iGPUs and can benefit from SR-IOV for KubeVirt
-  boot.extraModulePackages = [ pkgs.i915-sriov ];
-  
+  # SR-IOV setup service (driver is handled in graphics modules)
   systemd.services.i915-sriov-setup = {
     description = "Setup Intel i915 SR-IOV Virtual Functions";
     after = [ "multi-user.target" ];
