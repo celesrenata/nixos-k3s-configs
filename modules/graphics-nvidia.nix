@@ -58,9 +58,4 @@ in {
     enable = false;
     videoDrivers = [ "nvidia" ];
   };
-
-  systemd.services = {
-    # Note: SR-IOV configuration is handled by the i915-sriov flake module
-    # No custom systemd services needed here
-  };
 }
