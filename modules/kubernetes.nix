@@ -46,8 +46,8 @@
     # Create Multus CNI configuration directory
     "d /var/lib/rancher/k3s/agent/etc/cni/net.d/multus.d 0755 root root -"
     
-    # Create proper Multus CNI configuration with CORRECT kubeconfig path
-    "f /var/lib/rancher/k3s/agent/etc/cni/net.d/00-multus.conflist 0644 root root - {\"cniVersion\":\"1.0.0\",\"name\":\"multus-cni-network\",\"plugins\":[{\"type\":\"multus\",\"capabilities\":{\"bandwidth\":true,\"portMappings\":true},\"kubeconfig\":\"/var/lib/rancher/k3s/agent/etc/cni/net.d/multus.d/multus.kubeconfig\",\"server\":\"https://127.0.0.1:6443\",\"delegates\":[{\"cniVersion\":\"1.0.0\",\"name\":\"cbr0\",\"plugins\":[{\"delegate\":{\"forceAddress\":true,\"hairpinMode\":true,\"isDefaultGateway\":true},\"type\":\"flannel\"},{\"capabilities\":{\"portMappings\":true},\"type\":\"portmap\"},{\"capabilities\":{\"bandwidth\":true},\"type\":\"bandwidth\"}]}]}]}"
+    # Create Multus as SECONDARY CNI plugin (99- prefix makes it run after Flannel)
+    "f /var/lib/rancher/k3s/agent/etc/cni/net.d/99-multus.conflist 0644 root root - {\"cniVersion\":\"1.0.0\",\"name\":\"multus-cni-network\",\"plugins\":[{\"type\":\"multus\",\"capabilities\":{\"bandwidth\":true,\"portMappings\":true},\"kubeconfig\":\"/var/lib/rancher/k3s/agent/etc/cni/net.d/multus.d/multus.kubeconfig\",\"server\":\"https://127.0.0.1:6443\",\"delegates\":[{\"cniVersion\":\"1.0.0\",\"name\":\"cbr0\",\"plugins\":[{\"delegate\":{\"forceAddress\":true,\"hairpinMode\":true,\"isDefaultGateway\":true},\"type\":\"flannel\"},{\"capabilities\":{\"portMappings\":true},\"type\":\"portmap\"},{\"capabilities\":{\"bandwidth\":true},\"type\":\"bandwidth\"}]}]}]}"
   ];
 
   # Create Multus kubeconfig service - minimal kubectl usage for ServiceAccount token
