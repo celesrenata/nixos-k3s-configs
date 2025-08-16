@@ -5,6 +5,7 @@ let
     name = "cni-full";
     paths = with pkgs; [
       cni-plugin-flannel  # your primary CNI for pod networking
+      multus-cni          # Multus CNI for multiple network interfaces
       cni-plugins         # the meta-package that contains vlan, bridge, host-local…
     ];
   };
