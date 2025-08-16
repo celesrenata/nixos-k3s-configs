@@ -46,13 +46,13 @@
     # Create Multus CNI configuration directory
     "d /var/lib/rancher/k3s/agent/etc/cni/net.d/multus.d 0755 root root -"
     
-    # Create proper Multus CNI configuration with explicit server parameter
-    "f /var/lib/rancher/k3s/agent/etc/cni/net.d/00-multus.conflist 0644 root root - {\"cniVersion\":\"1.0.0\",\"name\":\"multus-cni-network\",\"plugins\":[{\"type\":\"multus\",\"capabilities\":{\"bandwidth\":true,\"portMappings\":true},\"kubeconfig\":\"/etc/cni/net.d/multus.d/multus.kubeconfig\",\"server\":\"https://127.0.0.1:6443\",\"delegates\":[{\"cniVersion\":\"1.0.0\",\"name\":\"cbr0\",\"plugins\":[{\"delegate\":{\"forceAddress\":true,\"hairpinMode\":true,\"isDefaultGateway\":true},\"type\":\"flannel\"},{\"capabilities\":{\"portMappings\":true},\"type\":\"portmap\"},{\"capabilities\":{\"bandwidth\":true},\"type\":\"bandwidth\"}]}]}]}"
+    # Create proper Multus CNI configuration with CORRECT kubeconfig path
+    "f /var/lib/rancher/k3s/agent/etc/cni/net.d/00-multus.conflist 0644 root root - {\"cniVersion\":\"1.0.0\",\"name\":\"multus-cni-network\",\"plugins\":[{\"type\":\"multus\",\"capabilities\":{\"bandwidth\":true,\"portMappings\":true},\"kubeconfig\":\"/var/lib/rancher/k3s/agent/etc/cni/net.d/multus.d/multus.kubeconfig\",\"server\":\"https://127.0.0.1:6443\",\"delegates\":[{\"cniVersion\":\"1.0.0\",\"name\":\"cbr0\",\"plugins\":[{\"delegate\":{\"forceAddress\":true,\"hairpinMode\":true,\"isDefaultGateway\":true},\"type\":\"flannel\"},{\"capabilities\":{\"portMappings\":true},\"type\":\"portmap\"},{\"capabilities\":{\"bandwidth\":true},\"type\":\"bandwidth\"}]}]}]}"
   ];
 
-  # Create Multus kubeconfig service that generates proper kubeconfig without brackets
+  # Create Multus kubeconfig service - minimal kubectl usage for ServiceAccount token
   systemd.services.multus-kubeconfig = {
-    description = "Generate Multus kubeconfig";
+    description = "Generate Multus kubeconfig with proper ServiceAccount token";
     wantedBy = [ "k3s.service" ];
     after = [ "k3s.service" ];
     serviceConfig = {
@@ -66,46 +66,17 @@
         sleep 5
       done
 
-      # Create multus service account and get token
+      # Create minimal ServiceAccount for Multus (this is infrastructure, not application logic)
       ${pkgs.k3s}/bin/kubectl --kubeconfig=/etc/rancher/k3s/k3s.yaml apply -f - <<YAML
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: multus
   namespace: kube-system
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: multus
-rules:
-- apiGroups: [""]
-  resources: ["pods", "pods/status"]
-  verbs: ["get", "update"]
-- apiGroups: ["", "events.k8s.io"]
-  resources: ["events"]
-  verbs: ["create", "patch", "update"]
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: multus
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: multus
-subjects:
-- kind: ServiceAccount
-  name: multus
-  namespace: kube-system
 YAML
 
-      # Get the service account token
-      SECRET_NAME=$(${pkgs.k3s}/bin/kubectl --kubeconfig=/etc/rancher/k3s/k3s.yaml get serviceaccount multus -n kube-system -o jsonpath='{.secrets[0].name}' 2>/dev/null || echo "")
-      
-      if [ -z "$SECRET_NAME" ]; then
-        # Create token secret for newer Kubernetes versions
-        ${pkgs.k3s}/bin/kubectl --kubeconfig=/etc/rancher/k3s/k3s.yaml apply -f - <<YAML
+      # Create token secret for the ServiceAccount
+      ${pkgs.k3s}/bin/kubectl --kubeconfig=/etc/rancher/k3s/k3s.yaml apply -f - <<YAML
 apiVersion: v1
 kind: Secret
 metadata:
@@ -115,22 +86,20 @@ metadata:
     kubernetes.io/service-account.name: multus
 type: kubernetes.io/service-account-token
 YAML
-        SECRET_NAME="multus-token"
-      fi
 
       # Wait for token to be available
-      while ! ${pkgs.k3s}/bin/kubectl --kubeconfig=/etc/rancher/k3s/k3s.yaml get secret $SECRET_NAME -n kube-system >/dev/null 2>&1; do
+      while ! ${pkgs.k3s}/bin/kubectl --kubeconfig=/etc/rancher/k3s/k3s.yaml get secret multus-token -n kube-system >/dev/null 2>&1; do
         echo "Waiting for service account token..."
         sleep 2
       done
 
-      TOKEN=$(${pkgs.k3s}/bin/kubectl --kubeconfig=/etc/rancher/k3s/k3s.yaml get secret $SECRET_NAME -n kube-system -o jsonpath='{.data.token}' | base64 -d)
-      CA_DATA=$(${pkgs.k3s}/bin/kubectl --kubeconfig=/etc/rancher/k3s/k3s.yaml get secret $SECRET_NAME -n kube-system -o jsonpath='{.data.ca\.crt}')
+      TOKEN=$(${pkgs.k3s}/bin/kubectl --kubeconfig=/etc/rancher/k3s/k3s.yaml get secret multus-token -n kube-system -o jsonpath='{.data.token}' | base64 -d)
+      CA_DATA=$(${pkgs.k3s}/bin/kubectl --kubeconfig=/etc/rancher/k3s/k3s.yaml get secret multus-token -n kube-system -o jsonpath='{.data.ca\.crt}')
 
       # Create the multus kubeconfig directory
       mkdir -p /var/lib/rancher/k3s/agent/etc/cni/net.d/multus.d
 
-      # Generate proper kubeconfig without bracketed IPs
+      # Generate proper kubeconfig with ServiceAccount token
       cat > /var/lib/rancher/k3s/agent/etc/cni/net.d/multus.d/multus.kubeconfig <<KUBECONFIG
 # Kubeconfig file for Multus CNI plugin.
 apiVersion: v1
@@ -152,7 +121,7 @@ contexts:
 current-context: multus-context
 KUBECONFIG
 
-      echo "Multus kubeconfig generated successfully"
+      echo "Multus kubeconfig generated successfully with ServiceAccount token"
     '';
   };
 
