@@ -1,128 +1,131 @@
 { config, lib, pkgs, hasNvidia ? false, ... }:
+let
+  # buildEnv that bundles flannel + the full CNI plugin set (bridge, host-local, vlan, etc)
+  fullCNIPlugins = pkgs.buildEnv {
+    name = "cni-full";
+    paths = with pkgs; [
+      cni-plugin-flannel  # your primary CNI for pod networking
+      multus-cni          # Multus CNI for multiple network interfaces
+      cni-plugins         # the meta-package that contains vlan, bridge, host-local…
+    ];
+  };
+in
 {
+  # System Packages
   environment.systemPackages = with pkgs; [
     docker
     runc
     k3s 
     kubernetes-helm
-    multus-cni  # Make multus-cni available system-wide
-    cni-plugins  # Include additional CNI plugins like vlan, macvlan, etc.
   ] ++ lib.optionals hasNvidia [
     nvidia-container-toolkit
-    libnvidia-container
+    libnvidia-container  # Provides nvidia-container-cli
   ];
 
+  # Kubernetes Service - conditional configuration based on hostname
   services.k3s = {
     enable = true;
     role = "server";
     token = "532a3cf6ea";
+    # Only gremlin-1 initializes the cluster, others join it
     clusterInit = (config.networking.hostName == "gremlin-1");
+    # Non-leader servers need to know where to connect
     serverAddr = lib.mkIf (config.networking.hostName != "gremlin-1") "https://10.1.1.12:6443";
-    extraFlags = toString [
+    extraFlags = (toString [
       "--container-runtime-endpoint unix:///run/containerd/containerd.sock"
-      "--tls-san 127.0.0.1"
-      "--tls-san localhost"
-      "--tls-san 10.1.1.12"
-      "--tls-san 10.1.1.13" 
-      "--tls-san 10.1.1.14"
-      "--tls-san 10.43.0.1"
-      "--tls-san kubernetes.default.svc.cluster.local"
-      "--advertise-address 10.1.1.12"
-      "--bind-address 0.0.0.0"
-    ]; 
+    ]); 
   };
 
-  # Create a proper CNI directory with all needed binaries and configuration
-  systemd.tmpfiles.rules = [
-    "d /var/lib/rancher/k3s/data/cni 0755 root root -"
-    "L+ /var/lib/rancher/k3s/data/cni/multus - - - - ${pkgs.multus-cni}/bin/multus"
-    "L+ /var/lib/rancher/k3s/data/cni/multus-daemon - - - - ${pkgs.multus-cni}/bin/multus-daemon"
-    "L+ /var/lib/rancher/k3s/data/cni/multus-shim - - - - ${pkgs.multus-cni}/bin/multus-shim"
-    "L+ /var/lib/rancher/k3s/data/cni/thin_entrypoint - - - - ${pkgs.multus-cni}/bin/thin_entrypoint"
-    "L+ /var/lib/rancher/k3s/data/cni/vlan - - - - ${pkgs.cni-plugins}/bin/vlan"
-    "L+ /var/lib/rancher/k3s/data/cni/macvlan - - - - ${pkgs.cni-plugins}/bin/macvlan"
-    "L+ /var/lib/rancher/k3s/data/cni/ipvlan - - - - ${pkgs.cni-plugins}/bin/ipvlan"
-    
-    # Create Multus CNI configuration directory
-    "d /var/lib/rancher/k3s/agent/etc/cni/net.d/multus.d 0755 root root -"
-    
-    # Create Multus as SECONDARY CNI plugin (99- prefix makes it run after Flannel)
-    "f /var/lib/rancher/k3s/agent/etc/cni/net.d/99-multus.conflist 0644 root root - {\"cniVersion\":\"1.0.0\",\"name\":\"multus-cni-network\",\"plugins\":[{\"type\":\"multus\",\"capabilities\":{\"bandwidth\":true,\"portMappings\":true},\"kubeconfig\":\"/var/lib/rancher/k3s/agent/etc/cni/net.d/multus.d/multus.kubeconfig\",\"server\":\"https://127.0.0.1:6443\",\"delegates\":[{\"cniVersion\":\"1.0.0\",\"name\":\"cbr0\",\"plugins\":[{\"delegate\":{\"forceAddress\":true,\"hairpinMode\":true,\"isDefaultGateway\":true},\"type\":\"flannel\"},{\"capabilities\":{\"portMappings\":true},\"type\":\"portmap\"},{\"capabilities\":{\"bandwidth\":true},\"type\":\"bandwidth\"}]}]}]}"
+  systemd.services = lib.mkMerge [
+    {
+      k3s-containerd-setup = {
+        serviceConfig.Type = "oneshot";
+        requiredBy = ["k3s.service"];
+        before = ["k3s.service"];
+        script = if hasNvidia then ''
+          mkdir -p /var/lib/rancher/k3s/agent/etc/containerd
+          cat << EOF > /var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
+          {{ template "base" . }}
+          version = 2
+
+          [plugins."io.containerd.grpc.v1.cri".cni]
+            bin_dir  = "${fullCNIPlugins}/bin"
+            conf_dir = "/var/lib/rancher/k3s/agent/etc/cni/net.d"
+
+          [plugins."io.containerd.grpc.v1.cri".containerd]
+            default_runtime_name = "nvidia"
+
+            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+              runtime_type = "io.containerd.runc.v2"
+
+            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia]
+              privileged_without_host_devices = false
+              runtime_type = "io.containerd.runc.v2"
+
+              [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia.options]
+                BinaryName = "${pkgs.nvidia-container-toolkit.tools}/bin/nvidia-container-runtime"
+                SystemdCgroup = true
+
+              [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia.env]
+                PATH = "${pkgs.nvidia-container-toolkit.tools}/bin:${pkgs.libnvidia-container}/bin:/run/current-system/sw/bin"
+
+          [plugins."io.containerd.grpc.v1.cri"]
+            enable_cdi = true
+            cdi_spec_dirs = [ "/var/run/cdi" ]
+          EOF
+        '' else ''
+          mkdir -p /var/lib/rancher/k3s/agent/etc/containerd
+          cat << EOF > /var/lib/rancher/k3s/agent/etc/containerd/config.toml.tmpl
+          {{ template "base" . }}
+          version = 2
+
+          [plugins."io.containerd.grpc.v1.cri".cni]
+            bin_dir  = "${fullCNIPlugins}/bin"
+            conf_dir = "/var/lib/rancher/k3s/agent/etc/cni/net.d"
+
+          [plugins."io.containerd.grpc.v1.cri".containerd]
+            default_runtime_name = "runc"
+
+            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+              runtime_type = "io.containerd.runc.v2"
+          EOF
+        '';
+      };
+    }
+    (lib.mkIf hasNvidia {
+      # Ensure CDI directory exists
+      nvidia-cdi-setup = {
+        description = "Setup NVIDIA CDI directory";
+        wantedBy = [ "multi-user.target" ];
+        before = [ "nvidia-container-toolkit.service" ];
+        serviceConfig = {
+          Type = "oneshot";
+          RemainAfterExit = true;
+          ExecStart = "${pkgs.coreutils}/bin/mkdir -p /var/run/cdi";
+        };
+      };
+
+      # Create symlinks for nvidia-container-cli in standard locations
+      nvidia-container-cli-setup = {
+        description = "Setup NVIDIA container CLI symlinks";
+        wantedBy = [ "multi-user.target" ];
+        before = [ "k3s.service" ];
+        serviceConfig = {
+          Type = "oneshot";
+          RemainAfterExit = true;
+          ExecStart = [
+            "${pkgs.coreutils}/bin/mkdir -p /usr/bin"
+            "${pkgs.coreutils}/bin/ln -sf ${pkgs.libnvidia-container}/bin/nvidia-container-cli /usr/bin/nvidia-container-cli"
+          ];
+        };
+      };
+    })
   ];
 
-  # Create Multus kubeconfig service - minimal kubectl usage for ServiceAccount token
-  systemd.services.multus-kubeconfig = {
-    description = "Generate Multus kubeconfig with proper ServiceAccount token";
-    wantedBy = [ "k3s.service" ];
-    after = [ "k3s.service" ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-    };
-    script = ''
-      # Wait for K3s to be ready
-      while ! ${pkgs.k3s}/bin/kubectl --kubeconfig=/etc/rancher/k3s/k3s.yaml get nodes >/dev/null 2>&1; do
-        echo "Waiting for K3s to be ready..."
-        sleep 5
-      done
-
-      # Create minimal ServiceAccount for Multus (this is infrastructure, not application logic)
-      ${pkgs.k3s}/bin/kubectl --kubeconfig=/etc/rancher/k3s/k3s.yaml apply -f - <<YAML
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: multus
-  namespace: kube-system
-YAML
-
-      # Create token secret for the ServiceAccount
-      ${pkgs.k3s}/bin/kubectl --kubeconfig=/etc/rancher/k3s/k3s.yaml apply -f - <<YAML
-apiVersion: v1
-kind: Secret
-metadata:
-  name: multus-token
-  namespace: kube-system
-  annotations:
-    kubernetes.io/service-account.name: multus
-type: kubernetes.io/service-account-token
-YAML
-
-      # Wait for token to be available
-      while ! ${pkgs.k3s}/bin/kubectl --kubeconfig=/etc/rancher/k3s/k3s.yaml get secret multus-token -n kube-system >/dev/null 2>&1; do
-        echo "Waiting for service account token..."
-        sleep 2
-      done
-
-      TOKEN=$(${pkgs.k3s}/bin/kubectl --kubeconfig=/etc/rancher/k3s/k3s.yaml get secret multus-token -n kube-system -o jsonpath='{.data.token}' | base64 -d)
-      CA_DATA=$(${pkgs.k3s}/bin/kubectl --kubeconfig=/etc/rancher/k3s/k3s.yaml get secret multus-token -n kube-system -o jsonpath='{.data.ca\.crt}')
-
-      # Create the multus kubeconfig directory
-      mkdir -p /var/lib/rancher/k3s/agent/etc/cni/net.d/multus.d
-
-      # Generate proper kubeconfig with ServiceAccount token
-      cat > /var/lib/rancher/k3s/agent/etc/cni/net.d/multus.d/multus.kubeconfig <<KUBECONFIG
-# Kubeconfig file for Multus CNI plugin.
-apiVersion: v1
-kind: Config
-clusters:
-- name: local
-  cluster:
-    server: https://127.0.0.1:6443
-    certificate-authority-data: $CA_DATA
-users:
-- name: multus
-  user:
-    token: $TOKEN
-contexts:
-- name: multus-context
-  context:
-    cluster: local
-    user: multus
-current-context: multus-context
-KUBECONFIG
-
-      echo "Multus kubeconfig generated successfully with ServiceAccount token"
-    '';
+  # NVIDIA container toolkit - only enable if NVIDIA is present
+  hardware.nvidia-container-toolkit = lib.mkIf hasNvidia {
+    enable = true;
+    mount-nvidia-executables = true; 
   };
 
   virtualisation = {
@@ -137,23 +140,53 @@ KUBECONFIG
     containerd = {
       enable = true;
       settings = {
-        plugins."io.containerd.grpc.v1.cri" = {
-          cni = {
-            bin_dir = "/var/lib/rancher/k3s/data/cni";
-            conf_dir = "/var/lib/rancher/k3s/agent/etc/cni/net.d/";
-          };
-          containerd = {
-            default_runtime_name = "runc";
-            runtimes.runc = {
-              runtime_type = "io.containerd.runc.v2";
+        plugins."io.containerd.grpc.v1.cri" = lib.mkMerge [
+          {
+            cni = {
+              bin_dir = "${fullCNIPlugins}/bin";
+              conf_dir = "/var/lib/rancher/k3s/agent/etc/cni/net.d/";
             };
-          };
-        };
+            containerd = lib.mkMerge [
+              {
+                default_runtime_name = if hasNvidia then "nvidia" else "runc";
+                runtimes.runc = {
+                  runtime_type = "io.containerd.runc.v2";
+                };
+              }
+              (lib.mkIf hasNvidia {
+                runtimes.nvidia = {
+                  priviledged_without_host_devices = false;
+                  runtime_type = "io.containerd.runc.v2"; 
+                  options = {
+                    BinaryName = "${pkgs.nvidia-container-toolkit.tools}/bin/nvidia-container-runtime";
+                    SystemdCgroup = true;
+                  };
+                  env = [
+                    "PATH=${pkgs.nvidia-container-toolkit.tools}/bin:${pkgs.libnvidia-container}/bin:/run/current-system/sw/bin"
+                  ];
+                };
+              })
+            ];
+          }
+          (lib.mkIf hasNvidia {
+            enable_cdi = true;
+            cdi_spec_dirs = [ "/var/run/cdi" ];
+          })
+        ];
       };
     };
+  };
+
+  # Ensure nvidia-container-cli and related tools are in PATH for NVIDIA nodes
+  environment.variables = lib.mkIf hasNvidia {
+    PATH = lib.mkAfter [ 
+      "${pkgs.nvidia-container-toolkit.tools}/bin" 
+      "${pkgs.libnvidia-container}/bin"
+    ];
   };
 
   security.pam.loginLimits = [
     {domain = "*"; item = "memlock"; type = "-"; value = "unlimited";}
   ];
 }
+
