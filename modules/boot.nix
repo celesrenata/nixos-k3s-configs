@@ -41,7 +41,7 @@
   ];
   
   # SR-IOV Module - now handled by graphics modules
-  # boot.extraModulePackages = with pkgs; [ i915-sriov ];
+  boot.extraModulePackages = with pkgs; [ i915-sriov ];
 
   # Kubernetes FS problem solver
   boot.kernel.sysctl."fs.inotify.max_user_instances" = 2147483647;

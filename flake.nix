@@ -6,6 +6,7 @@
     nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-25.05";
     # Intel SR-IOV support
     i915-sriov.url = "github:strongtz/i915-sriov-dkms";
+    i915-sriov.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = { self, nixpkgs, nixpkgs-stable, i915-sriov, ... }@inputs: 
@@ -21,6 +22,8 @@
         modules = [
           ./hosts/${hostname}/configuration.nix
           ./modules/common.nix
+          # Add i915-sriov module for all systems (it will only activate on Intel systems)
+          i915-sriov.nixosModules.default
           # Graphics modules now include comprehensive i915-sriov patches for all systems
           (if hasNvidia then ./modules/graphics-nvidia.nix else ./modules/graphics-intel.nix)
           ./modules/networking.nix

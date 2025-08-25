@@ -18,7 +18,7 @@ let
 in {
   # Import the shared i915-sriov patched module
   imports = [
-    ./i915-sriov-patched.nix
+    ./i915-sriov.nix
   ];
 
   # Add NVIDIA-specific overlays
