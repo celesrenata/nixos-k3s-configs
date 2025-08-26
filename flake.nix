@@ -22,9 +22,7 @@
         modules = [
           ./hosts/${hostname}/configuration.nix
           ./modules/common.nix
-          # Add i915-sriov module for all systems (it will only activate on Intel systems)
-          i915-sriov.nixosModules.default
-          # Graphics modules now include comprehensive i915-sriov patches for all systems
+          # Graphics modules now handle SR-IOV conditionally based on hasNvidia
           (if hasNvidia then ./modules/graphics-nvidia.nix else ./modules/graphics-intel.nix)
           ./modules/networking.nix
           ./modules/virtualisation.nix
@@ -33,6 +31,9 @@
         ] ++ (if resetMode then [] else [
           ./modules/kubernetes.nix
           ./modules/monitoring.nix
+        ]) ++ (if hasNvidia then [] else [
+          # Only add i915-sriov module for Intel-only systems
+          i915-sriov.nixosModules.default
         ]);
       };
   in {

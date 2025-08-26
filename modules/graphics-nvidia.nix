@@ -16,11 +16,19 @@ let
     patches = [ gpl_symbols_linux_615_patch ];
   });
 in {
-  # SR-IOV is disabled for NVIDIA systems to avoid driver conflicts
-  # Only import SR-IOV module for Intel-only systems
-  imports = lib.optionals (!hasNvidia) [
-    ./i915-sriov.nix
+  # NVIDIA systems use upstream xe driver for Intel Arc (no SR-IOV)
+  # xe is Intel's modern driver for Arc GPUs, avoiding i915 SR-IOV conflicts
+
+  # Kernel parameters for xe driver (Intel Arc)
+  boot.kernelParams = [
+    # Enable xe driver for Intel Arc GPUs
+    "xe.force_probe=7d55"  # Meteor Lake Arc Graphics
+    # Blacklist i915 to prevent conflicts with xe
+    "module_blacklist=i915"
   ];
+
+  # Explicitly blacklist i915 driver to prevent conflicts with xe
+  boot.blacklistedKernelModules = [ "i915" ];
 
   # Add NVIDIA-specific overlays
   nixpkgs.overlays = [
