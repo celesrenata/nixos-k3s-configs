@@ -1,8 +1,8 @@
-{ config, lib, pkgs, inputs, ... }:
+{ config, lib, pkgs, inputs, hasNvidia ? false, ... }:
 
 {
-  # Import the shared i915-sriov patched module
-  imports = [
+  # Import SR-IOV module only for Intel-only systems (not hybrid NVIDIA+Intel)
+  imports = lib.optionals (!hasNvidia) [
     ./i915-sriov.nix
   ];
 

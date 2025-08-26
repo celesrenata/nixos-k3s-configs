@@ -1,4 +1,4 @@
-{ config, lib, pkgs, inputs, ... }:
+{ config, lib, pkgs, inputs, hasNvidia ? false, ... }:
 let
   gpl_symbols_linux_615_patch = pkgs.fetchpatch {
     url = "https://github.com/CachyOS/kernel-patches/raw/914aea4298e3744beddad09f3d2773d71839b182/6.15/misc/nvidia/0003-Workaround-nv_vm_flags_-calling-GPL-only-code.patch";
@@ -16,8 +16,9 @@ let
     patches = [ gpl_symbols_linux_615_patch ];
   });
 in {
-  # Import the shared i915-sriov patched module
-  imports = [
+  # SR-IOV is disabled for NVIDIA systems to avoid driver conflicts
+  # Only import SR-IOV module for Intel-only systems
+  imports = lib.optionals (!hasNvidia) [
     ./i915-sriov.nix
   ];
 

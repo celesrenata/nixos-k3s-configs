@@ -15,7 +15,7 @@
     {
       hostName = "gremlin-2";
       system = "x86_64-linux";
-      protocol = "ssh-ng";
+      protocol = "ssh";
       maxJobs = 11;  # 50% of 22 threads
       speedFactor = 3; # High performance: 96GB RAM + RAID0 NVMe + modern CPU
       supportedFeatures = [ "nixos-test" "benchmark" "big-parallel" "kvm" ];
@@ -24,7 +24,7 @@
     {
       hostName = "gremlin-3";
       system = "x86_64-linux";
-      protocol = "ssh-ng";
+      protocol = "ssh";
       maxJobs = 11;  # 50% of 22 threads
       speedFactor = 3; # High performance: 96GB RAM + RAID0 NVMe + modern CPU
       supportedFeatures = [ "nixos-test" "benchmark" "big-parallel" "kvm" ];
@@ -33,7 +33,7 @@
     {
       hostName = "gremlin-4";
       system = "x86_64-linux";
-      protocol = "ssh-ng";
+      protocol = "ssh";
       maxJobs = 11;  # 50% of 22 threads
       speedFactor = 3; # High performance: 96GB RAM + RAID0 NVMe + modern CPU
       supportedFeatures = [ "nixos-test" "benchmark" "big-parallel" "kvm" ];

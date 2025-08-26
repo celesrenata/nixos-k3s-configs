@@ -1,4 +1,4 @@
-{ config, lib, pkgs, resetMode ? false, ... }:
+{ config, lib, pkgs, resetMode ? false, hasNvidia ? false, ... }:
 
 {
   imports = [
@@ -19,7 +19,8 @@
   ];
 
   # SR-IOV setup service (driver is handled in graphics modules)
-  systemd.services.i915-sriov-setup = {
+  # Only enable for Intel-only systems (not hybrid NVIDIA+Intel)
+  systemd.services.i915-sriov-setup = lib.mkIf (!hasNvidia) {
     description = "Setup Intel i915 SR-IOV Virtual Functions";
     after = [ "multi-user.target" ];
     wantedBy = [ "multi-user.target" ];
