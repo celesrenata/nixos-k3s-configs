@@ -16,19 +16,20 @@ let
     patches = [ gpl_symbols_linux_615_patch ];
   });
 in {
-  # NVIDIA systems use upstream xe driver for Intel Arc (no SR-IOV)
-  # xe is Intel's modern driver for Arc GPUs, avoiding i915 SR-IOV conflicts
+  # NVIDIA-only system - completely disable Intel graphics
 
-  # Kernel parameters for xe driver (Intel Arc)
+  # Kernel parameters to disable Intel graphics completely
   boot.kernelParams = [
-    # Enable xe driver for Intel Arc GPUs
-    "xe.force_probe=7d55"  # Meteor Lake Arc Graphics
-    # Blacklist i915 to prevent conflicts with xe
-    "module_blacklist=i915"
+    # Disable Intel graphics drivers completely
+    "module_blacklist=i915,xe,intel_guc_submission"
+    # Disable Intel graphics at PCI level
+    "pci=noaer"
+    "intel_iommu=on"
+    "iommu=pt"
   ];
 
-  # Explicitly blacklist i915 driver to prevent conflicts with xe
-  boot.blacklistedKernelModules = [ "i915" ];
+  # Blacklist all Intel graphics modules
+  boot.blacklistedKernelModules = [ "i915" "xe" "intel_guc_submission" ];
 
   # Add NVIDIA-specific overlays
   nixpkgs.overlays = [
@@ -44,25 +45,22 @@ in {
   hardware.graphics = {
     enable = true;
     enable32Bit = true;
-    extraPackages = with pkgs; [
-      intel-compute-runtime.drivers
-      intel-media-driver
-    ];
+    # Remove all Intel packages - NVIDIA only
+    extraPackages = [ ];
   };
 
   hardware.nvidia = {
-    open = true;  # Explicitly set to true for newer drivers
+    open = true;  # Use open source NVIDIA drivers
     package = nvidia-package;
     nvidiaSettings = true;
+    # Force NVIDIA as primary GPU
+    prime.offload.enable = false;
+    modesetting.enable = true;
   };
 
   hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
   hardware.enableRedistributableFirmware = true;
   hardware.enableAllFirmware = true;
-
-  # Use standard Linux firmware instead of custom override
-  # Removed: pkgs.linux-firmwareOverride
-  # This uses the standard NixOS firmware packages for better stability
 
   services.xserver = {
     enable = false;
