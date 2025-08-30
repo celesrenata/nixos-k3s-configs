@@ -1,5 +1,8 @@
 { ... }:
 {
+  # DNS Configuration
+  networking.nameservers = [ "192.168.42.1" "1.1.1.1" ];
+  
   # Networking
   systemd.network = {
     enable = true;
@@ -28,20 +31,6 @@
       };
     };
   };
-  #networking.wireless.dbusControlled = true;
-  #hardware.bluetooth = {
-  #  enable = true;
-  #  network = {
-  #    General = {
-  #      DisableSecurity = true;
-  #    };
-  #  };
-  #  settings = {
-  #    General = {
-  #      ControllerMode = "dual";
-  #    };
-  #  };
-  #};
   services.rpcbind.enable = true;
   services.openssh.enable = true;
   services.openssh.settings.PermitRootLogin = "yes";

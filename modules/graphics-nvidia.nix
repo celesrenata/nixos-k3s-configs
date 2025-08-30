@@ -12,24 +12,25 @@ let
     sha256_aarch64 = "";
     openSha256 = "sha256-xEPJ9nskN1kISnSbfBigVaO6Mw03wyHebqQOQmUg/eQ=";
     settingsSha256 = "sha256-ll7HD7dVPHKUyp5+zvLeNqAb6hCpxfwuSyi+SAXapoQ=";
-    persistencedSha256 = "";
+    persistencedSha256 = "sha256-bs3bUi8LgBu05uTzpn2ugcNYgR5rzWEPaTlgm0TIpHY=";
     patches = [ gpl_symbols_linux_615_patch ];
   });
 in {
-  # NVIDIA-only system - completely disable Intel graphics
+  # NVIDIA-only headless server with stability improvements
 
-  # Kernel parameters to disable Intel graphics completely
+  # Optimized kernel parameters for CUDA containers + containerd + k3s
   boot.kernelParams = [
-    # Disable Intel graphics drivers completely
-    "module_blacklist=i915,xe,intel_guc_submission"
-    # Disable Intel graphics at PCI level
-    "pci=noaer"
-    "intel_iommu=on"
-    "iommu=pt"
+    "intel_iommu=on"              # ensure IOMMU active
+    "iommu=pt"                    # pass-through mapping; lowers overhead / flakiness
+    "modprobe.blacklist=i915,xe"  # keep Intel gfx out on this node
+    "pcie_aspm=off"               # disable PCIe ASPM to prevent Xid/link errors
+    "nmi_watchdog=0"              # disable NMI watchdog to prevent panic reboots
+    "softlockup_panic=0"          # disable softlockup panic to prevent reboots
+    "nvidia-drm.modeset=0"        # disable KMS on headless server
   ];
 
-  # Blacklist all Intel graphics modules
-  boot.blacklistedKernelModules = [ "i915" "xe" "intel_guc_submission" ];
+  # Blacklist Intel graphics modules + nouveau for stability
+  boot.blacklistedKernelModules = [ "i915" "xe" "intel_guc_submission" "nouveau" ];
 
   # Add NVIDIA-specific overlays
   nixpkgs.overlays = [
@@ -42,20 +43,25 @@ in {
     nvtopPackages.full
   ];
 
+  # CDI-based container runtime configuration
+  virtualisation.containerd.enable = true;
+  hardware.nvidia-container-toolkit.enable = true;
+
   hardware.graphics = {
     enable = true;
     enable32Bit = true;
-    # Remove all Intel packages - NVIDIA only
     extraPackages = [ ];
   };
 
+  # NVIDIA headless server configuration
   hardware.nvidia = {
-    open = true;  # Use open source NVIDIA drivers
     package = nvidia-package;
+    nvidiaPersistenced = true;
+    powerManagement.enable = false;
+    open = true;
     nvidiaSettings = true;
-    # Force NVIDIA as primary GPU
+    modesetting.enable = false;       # disable KMS on headless server
     prime.offload.enable = false;
-    modesetting.enable = true;
   };
 
   hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
@@ -63,7 +69,7 @@ in {
   hardware.enableAllFirmware = true;
 
   services.xserver = {
-    enable = false;
+    enable = false;                   # headless server
     videoDrivers = [ "nvidia" ];
   };
 }
