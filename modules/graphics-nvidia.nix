@@ -56,7 +56,7 @@ in {
   # NVIDIA headless server configuration
   hardware.nvidia = {
     package = nvidia-package;
-    nvidiaPersistenced = true;
+    nvidiaPersistenced = false;
     powerManagement.enable = false;
     open = true;
     nvidiaSettings = true;
