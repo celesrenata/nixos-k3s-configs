@@ -1,4 +1,4 @@
-{ config, lib, pkgs, inputs, hasNvidia ? false, ... }:
+{ config, lib, pkgs, inputs, hasNvidia ? false, kernel615Pkgs ? null, ... }:
 let
   gpl_symbols_linux_615_patch = pkgs.fetchpatch {
     url = "https://github.com/CachyOS/kernel-patches/raw/914aea4298e3744beddad09f3d2773d71839b182/6.15/misc/nvidia/0003-Workaround-nv_vm_flags_-calling-GPL-only-code.patch";
