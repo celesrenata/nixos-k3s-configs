@@ -36,6 +36,22 @@
         "type": "github"
       }
     },
+    "nixpkgs-kernel615": {
+      "locked": {
+        "lastModified": 1755963768,
+        "narHash": "sha256-7Z5t53FJhrXRZ1n5MDkvI75DFbcL6LcPVXlLRPCJ1vE=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "91f7851fb22471217e118a711c0db77ff528e2f7",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "91f7851fb22471217e118a711c0db77ff528e2f7",
+        "type": "github"
+      }
+    },
     "nixpkgs-stable": {
       "locked": {
         "lastModified": 1757020766,
@@ -56,6 +72,7 @@
       "inputs": {
         "i915-sriov": "i915-sriov",
         "nixpkgs": "nixpkgs",
+        "nixpkgs-kernel615": "nixpkgs-kernel615",
         "nixpkgs-stable": "nixpkgs-stable"
       }
     }

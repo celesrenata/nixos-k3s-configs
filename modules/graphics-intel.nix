@@ -1,4 +1,4 @@
-{ config, lib, pkgs, inputs, hasNvidia ? false, ... }:
+{ config, lib, pkgs, inputs, hasNvidia ? false, kernel615Pkgs, ... }:
 
 {
   # Import SR-IOV module only for Intel-only systems (not hybrid NVIDIA+Intel)

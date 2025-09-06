@@ -1,4 +1,4 @@
-{ pkgs, lib, hasNvidia ? false, ... }:
+{ pkgs, lib, hasNvidia ? false, kernel615Pkgs ? null, ... }:
 {
   # Use the systemd-boot EFI boot loader.
   boot.initrd.systemd.enable = true;
@@ -18,7 +18,7 @@
   boot.crashDump.enable = true;
   
   # See Kernel Overlay
-  boot.kernelPackages = pkgs.kernelPXP;
+  boot.kernelPackages = if (!hasNvidia && kernel615Pkgs != null) then kernel615Pkgs.linuxKernel.packages.linux_6_15 else pkgs.kernelPXP;
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
   boot.kernelModules = [ "i915" "vfio" "vfio_pci" "vfio_iommu_type1" ];
   boot.supportedFilesystems = [ "nfs" ];
