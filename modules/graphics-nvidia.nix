@@ -52,10 +52,11 @@ in {
     enable32Bit = true;
     extraPackages = [ ];
   };
-
+    
   # NVIDIA headless server configuration
   hardware.nvidia = {
-    package = nvidia-package;
+    #package = nvidia-package;
+    package = config.boot.kernelPackages.nvidiaPackages.latest;  
     nvidiaPersistenced = false;
     powerManagement.enable = false;
     open = true;
