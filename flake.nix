@@ -18,7 +18,7 @@
       pkgs.lib.nixosSystem {
         system = "x86_64-linux";
         specialArgs = { 
-          kernel615Pkgs = nixpkgs-kernel615.legacyPackages.x86_64-linux;
+          kernel615Pkgs = import nixpkgs-kernel615 { system = "x86_64-linux"; config.allowUnfree = true; };
           inherit inputs resetMode hasNvidia; 
           systemHostname = hostname;
         };
