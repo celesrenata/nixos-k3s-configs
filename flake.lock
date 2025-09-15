@@ -7,26 +7,26 @@
         ]
       },
       "locked": {
-        "lastModified": 1756510210,
-        "narHash": "sha256-SEFhn3fRKAVI2zNTS43zsKI9VWhDK+8oU5zODHsZh24=",
-        "owner": "strongtz",
+        "lastModified": 1757246238,
+        "narHash": "sha256-+iQHlnfy8V7ZrBzi013wjGMRK97/2MkyQsImCrbw6Zo=",
+        "owner": "bbaa-bbaa",
         "repo": "i915-sriov-dkms",
-        "rev": "518611bcacfb0493a178e23acae071814baa4572",
+        "rev": "73b1d2582edadd28d8330729411d61ee530dab3e",
         "type": "github"
       },
       "original": {
-        "owner": "strongtz",
+        "owner": "bbaa-bbaa",
         "repo": "i915-sriov-dkms",
         "type": "github"
       }
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1756787288,
-        "narHash": "sha256-rw/PHa1cqiePdBxhF66V7R+WAP8WekQ0mCDG4CFqT8Y=",
+        "lastModified": 1757745802,
+        "narHash": "sha256-hLEO2TPj55KcUFUU1vgtHE9UEIOjRcH/4QbmfHNF820=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "d0fc30899600b9b3466ddb260fd83deb486c32f1",
+        "rev": "c23193b943c6c689d70ee98ce3128239ed9e32d1",
         "type": "github"
       },
       "original": {
@@ -36,29 +36,13 @@
         "type": "github"
       }
     },
-    "nixpkgs-kernel615": {
-      "locked": {
-        "lastModified": 1755963768,
-        "narHash": "sha256-7Z5t53FJhrXRZ1n5MDkvI75DFbcL6LcPVXlLRPCJ1vE=",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "91f7851fb22471217e118a711c0db77ff528e2f7",
-        "type": "github"
-      },
-      "original": {
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "91f7851fb22471217e118a711c0db77ff528e2f7",
-        "type": "github"
-      }
-    },
     "nixpkgs-stable": {
       "locked": {
-        "lastModified": 1757020766,
-        "narHash": "sha256-PLoSjHRa2bUbi1x9HoXgTx2AiuzNXs54c8omhadyvp0=",
+        "lastModified": 1757810152,
+        "narHash": "sha256-Vp9K5ol6h0J90jG7Rm4RWZsCB3x7v5VPx588TQ1dkfs=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "fe83bbdde2ccdc2cb9573aa846abe8363f79a97a",
+        "rev": "9a094440e02a699be5c57453a092a8baf569bdad",
         "type": "github"
       },
       "original": {
@@ -72,7 +56,6 @@
       "inputs": {
         "i915-sriov": "i915-sriov",
         "nixpkgs": "nixpkgs",
-        "nixpkgs-kernel615": "nixpkgs-kernel615",
         "nixpkgs-stable": "nixpkgs-stable"
       }
     }

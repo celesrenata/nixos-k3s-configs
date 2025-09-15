@@ -1,11 +1,5 @@
-{ config, lib, pkgs, inputs, hasNvidia ? false, kernel615Pkgs ? null, ... }:
+{ config, lib, pkgs, inputs, hasNvidia ? false, ... }:
 let
-  gpl_symbols_linux_615_patch = pkgs.fetchpatch {
-    url = "https://github.com/CachyOS/kernel-patches/raw/914aea4298e3744beddad09f3d2773d71839b182/6.15/misc/nvidia/0003-Workaround-nv_vm_flags_-calling-GPL-only-code.patch";
-    hash = "sha256-YOTAvONchPPSVDP9eJ9236pAPtxYK5nAePNtm2dlvb4=";
-    stripLen = 1;
-    extraPrefix = "kernel/";
-  };
   nvidia-package = config.boot.kernelPackages.nvidiaPackages.mkDriver ({
     version = "580.82.07";
     sha256_64bit = "sha256-Bh5I4R/lUiMglYEdCxzqm3GLolQNYFB0/yJ/zgYoeYw=";
@@ -13,7 +7,6 @@ let
     openSha256 = "sha256-8/7ZrcwBMgrBtxebYtCcH5A51u3lAxXTCY00LElZz08=";
     settingsSha256 = "sha256-lx1WZHsW7eKFXvi03dAML6BoC5glEn63Tuiz3T867nY=";
     persistencedSha256 = "sha256-1JCk2T3H5NNFQum0gA9cnio31jc0pGvfGIn2KkAz9kA=";
-    patches = [ gpl_symbols_linux_615_patch ];
   });
 in {
   # NVIDIA-only headless server with stability improvements
