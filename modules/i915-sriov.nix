@@ -3,7 +3,6 @@
 {
   # Intel i915 SR-IOV configuration
   # The actual SR-IOV functionality is provided by the i915-sriov DKMS module
-  # imported in flake.nix as i915-sriov.nixosModules.default
   
   # Kernel parameters required for i915 SR-IOV
   boot.kernelParams = [

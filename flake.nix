@@ -33,7 +33,7 @@
           ./modules/monitoring.nix
         ]) ++ (if hasNvidia then [] else [
           # Only add i915-sriov module for Intel-only systems
-          i915-sriov.nixosModules.default
+          ./modules/i915-sriov-simple-fix.nix
         ]);
       };
   in {

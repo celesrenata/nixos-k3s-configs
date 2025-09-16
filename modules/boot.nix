@@ -38,12 +38,12 @@
     "i915.enable_guc=3"
     "i915.max_vfs=7"
     "i915.force_probe=7d55"
-    "module_blacklist=xe"  # Blacklist xe only for i915 SR-IOV systems
+    "module_blacklist=xe"  # Blacklist i915 for SR-IOV patched driver
     "vfio-pci.ids=8086:7d55"  # Reserve Intel GPU VFs for VFIO
   ];
   
   # SR-IOV Module - only for Intel-only systems (not hybrid NVIDIA+Intel)
-  boot.extraModulePackages = lib.optionals (!hasNvidia) (with pkgs; [ i915-sriov ]);
+  boot.extraModulePackages = lib.optionals (!hasNvidia) (with pkgs; [ i915-sriov-patched ]);
 
   # Kubernetes FS problem solver
   boot.kernel.sysctl."fs.inotify.max_user_instances" = 2147483647;
