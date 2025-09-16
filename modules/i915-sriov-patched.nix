@@ -66,7 +66,7 @@ EOF
           make -j$NIX_BUILD_CORES -C ${config.boot.kernelPackages.kernel.dev}/lib/modules/${config.boot.kernelPackages.kernel.modDirVersion}/build M=$(pwd) modules
         '';
         installPhase = ''
-          install -D i915.ko $out/lib/modules/${config.boot.kernelPackages.kernel.modDirVersion}/kernel/drivers/gpu/drm/i915/i915.ko
+          install -D drivers/gpu/drm/i915/i915.ko $out/lib/modules/${config.boot.kernelPackages.kernel.modDirVersion}/kernel/drivers/gpu/drm/i915/i915.ko
         '';
       };
     })
