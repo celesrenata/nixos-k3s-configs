@@ -1,8 +1,33 @@
 { config, lib, pkgs, inputs, ... }:
 
 {
-  # Intel xe SR-IOV configuration
-  # xe is the modern unified Intel GPU driver with native SR-IOV support
+  # Intel xe SR-IOV configuration using bbaa-bbaa's xe-sriov driver
+  
+  nixpkgs.overlays = [
+    (final: prev: {
+      xe-sriov-patched = prev.stdenv.mkDerivation {
+        name = "xe-sriov-${config.boot.kernelPackages.kernel.modDirVersion}";
+        src = inputs.i915-sriov;
+        hardeningDisable = [ "pic" ];
+        nativeBuildInputs = config.boot.kernelPackages.kernel.moduleBuildDependencies;
+        
+        makeFlags = [
+          "KVERSION=${config.boot.kernelPackages.kernel.modDirVersion}"
+          "KDIR=${config.boot.kernelPackages.kernel.dev}/lib/modules/${config.boot.kernelPackages.kernel.modDirVersion}/build"
+        ];
+        buildPhase = ''
+          echo "Building xe-sriov for kernel ${config.boot.kernelPackages.kernel.modDirVersion}"
+          make -j$NIX_BUILD_CORES -C ${config.boot.kernelPackages.kernel.dev}/lib/modules/${config.boot.kernelPackages.kernel.modDirVersion}/build M=$(pwd) modules
+        '';
+        installPhase = ''
+          install -D drivers/gpu/drm/xe/xe.ko $out/lib/modules/${config.boot.kernelPackages.kernel.modDirVersion}/kernel/drivers/gpu/drm/xe/xe.ko
+        '';
+      };
+    })
+  ];
+
+  # Enable xe SR-IOV support
+  boot.extraModulePackages = [ pkgs.xe-sriov-patched ];
   
   # Kernel parameters required for xe SR-IOV
   boot.kernelParams = [
