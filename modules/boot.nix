@@ -42,10 +42,10 @@ in
     "hugepages=512"
   ] ++ lib.optionals (!hasNvidia) [
     # SR-IOV parameters only for Intel-only systems
-    "i915.enable_guc=3"
-    "i915.max_vfs=7"
-    "i915.force_probe=7d55"
-    "module_blacklist=xe"  # Blacklist i915 for SR-IOV patched driver
+    "xe.enable_guc=3"
+    "xe.max_vfs=7"
+    "xe.force_probe=7d55"
+    "module_blacklist=i915"  # Blacklist i915 for xe driver
     "vfio-pci.ids=8086:7d55"  # Reserve Intel GPU VFs for VFIO
   ];
   
