@@ -24,7 +24,7 @@
           ./hosts/${hostname}/configuration.nix
           ./modules/common.nix
           # Graphics modules now handle SR-IOV conditionally based on hasNvidia
-          (if hasNvidia then ./modules/graphics-nvidia.nix else ./modules/graphics-intel.nix)
+          (if hasNvidia then ./modules/graphics-nvidia.nix else ./modules/graphics-intel-xe.nix)
           ./modules/networking.nix
           ./modules/virtualisation.nix
           ./modules/ups.nix
@@ -33,8 +33,7 @@
           ./modules/kubernetes.nix
           ./modules/monitoring.nix
         ]) ++ (if hasNvidia then [] else [
-          # Only add i915-sriov module for Intel-only systems
-          ./modules/i915-sriov-simple-fix.nix
+          # xe driver has native SR-IOV support, no patched module needed
         ]);
       };
   in {
