@@ -1,4 +1,11 @@
-{ pkgs, lib, hasNvidia ? false, ... }:
+{ pkgs, nixpkgs-stable, lib, hasNvidia ? false, ... }:
+let
+  # Configure nixpkgs-stable with allowUnfree
+  stable-pkgs = import nixpkgs-stable {
+    system = "x86_64-linux";
+    config.allowUnfree = true;
+  };
+in
 {
   # Use the systemd-boot EFI boot loader.
   boot.initrd.systemd.enable = true;
@@ -17,8 +24,8 @@
   boot.initrd.kernelModules = [ "vmd" "md_mod" "raid0" ];
   boot.crashDump.enable = true;
   
-  # Use kernel 6.16
-  boot.kernelPackages = pkgs.linuxPackages_6_16;
+  # Use kernel 6.17
+  boot.kernelPackages = stable-pkgs.linuxPackages_6_17;
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
   boot.kernelModules = [ "i915" "vfio" "vfio_pci" "vfio_iommu_type1" ];
   boot.supportedFilesystems = [ "nfs" ];

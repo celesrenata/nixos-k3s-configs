@@ -16,10 +16,11 @@
       pkgs.lib.nixosSystem {
         system = "x86_64-linux";
         specialArgs = { 
-          inherit inputs resetMode hasNvidia; 
+          inherit inputs resetMode hasNvidia nixpkgs-stable; 
           systemHostname = hostname;
         };
         modules = [
+          { nixpkgs.config.allowUnfree = true; }
           ./hosts/${hostname}/configuration.nix
           ./modules/common.nix
           # Graphics modules now handle SR-IOV conditionally based on hasNvidia
