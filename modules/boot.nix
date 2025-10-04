@@ -49,8 +49,7 @@ in
     "vfio-pci.ids=8086:7d55"  # Reserve Intel GPU VFs for VFIO
   ];
   
-  # SR-IOV Module - only for Intel-only systems (not hybrid NVIDIA+Intel)
-  boot.extraModulePackages = lib.optionals (!hasNvidia) (with pkgs; [ i915-sriov-patched ]);
+  # xe driver has native SR-IOV support, no extra module packages needed
 
   # Kubernetes FS problem solver
   boot.kernel.sysctl."fs.inotify.max_user_instances" = 2147483647;
