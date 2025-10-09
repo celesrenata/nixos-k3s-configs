@@ -33,7 +33,7 @@
           ./modules/kubernetes.nix
           ./modules/monitoring.nix
         ]) ++ (if hasNvidia then [] else [
-          # xe driver has native SR-IOV support, no patched module needed
+          ./modules/i915-sriov-patched.nix
         ]);
       };
   in {
