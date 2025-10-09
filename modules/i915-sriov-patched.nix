@@ -9,9 +9,20 @@
       i915-sriov-patched = prev.stdenv.mkDerivation {
         name = "i915-sriov-${config.boot.kernelPackages.kernel.modDirVersion}";
         src = inputs.i915-sriov;
-        hardeningDisable = [ "pic" "format" ];
+        hardeningDisable = [ "pic" ];
         nativeBuildInputs = config.boot.kernelPackages.kernel.moduleBuildDependencies;
         
+        makeFlags = [
+          "KVERSION=${config.boot.kernelPackages.kernel.modDirVersion}"
+          "KDIR=${config.boot.kernelPackages.kernel.dev}/lib/modules/${config.boot.kernelPackages.kernel.modDirVersion}/build"
+        ];
+        buildPhase = ''
+          echo "Building comprehensively patched i915-sriov for kernel ${config.boot.kernelPackages.kernel.modDirVersion}"
+          make -j$NIX_BUILD_CORES -C ${config.boot.kernelPackages.kernel.dev}/lib/modules/${config.boot.kernelPackages.kernel.modDirVersion}/build M=$(pwd) modules
+        '';
+        installPhase = ''
+          install -D drivers/gpu/drm/i915/i915.ko $out/lib/modules/${config.boot.kernelPackages.kernel.modDirVersion}/kernel/drivers/gpu/drm/i915/i915.ko
+        '';
       };
     })
   ];
