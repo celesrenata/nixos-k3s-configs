@@ -14,7 +14,8 @@
   hardware.graphics = {
     enable = true;
     extraPackages = with pkgs; [
-      intel-compute-runtime.drivers
+      #intel-compute-runtime.drivers
+      intel-media-driver
       vpl-gpu-rt          # for newer GPUs on NixOS >24.05 or unstable
     ];
   };
