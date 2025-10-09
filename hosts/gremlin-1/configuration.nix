@@ -19,4 +19,19 @@
       };
     };
   };
+
+  # InfluxDB service with provisioning
+  services.influxdb2 = {
+    enable = true;
+    provision = {
+      enable = true;
+      initialSetup = {
+        organization = "celestium.life";
+        bucket = "influx";
+        username = "admin";
+        passwordFile = "/etc/nixos/.config/PasswordFiles/influx.pass";
+        tokenFile = "/etc/nixos/.config/PasswordFiles/influx.token";
+      };
+    };
+  };
 }

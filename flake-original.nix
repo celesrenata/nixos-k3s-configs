@@ -5,8 +5,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-25.05";
     # Intel SR-IOV support
-    i915-sriov.url = "github:bbaa-bbaa/i915-sriov-dkms/0da9e29ca3a27911747d06d3d65df7ec53de5ace";
-    i915-sriov.inputs.nixpkgs.follows = "nixpkgs";
+    i915-sriov.url = "github:strongtz/i915-sriov-dkms";
   };
 
   outputs = { self, nixpkgs, nixpkgs-stable, i915-sriov, ... }@inputs: 
@@ -16,15 +15,14 @@
       pkgs.lib.nixosSystem {
         system = "x86_64-linux";
         specialArgs = { 
-          inherit inputs resetMode hasNvidia nixpkgs-stable; 
+          inherit inputs resetMode hasNvidia; 
           systemHostname = hostname;
         };
         modules = [
-          { nixpkgs.config.allowUnfree = true; }
           ./hosts/${hostname}/configuration.nix
           ./modules/common.nix
-          # Graphics modules now handle SR-IOV conditionally based on hasNvidia
-          (if hasNvidia then ./modules/graphics-nvidia.nix else ./modules/graphics-intel-xe.nix)
+          # Graphics modules now include comprehensive i915-sriov patches for all systems
+          (if hasNvidia then ./modules/graphics-nvidia.nix else ./modules/graphics-intel.nix)
           ./modules/networking.nix
           ./modules/virtualisation.nix
           ./modules/ups.nix
@@ -32,8 +30,6 @@
         ] ++ (if resetMode then [] else [
           ./modules/kubernetes.nix
           ./modules/monitoring.nix
-        ]) ++ (if hasNvidia then [] else [
-          # xe driver has native SR-IOV support, no patched module needed
         ]);
       };
   in {
