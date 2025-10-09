@@ -4,12 +4,9 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-25.05";
-    # Intel SR-IOV support
-    i915-sriov.url = "github:bbaa-bbaa/i915-sriov-dkms/0da9e29ca3a27911747d06d3d65df7ec53de5ace";
-    i915-sriov.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, nixpkgs-stable, i915-sriov, ... }@inputs: 
+  outputs = { self, nixpkgs, nixpkgs-stable, ... }@inputs: 
   let
     # Helper function to create system configurations with reset mode support
     mkSystem = { hostname, pkgs ? nixpkgs, hasNvidia ? false, resetMode ? false }: 
