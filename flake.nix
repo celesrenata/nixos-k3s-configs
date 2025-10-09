@@ -5,7 +5,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-25.05";
     # Intel SR-IOV support
-    i915-sriov.url = "github:bbaa-bbaa/i915-sriov-dkms";
+    i915-sriov.url = "github:bbaa-bbaa/i915-sriov-dkms/229351f6acadf20ee271a6f17db18f12f596ca44";
     i915-sriov.inputs.nixpkgs.follows = "nixpkgs";
   };
 
