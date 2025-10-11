@@ -1,4 +1,4 @@
-{ pkgs, nixpkgs-stable, lib, hasNvidia ? false, ... }:
+{ pkgs, nixpkgs-stable, lib, config, ... }:
 let
   # Configure nixpkgs-stable with allowUnfree
   stable-pkgs = import nixpkgs-stable {
@@ -27,7 +27,7 @@ in
   # Use kernel 6.17
   boot.kernelPackages = stable-pkgs.linuxPackages_6_17;
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
-  boot.kernelModules = [ "i915" "vfio" "vfio_pci" "vfio_iommu_type1" ];
+  boot.kernelModules = [ "xe" "vfio" "vfio_pci" "vfio_iommu_type1" ];
   boot.supportedFilesystems = [ "nfs" ];
   
   # Kernel parameters - conditional based on graphics configuration
@@ -40,7 +40,7 @@ in
     "hugepages=2"
     "hugepagesz=2M"
     "hugepages=512"
-  ] ++ lib.optionals (!hasNvidia) [
+  ] ++ lib.optionals (config.gremlin.graphics.intel.sriov) [
     # SR-IOV parameters only for Intel-only systems
     "xe.enable_guc=3"
     "xe.max_vfs=7"

@@ -1,4 +1,4 @@
-{ config, lib, pkgs, resetMode ? false, hasNvidia ? false, ... }:
+{ config, lib, pkgs, resetMode ? false, ... }:
 
 {
   imports = [
@@ -19,8 +19,7 @@
   ];
 
   # SR-IOV setup service (driver is handled in graphics modules)
-  # Only enable for Intel-only systems (not hybrid NVIDIA+Intel)
-  systemd.services.i915-sriov-setup = lib.mkIf (!hasNvidia) {
+  systemd.services.i915-sriov-setup = lib.mkIf (config.gremlin.graphics.intel.sriov) {
     description = "Setup Intel i915 SR-IOV Virtual Functions";
     after = [ "multi-user.target" ];
     wantedBy = [ "multi-user.target" ];
@@ -31,8 +30,8 @@
     };
     
     script = ''
-      # Enable SR-IOV (create 7 VFs)
-      echo 7 > /sys/devices/pci0000:00/0000:00:02.0/sriov_numvfs
+      # Enable SR-IOV (create 7 VFs) - ignore errors if already enabled
+      echo 7 > /sys/devices/pci0000:00/0000:00:02.0/sriov_numvfs || true
       
       # Wait for VFs to be created
       sleep 3

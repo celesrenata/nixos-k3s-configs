@@ -1,5 +1,7 @@
-{ config, lib, pkgs, hasNvidia ? false, ... }:
+{ config, lib, pkgs, ... }:
 let
+  cfg = config.gremlin.graphics;
+  hasNvidia = cfg.nvidia.enable;
   # buildEnv that bundles flannel + the full CNI plugin set (bridge, host-local, vlan, etc)
   fullCNIPlugins = pkgs.buildEnv {
     name = "cni-full";
