@@ -61,28 +61,6 @@
       echo 0 > /sys/devices/pci0000:00/0000:00:02.0/sriov_numvfs || true
     '';
   };
-      
-      # Wait for VFs to be created
-      sleep 3
-      
-      # Bind VFs to vfio-pci driver for passthrough
-      for vf in /sys/devices/pci0000:00/0000:00:02.0/virtfn*; do
-        if [ -d "$vf" ]; then
-          vf_pci=$(basename $(readlink $vf))
-          echo "Configuring VF $vf_pci for VFIO passthrough"
-          
-          # Unbind from current driver if bound
-          if [ -e "$vf/driver" ]; then
-            echo $vf_pci > $vf/driver/unbind 2>/dev/null || true
-          fi
-          
-          # Bind to vfio-pci
-          echo "8086 7d55" > /sys/bus/pci/drivers/vfio-pci/new_id 2>/dev/null || true
-          echo $vf_pci > /sys/bus/pci/drivers/vfio-pci/bind 2>/dev/null || true
-        fi
-      done
-      
-      echo "SR-IOV VFs configured for VFIO passthrough"
     '';
     
     preStop = ''
