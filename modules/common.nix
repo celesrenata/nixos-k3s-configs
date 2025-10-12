@@ -30,8 +30,17 @@
     };
     
     script = ''
+      # Check if SR-IOV is supported
+      if [ ! -f /sys/devices/pci0000:00/0000:00:02.0/sriov_numvfs ]; then
+        echo "SR-IOV not supported on this system"
+        exit 0
+      fi
+      
       # Enable SR-IOV (create 7 VFs)
-      echo 7 > /sys/devices/pci0000:00/0000:00:02.0/sriov_numvfs
+      if ! echo 7 > /sys/devices/pci0000:00/0000:00:02.0/sriov_numvfs; then
+        echo "Failed to enable SR-IOV VFs"
+        exit 1
+      fi
       
       # Wait for VFs to be created
       sleep 3
