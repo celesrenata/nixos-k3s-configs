@@ -21,15 +21,20 @@
   # SR-IOV setup service (driver is handled in graphics modules)
   systemd.services.i915-sriov-setup = lib.mkIf (config.gremlin.graphics.intel.sriov) {
     description = "Setup Intel i915 SR-IOV Virtual Functions";
-    after = [ "multi-user.target" ];
+    after = [ "multi-user.target" "graphical.target" ];
+    wants = [ "multi-user.target" ];
     wantedBy = [ "multi-user.target" ];
     
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
+      ExecStartPre = "${pkgs.coreutils}/bin/sleep 10";  # 10 second delay
     };
     
     script = ''
+      # Additional delay to ensure everything is fully initialized
+      sleep 5
+      
       # Enable SR-IOV (create 7 VFs) - ignore errors if already enabled
       echo 7 > /sys/devices/pci0000:00/0000:00:02.0/sriov_numvfs || true
       
