@@ -61,17 +61,6 @@
       echo 0 > /sys/devices/pci0000:00/0000:00:02.0/sriov_numvfs || true
     '';
   };
-    '';
-    
-    preStop = ''
-      # Disable SR-IOV
-      echo 0 > /sys/devices/pci0000:00/0000:00:02.0/sriov_numvfs || true
-    '';
-    
-    unitConfig = {
-      ConditionPathExists = "/sys/devices/pci0000:00/0000:00:02.0/sriov_numvfs";
-    };
-  };
 
   # VMD Array configuration
   boot.swraid = {
