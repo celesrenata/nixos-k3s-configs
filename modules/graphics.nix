@@ -13,7 +13,7 @@ let
   });
 in {
   imports = [
-    ./i915-sriov-patched.nix
+    ./xe-sriov.nix
   ];
 
   options.gremlin.graphics = {
