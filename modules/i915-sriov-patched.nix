@@ -29,4 +29,17 @@
 
   # Enable Intel SR-IOV support with comprehensive patches
   boot.extraModulePackages = lib.mkIf (config.gremlin.graphics.intel.enable && config.gremlin.graphics.intel.sriov) [ pkgs.xe-sriov-patched ];
+  
+  # Blacklist the stock xe module from initrd and kernel
+  boot.blacklistedKernelModules = lib.mkIf (config.gremlin.graphics.intel.enable && config.gremlin.graphics.intel.sriov) [ "xe" ];
+  boot.initrd.blacklistedKernelModules = lib.mkIf (config.gremlin.graphics.intel.enable && config.gremlin.graphics.intel.sriov) [ "xe" ];
+  
+  # Force load our patched xe module
+  boot.kernelModules = lib.mkIf (config.gremlin.graphics.intel.enable && config.gremlin.graphics.intel.sriov) [ "xe" ];
+}
+}
+  
+  # Ensure our patched xe module takes priority over stock kernel xe module
+  boot.kernelModules = lib.mkIf (config.gremlin.graphics.intel.enable && config.gremlin.graphics.intel.sriov) [ "xe" ];
+  boot.blacklistedKernelModules = lib.mkIf (config.gremlin.graphics.intel.enable && config.gremlin.graphics.intel.sriov) [ ];
 }
