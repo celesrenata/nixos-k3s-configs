@@ -3,7 +3,7 @@
 {
   # Intel xe SR-IOV configuration using bbaa-bbaa's xe-sriov driver
   
-  nixpkgs.overlays = [
+  nixpkgs.overlays = lib.mkIf (config.gremlin.graphics.intel.enable && config.gremlin.graphics.intel.sriov) [
     (final: prev: {
       xe-sriov-patched = prev.stdenv.mkDerivation {
         name = "xe-sriov-${config.boot.kernelPackages.kernel.modDirVersion}";
@@ -27,7 +27,7 @@
   ];
 
   # Enable xe SR-IOV support
-  boot.extraModulePackages = [ pkgs.xe-sriov-patched ];
+  boot.extraModulePackages = lib.mkIf (config.gremlin.graphics.intel.enable && config.gremlin.graphics.intel.sriov) [ pkgs.xe-sriov-patched ];
   
   # Kernel parameters required for xe SR-IOV
   boot.kernelParams = [
