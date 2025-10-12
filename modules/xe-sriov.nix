@@ -52,6 +52,9 @@
 
   # Configure modprobe options for xe
   boot.extraModprobeConfig = ''
+    # Override xe module path to use our SR-IOV patched version
+    override xe * /run/current-system/kernel-modules/lib/modules/*/extra/xe.ko
+    
     # xe SR-IOV options
     options xe enable_guc=3 max_vfs=7 force_probe=7d55
     
