@@ -38,9 +38,7 @@
         ] ++ (if resetMode then [] else [
           ./modules/kubernetes.nix
           ./modules/monitoring.nix
-        ]) ++ (if intel && sriov then [
-          ./modules/i915-sriov-patched.nix
-        ] else []);
+        ]);
       };
   in {
     nixosConfigurations = {

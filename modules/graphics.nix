@@ -12,6 +12,10 @@ let
     persistencedSha256 = "";
   });
 in {
+  imports = lib.optionals (cfg.intel.enable && cfg.intel.sriov) [
+    ./i915-sriov-patched.nix
+  ];
+
   options.gremlin.graphics = {
     intel.enable = lib.mkEnableOption "Intel graphics support";
     intel.sriov = lib.mkEnableOption "Intel SR-IOV support";
@@ -51,8 +55,6 @@ in {
       ];
 
       boot.kernelParams = [
-        "intel_iommu=on"
-        "iommu=pt"
       ] ++ lib.optionals (!cfg.intel.enable) [
         "modprobe.blacklist=i915,xe"
       ] ++ lib.optionals (!config.services.xserver.enable) [
