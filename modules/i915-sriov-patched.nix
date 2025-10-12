@@ -35,4 +35,3 @@
   
   # Our patched xe module will be available via extraModulePackages and loaded by the kernel when needed
 }
-}
