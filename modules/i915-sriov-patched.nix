@@ -37,9 +37,3 @@
   # Force load our patched xe module
   boot.kernelModules = lib.mkIf (config.gremlin.graphics.intel.enable && config.gremlin.graphics.intel.sriov) [ "xe" ];
 }
-}
-  
-  # Ensure our patched xe module takes priority over stock kernel xe module
-  boot.kernelModules = lib.mkIf (config.gremlin.graphics.intel.enable && config.gremlin.graphics.intel.sriov) [ "xe" ];
-  boot.blacklistedKernelModules = lib.mkIf (config.gremlin.graphics.intel.enable && config.gremlin.graphics.intel.sriov) [ ];
-}
