@@ -4,7 +4,7 @@
   # Patched xe-sriov with comprehensive fixes for kernel 6.15.7
   # This module provides the patched driver for all systems
   
-  nixpkgs.overlays = [
+  nixpkgs.overlays = lib.mkIf (config.gremlin.graphics.intel.enable && config.gremlin.graphics.intel.sriov) [
     (final: prev: {
       xe-sriov-patched = prev.stdenv.mkDerivation {
         name = "xe-sriov-${config.boot.kernelPackages.kernel.modDirVersion}";
@@ -28,5 +28,5 @@
   ];
 
   # Enable Intel SR-IOV support with comprehensive patches
-  boot.extraModulePackages = [ pkgs.xe-sriov-patched ];
+  boot.extraModulePackages = lib.mkIf (config.gremlin.graphics.intel.enable && config.gremlin.graphics.intel.sriov) [ pkgs.xe-sriov-patched ];
 }
