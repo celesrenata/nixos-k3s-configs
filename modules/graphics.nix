@@ -12,7 +12,7 @@ let
     persistencedSha256 = "";
   });
 in {
-  imports = [
+  imports = lib.optionals (cfg.intel.enable && cfg.intel.sriov) [
     ./i915-sriov-patched.nix
   ];
 
