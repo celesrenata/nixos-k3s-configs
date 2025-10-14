@@ -148,6 +148,8 @@
     extraGroups = [ "wheel" "docker" ];
   };
   
+  users.groups.video.gid = lib.mkForce 500;
+
   users.users.nixremote = {
     isNormalUser = true;
   };
