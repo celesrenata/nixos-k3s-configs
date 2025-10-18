@@ -7,21 +7,17 @@
     source = "${pkgs.nvtopPackages.intel}/bin/nvtop";
   };
 
-  services.prometheus.exporters.node = {
-    enable = true;
-    port = 9000;
-    enabledCollectors = [ "systemd" ];
-    extraFlags = [ "--collector.ethtool" "--collector.softirqs" "--collector.tcpstat" ];
-  };
-
-  services.prometheus.exporters.nut = {
-    enable = true;
-    nutServer = "127.0.0.1";
-    nutUser = "nutmaster";
-    passwordPath = "/etc/nixos/.config/PasswordFiles/apc.pass";
-    extraFlags = [ "--web.telemetry-path=/metrics" "--web.exporter-telemetry-path=/exporter_metrics" ];
-   
-  };
+  environment.systemPackages = with pkgs; [
+    (writeShellScriptBin "nvtop-numeric" ''
+      /run/wrappers/bin/nvtop -s | ${pkgs.jq}/bin/jq '.[0] | {
+        device_name: .device_name,
+        gpu_clock_mhz: (if .gpu_clock then (.gpu_clock | gsub("MHz"; "") | tonumber) else 0 end),
+        temp_c: (if .temp then (.temp | gsub("°C"; "") | tonumber) else 0 end),
+        gpu_util_pct: (if .gpu_util then (.gpu_util | gsub("%"; "") | tonumber) else 0 end),
+        mem_util_pct: (if .mem_util then (.mem_util | gsub("%"; "") | tonumber) else 0 end)
+      }'
+    '')
+  ];
 
   services.telegraf = {
     enable = true;
@@ -29,9 +25,8 @@
       inputs = {
         exec = {
           name_override = "nvtop_intel";
-          commands = [ "/run/current-system/sw/bin/timeout --preserve-status -s SIGINT -k 2 2 /run/wrappers/bin/nvtop -s" ];
-          json_query = "[:1]";
-          timeout = "3s";
+          commands = [ "/run/current-system/sw/bin/nvtop-numeric" ];
+          timeout = "5s";
           data_format = "json";
           json_strict = false;
         };
