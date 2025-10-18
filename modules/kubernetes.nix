@@ -28,7 +28,6 @@ in
 {
   # System Packages
   environment.systemPackages = with pkgs; [
-    docker
     runc
     k3s 
     kubernetes-helm
@@ -164,14 +163,6 @@ in
   };
 
   virtualisation = {
-    docker = {
-      enable = true;
-      package = pkgs.docker;
-      rootless = {
-        enable = true;
-        setSocketVariable = true;
-      };
-    };
     containerd = {
       enable = true;
       settings = {
