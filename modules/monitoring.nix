@@ -1,10 +1,10 @@
 { pkgs, ... }:
 {
-  security.wrappers.intel_gpu_top = {
+  security.wrappers.nvtop = {
     owner = "root";
     group = "root";
     capabilities = "cap_perfmon=+ep";
-    source = "${pkgs.intel-gpu-tools}/bin/intel_gpu_top";
+    source = "${pkgs.nvtopPackages.intel}/bin/nvtop";
   };
 
   services.prometheus.exporters.node = {
@@ -28,8 +28,8 @@
     extraConfig = {
       inputs = {
         exec = {
-          name_override = "intel_gpu_top";
-          commands = [ "/run/current-system/sw/bin/timeout --preserve-status -s SIGINT -k 2 2 /run/wrappers/bin/intel_gpu_top -J -s 1000" ];
+          name_override = "nvtop_intel";
+          commands = [ "/run/current-system/sw/bin/timeout --preserve-status -s SIGINT -k 2 2 /run/wrappers/bin/nvtop -s" ];
           json_query = "[:1]";
           timeout = "3s";
           data_format = "json";
