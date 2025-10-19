@@ -56,5 +56,17 @@ in
   };
   
   # Open firewall ports for HARP and Docker API - only on gremlin-1
+  # HARP Agent for ExApp management - only on gremlin-1
+  systemd.services.harp-agent = lib.mkIf isGremlin1 {
+    description = "HARP Agent for Nextcloud ExApps";
+    after = [ "docker.service" "frp.service" ];
+    wants = [ "docker.service" "frp.service" ];
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      ExecStart = "${pkgs.docker}/bin/docker run --rm --name harp-agent -e HP_SHARED_KEY=8d8ec4a34b65ca090e99edbefd2fa72c9fd689c563de9a74ce11c7d39887d583 -e NC_INSTANCE_URL=https://nextcloud.celestium.life -p 8780:8780 -p 8782:8782 -v /var/run/docker.sock:/var/run/docker.sock ghcr.io/nextcloud/nextcloud-appapi-harp:release";
+      Restart = "always";
+      RestartSec = "10";
+    };
+  };
   networking.firewall.allowedTCPPorts = lib.mkIf isGremlin1 [ 7000 7500 24000 2375 ];
 }
