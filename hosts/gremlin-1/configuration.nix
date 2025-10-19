@@ -35,3 +35,4 @@
     };
   };
 }
+    ./../../modules/frp-config.nix
