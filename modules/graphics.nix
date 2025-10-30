@@ -51,7 +51,7 @@ in {
 
       environment.systemPackages = with pkgs; [
         nvidia-container-toolkit
-        nvtopPackages.full
+        (import nixpkgs-stable { system = "x86_64-linux"; config.allowUnfree = true; }).nvtopPackages.full
       ];
 
       boot.kernelParams = [
