@@ -46,7 +46,6 @@ in
     "xe.max_vfs=7"
     "xe.force_probe=7d55"
     "module_blacklist=i915"  # Blacklist i915 for xe driver
-    "vfio-pci.ids=8086:7d55"  # Reserve Intel GPU VFs for VFIO
   ];
   
   # xe driver has native SR-IOV support, no extra module packages needed
