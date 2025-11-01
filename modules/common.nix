@@ -30,7 +30,6 @@
     };
     
     script = ''
-# Check if PF is bound to vfio-pci and rebind to xe if needed      if [ -L /sys/bus/pci/devices/0000:00:02.0/driver ]; then        current_driver=$(basename $(readlink /sys/bus/pci/devices/0000:00:02.0/driver))        if [ "$current_driver" = "vfio-pci" ]; then          echo "PF bound to vfio-pci, rebinding to xe driver..."          echo "0000:00:02.0" > /sys/bus/pci/drivers/vfio-pci/unbind          echo "0000:00:02.0" > /sys/bus/pci/drivers/xe/bind          sleep 2        fi      fi      
       # Check if SR-IOV is supported
       if [ ! -f /sys/devices/pci0000:00/0000:00:02.0/sriov_numvfs ]; then
         echo "SR-IOV not supported on this system"

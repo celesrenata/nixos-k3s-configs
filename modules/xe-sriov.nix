@@ -44,7 +44,6 @@
     "module_blacklist=i915"
     
     # Automatically bind VFs to VFIO for passthrough
-    "vfio-pci.ids=8086:7d55"
   ];
 
   # Enable VFIO kernel modules
