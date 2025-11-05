@@ -8,19 +8,24 @@
       xe-sriov-patched = prev.stdenv.mkDerivation {
         name = "xe-sriov-${config.boot.kernelPackages.kernel.modDirVersion}";
         src = inputs.i915-sriov;
-        hardeningDisable = [ "pic" ];
+        hardeningDisable = [ "pic" "format" ];
         nativeBuildInputs = config.boot.kernelPackages.kernel.moduleBuildDependencies;
         
-        makeFlags = [
-          "KVERSION=${config.boot.kernelPackages.kernel.modDirVersion}"
-          "KDIR=${config.boot.kernelPackages.kernel.dev}/lib/modules/${config.boot.kernelPackages.kernel.modDirVersion}/build"
-        ];
+        postPatch = ''
+          sed -i '/\.has_pxp = true,/a \\t.has_sriov = true,' drivers/gpu/drm/xe/xe_pci.c
+        '';
+        
         buildPhase = ''
-          echo "Building xe-sriov for kernel ${config.boot.kernelPackages.kernel.modDirVersion}"
-          make -j$NIX_BUILD_CORES -C ${config.boot.kernelPackages.kernel.dev}/lib/modules/${config.boot.kernelPackages.kernel.modDirVersion}/build M=$(pwd) modules
+          make -C ${config.boot.kernelPackages.kernel.dev}/lib/modules/${config.boot.kernelPackages.kernel.modDirVersion}/build \
+            M=$PWD \
+            compat/intel_sriov_compat.ko \
+            drivers/gpu/drm/xe/xe.ko
         '';
         installPhase = ''
-          install -D drivers/gpu/drm/xe/xe.ko $out/lib/modules/${config.boot.kernelPackages.kernel.modDirVersion}/kernel/drivers/gpu/drm/xe/xe.ko
+          install -D drivers/gpu/drm/xe/xe.ko \
+            $out/lib/modules/${config.boot.kernelPackages.kernel.modDirVersion}/kernel/drivers/gpu/drm/xe/xe.ko
+          install -D compat/intel_sriov_compat.ko \
+            $out/lib/modules/${config.boot.kernelPackages.kernel.modDirVersion}/kernel/compat/gpu/drm/xe/intel_sriov_compat.ko
         '';
       };
     })
@@ -47,7 +52,7 @@
   ];
 
   # Enable VFIO kernel modules
-  boot.kernelModules = [ "vfio" "vfio_iommu_type1" "vfio_pci" "xe" ];
+  boot.kernelModules = [ "vfio" "vfio_iommu_type1" "vfio_pci" "intel_sriov_compat" "xe" ];
 
   # Configure modprobe options for xe
   boot.extraModprobeConfig = ''

@@ -20,7 +20,7 @@
 
   # SR-IOV setup service (driver is handled in graphics modules)
   systemd.services.i915-sriov-setup = lib.mkIf (config.gremlin.graphics.intel.sriov) {
-    description = "Setup Intel i915 SR-IOV Virtual Functions";
+    description = "Setup Intel xe SR-IOV Virtual Functions";
     after = [ "multi-user.target" ];
     wantedBy = [ "multi-user.target" ];
     
@@ -30,14 +30,25 @@
     };
     
     script = ''
-      # Check if SR-IOV is supported
-      if [ ! -f /sys/devices/pci0000:00/0000:00:02.0/sriov_numvfs ]; then
-        echo "SR-IOV not supported on this system"
+      # Wait for xe driver to be ready
+      sleep 2
+      
+      # Find Intel GPU device
+      gpu_device=""
+      for device in /sys/devices/pci0000:00/0000:00:02.0; do
+        if [ -f "$device/sriov_numvfs" ]; then
+          gpu_device="$device"
+          break
+        fi
+      done
+      
+      if [ -z "$gpu_device" ]; then
+        echo "No SR-IOV capable Intel GPU found"
         exit 0
       fi
       
       # Enable SR-IOV (create 7 VFs)
-      if ! echo 7 > /sys/devices/pci0000:00/0000:00:02.0/sriov_numvfs; then
+      if ! echo 7 > "$gpu_device/sriov_numvfs"; then
         echo "Failed to enable SR-IOV VFs"
         exit 1
       fi
@@ -46,7 +57,7 @@
       sleep 3
       
       # Bind VFs to vfio-pci driver for passthrough
-      for vf in /sys/devices/pci0000:00/0000:00:02.0/virtfn*; do
+      for vf in "$gpu_device"/virtfn*; do
         if [ -d "$vf" ]; then
           vf_pci=$(basename $(readlink $vf))
           echo "Configuring VF $vf_pci for VFIO passthrough"
