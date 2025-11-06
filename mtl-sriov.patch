@@ -1,0 +1,12 @@
+diff --git a/drivers/gpu/drm/xe/xe_pci.c b/drivers/gpu/drm/xe/xe_pci.c
+index 37e024c..d7af176 100644
+--- a/drivers/gpu/drm/xe/xe_pci.c
++++ b/drivers/gpu/drm/xe/xe_pci.c
+@@ -313,6 +313,7 @@ static const struct xe_device_desc mtl_desc = {
+ 	.dma_mask_size = 46,
+ 	.has_display = true,
+ 	.has_pxp = true,
++	.has_sriov = true,
+ 	.max_gt_per_tile = 2,
+ };
+ 

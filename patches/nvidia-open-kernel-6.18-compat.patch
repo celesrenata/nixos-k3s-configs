@@ -1,0 +1,11 @@
+--- a/kernel-open/nvidia-uvm/uvm_va_range_device_p2p.c
++++ b/kernel-open/nvidia-uvm/uvm_va_range_device_p2p.c
+@@ -360,7 +360,7 @@ static NV_STATUS alloc_device_p2p_mem(uvm_va_range_t *va_range,
+         // Check if the page is a device page
+         if (is_zone_device_page(page)) {
+             struct dev_pagemap *pgmap =
+-            get_dev_pagemap(page_to_pfn(page), NULL);
++            get_dev_pagemap(page_to_pfn(page));
+             if (pgmap && pgmap->type == MEMORY_DEVICE_PRIVATE) {
+                 // This is a device private page, handle accordingly
+                 put_dev_pagemap(pgmap);

@@ -46,6 +46,7 @@ in {
     # NVIDIA graphics configuration
     (lib.mkIf cfg.nvidia.enable {
       nixpkgs.overlays = [
+        (import ../overlays/nvidia-open-overlay.nix)
         (import ../overlays/nvidia-container-toolkit.nix)
       ];
 
