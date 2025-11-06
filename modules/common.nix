@@ -11,6 +11,7 @@
   # Enable Flakes
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   nix.settings.cores = 12;
+  nix.settings.require-sigs = false;
   nixpkgs.config.allowUnfree = true;
 
   # Common overlays for all systems (removed intel-firmware overlay)
