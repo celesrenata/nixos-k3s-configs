@@ -1,13 +1,14 @@
 final: prev: {
-        # Linux 6.15 kernel - upgraded from 6.6 for better Meteor Lake support and SR-IOV compatibility
-        # PXP support commented out as it's not needed for strongtz/i915-sriov-dkms
-        # Uncomment the override block below if PXP support is needed in the future
-        kernelPXP = prev.pkgs.linuxKernel.packages.linux_6_17;
-        
-        # kernelPXP = prev.pkgs.linuxPackagesFor (prev.pkgs.linux_6_6.override {
-        #   extraConfig = ''
-        #     DRM_I915_PXP y
-        #     INTEL_MEI_PXP m
-        #   '';
-        # });
+  linux_6_18_rc4 = (prev.linuxPackages_6_17.kernel.override {
+    argsOverride = {
+      version = "6.18.0-rc4";
+      modDirVersion = "6.18.0-rc4";
+      src = prev.fetchurl {
+        url = "https://git.kernel.org/torvalds/t/linux-6.18-rc4.tar.gz";
+        hash = "sha256-DtR8sFwexWyzondmRXXaSbHZ7W/QK2dMwp/zfg+TsKE=";
+      };
+    };
+  });
+  
+  linuxPackages_6_18_rc4 = prev.linuxPackagesFor final.linux_6_18_rc4;
 }
