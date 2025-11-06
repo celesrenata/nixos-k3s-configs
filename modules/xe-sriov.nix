@@ -6,7 +6,6 @@
   boot.kernelParams = lib.mkIf (config.gremlin.graphics.intel.enable && config.gremlin.graphics.intel.sriov) [
     "intel_iommu=on"
     "iommu=pt"
-    "xe.enable_guc=3"
     "xe.max_vfs=7"
     "xe.force_probe=7d55"
     "module_blacklist=i915"
@@ -17,7 +16,7 @@
   ];
 
   boot.extraModprobeConfig = lib.mkIf (config.gremlin.graphics.intel.enable && config.gremlin.graphics.intel.sriov) ''
-    options xe enable_guc=3 max_vfs=7 force_probe=7d55
+    options xe max_vfs=7 force_probe=7d55
     blacklist i915
   '';
 }

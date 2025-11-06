@@ -5,7 +5,6 @@
   boot.kernelParams = [
     "i915.force_probe=!7d55"  # Disable i915 for Meteor Lake
     "xe.force_probe=7d55"     # Enable Xe for Meteor Lake
-    "xe.enable_guc=3"         # Enable GuC and HuC
   ];
 
   # Load Xe and VFIO drivers
