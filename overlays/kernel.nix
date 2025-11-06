@@ -7,6 +7,12 @@ final: prev: {
         url = "https://git.kernel.org/torvalds/t/linux-6.18-rc4.tar.gz";
         hash = "sha256-DtR8sFwexWyzondmRXXaSbHZ7W/QK2dMwp/zfg+TsKE=";
       };
+      kernelPatches = [
+        {
+          name = "xe-mtl-sriov";
+          patch = ./. + "/../mtl-sriov.patch";
+        }
+      ];
     };
   });
   

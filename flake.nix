@@ -4,12 +4,9 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-25.05";
-    # Intel SR-IOV support
-    i915-sriov.url = "github:strongtz/i915-sriov-dkms/2025.11.04-rc1";
-    i915-sriov.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, nixpkgs-stable, i915-sriov, ... }@inputs: 
+  outputs = { self, nixpkgs, nixpkgs-stable, ... }@inputs: 
   let
     # Helper function to create system configurations
     mkSystem = { hostname, pkgs ? nixpkgs, intel ? true, nvidia ? false, sriov ? true, resetMode ? false }: 

@@ -1,7 +1,7 @@
 final: prev: {
   linuxPackages = prev.linuxPackages.extend (lpfinal: lpprev: {
     nvidiaPackages = lpprev.nvidiaPackages // {
-      mkDriver = args: (lpprev.nvidiaPackages.mkDriver args).overrideAttrs (oldAttrs: {
+      stable = lpprev.nvidiaPackages.stable.overrideAttrs (oldAttrs: {
         patches = (oldAttrs.patches or []) ++ [
           /etc/nixos/patches/nvidia-open-kernel-6.18-compat.patch
         ];

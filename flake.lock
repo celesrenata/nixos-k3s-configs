@@ -1,26 +1,5 @@
 {
   "nodes": {
-    "i915-sriov": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1762233018,
-        "narHash": "sha256-3YXyC/8BLldrG3uwmr0ZT8Ho8WjME3b9IUYZOHSa7Rw=",
-        "owner": "strongtz",
-        "repo": "i915-sriov-dkms",
-        "rev": "0d3c34fdf88bdeabd4c8d4927f5f02f4370f1508",
-        "type": "github"
-      },
-      "original": {
-        "owner": "strongtz",
-        "ref": "2025.11.04-rc1",
-        "repo": "i915-sriov-dkms",
-        "type": "github"
-      }
-    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1762111121,
@@ -39,11 +18,11 @@
     },
     "nixpkgs-stable": {
       "locked": {
-        "lastModified": 1761999846,
-        "narHash": "sha256-IYlYnp4O4dzEpL77BD/lj5NnJy2J8qbHkNSFiPBCbqo=",
+        "lastModified": 1762233356,
+        "narHash": "sha256-cGS3lLTYusbEP/IJIWGgnkzIl+FA5xDvtiHyjalGr4k=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "3de8f8d73e35724bf9abef41f1bdbedda1e14a31",
+        "rev": "ca534a76c4afb2bdc07b681dbc11b453bab21af8",
         "type": "github"
       },
       "original": {
@@ -55,7 +34,6 @@
     },
     "root": {
       "inputs": {
-        "i915-sriov": "i915-sriov",
         "nixpkgs": "nixpkgs",
         "nixpkgs-stable": "nixpkgs-stable"
       }
