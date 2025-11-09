@@ -72,7 +72,7 @@ in
 
   # Intel GPU ROM file for SR-IOV passthrough
   systemd.tmpfiles.rules = [
-    "d /usr/share/kvm 0755 root root -"
-    "C /usr/share/kvm/intelgopdriver_desktop.bin - - - - /etc/nixos/intelgopdriver_desktop.bin"
+    "d /usr/share/kvm 0755 qemu qemu -"
+    "C+ /usr/share/kvm/intelgopdriver_desktop.bin - - - - /etc/nixos/intelgopdriver_desktop.bin"
   ];
 }
