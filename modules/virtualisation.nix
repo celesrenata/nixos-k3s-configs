@@ -70,3 +70,9 @@ in
   };
   networking.firewall.allowedTCPPorts = lib.mkIf isGremlin1 [ 7000 7500 24000 2375 ];
 }
+
+  # Intel GPU ROM file for SR-IOV passthrough
+  systemd.tmpfiles.rules = [
+    "d /usr/share/kvm 0755 root root -"
+    "C /usr/share/kvm/intelgopdriver_desktop.bin - - - - /etc/nixos/intelgopdriver_desktop.bin"
+  ];
