@@ -20,6 +20,13 @@
     };
   };
 
+  # K3s node configuration - NVIDIA GPU only
+  services.k3s.extraFlags = toString [
+    "--node-taint nvidia.com/gpu=present:NoSchedule"
+    "--node-label gpu=nvidia"
+    "--node-label workload=gpu-only"
+  ];
+
   # InfluxDB service with provisioning
   services.influxdb2 = {
     enable = true;
