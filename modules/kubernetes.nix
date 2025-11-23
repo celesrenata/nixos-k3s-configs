@@ -135,6 +135,22 @@ in
           ];
         };
       };
+
+      # Copy NVIDIA libraries to standard paths for device plugin
+      nvidia-lib-setup = {
+        description = "Setup NVIDIA libraries in standard paths";
+        wantedBy = [ "multi-user.target" ];
+        before = [ "k3s.service" ];
+        serviceConfig = {
+          Type = "oneshot";
+          RemainAfterExit = true;
+          ExecStart = pkgs.writeShellScript "nvidia-lib-setup" ''
+            mkdir -p /usr/local/nvidia/lib64
+            cp -Lf ${config.hardware.nvidia.package}/lib/libnvidia-ml.so* /usr/local/nvidia/lib64/ || true
+            chmod 755 /usr/local/nvidia/lib64/*
+          '';
+        };
+      };
     })
     (lib.mkIf hasIntel {
       # Setup Intel GPU environment and device permissions

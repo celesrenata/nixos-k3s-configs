@@ -4,12 +4,12 @@ let
   cfg = config.gremlin.graphics;
   
   base-nvidia-package = config.boot.kernelPackages.nvidiaPackages.mkDriver ({
-    version = "570.207";
-    sha256_64bit = "sha256-LWvSWZeWYjdItXuPkXBmh/i5uMvh4HeyGmPsLGWJfOI=";
+    version = "580.105.08";
+    sha256_64bit = "sha256-2cboGIZy8+t03QTPpp3VhHn6HQFiyMKMjRdiV2MpNHU=";
     sha256_aarch64 = "";
-    openSha256 = "sha256-/E/q4N4eDelHKUApNmKBl+3IMwZGjwdo8eYQTTXdNHI=";
-    settingsSha256 = "sha256-khyOoXAp9FY4Yf6//dwnqxCqQQjWe2OESrNIoJAe0go=";
-    persistencedSha256 = "sha256-rtMLWpZ7s0kPUmz5xWHg6za0IjLgWauRyajkLZolj2A=";
+    openSha256 = "sha256-FGmMt3ShQrw4q6wsk8DSvm96ie5yELoDFYinSlGZcwQ=";
+    settingsSha256 = "sha256-YvzWO1U3am4Nt5cQ+b5IJ23yeWx5ud1HCu1U0KoojLY=";
+    persistencedSha256 = "sha256-qh8pKGxUjEimCgwH7q91IV7wdPyV5v5dc5/K/IcbruI=";
     postPatch = ''
       substituteInPlace kernel-open/nvidia-uvm/uvm_va_range_device_p2p.c \
         --replace 'get_dev_pagemap(page_to_pfn(page), NULL)' 'get_dev_pagemap(page_to_pfn(page))'
@@ -36,7 +36,6 @@ in {
   };
 
   config = lib.mkMerge [
-    # Base graphics configuration
     {
       hardware.graphics.enable = true;
       hardware.enableRedistributableFirmware = true;
@@ -44,7 +43,6 @@ in {
       hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
     }
 
-    # Intel graphics configuration
     (lib.mkIf cfg.intel.enable {
       environment.systemPackages = with pkgs; [
         nvtopPackages.intel
@@ -56,11 +54,11 @@ in {
       ];
     })
 
-    # NVIDIA graphics configuration
     (lib.mkIf cfg.nvidia.enable {
       nixpkgs.overlays = [
-        (import ../overlays/nvidia-open-overlay.nix)
-        (import ../overlays/nvidia-container-toolkit.nix)
+        (final: prev: {
+          nvidia-container-toolkit = nixpkgs-stable.legacyPackages.x86_64-linux.nvidia-container-toolkit;
+        })
       ];
 
       environment.systemPackages = with pkgs; [
@@ -79,7 +77,6 @@ in {
         lib.optionals (!cfg.intel.enable) [ "i915" "xe" "intel_guc_submission" ];
 
       virtualisation.containerd.enable = true;
-      hardware.nvidia-container-toolkit.enable = true;
 
       hardware.graphics.enable32Bit = true;
 
