@@ -24,8 +24,8 @@ in
   boot.initrd.kernelModules = [ "vmd" "md_mod" "raid0" ];
   boot.crashDump.enable = true;
   
-  # Use kernel 6.18-rc4
-  boot.kernelPackages = pkgs.linuxPackages_6_18_rc4;
+  # Use kernel 6.18-rc6
+  boot.kernelPackages = pkgs.linuxPackages_6_18_rc6;
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
   boot.kernelModules = [ "xe" "vfio" "vfio_pci" "vfio_iommu_type1" ];
   boot.supportedFilesystems = [ "nfs" ];

@@ -50,10 +50,10 @@ in
     enable = true;
     role = "server";
     token = "532a3cf6ea";
-    # Only gremlin-1 initializes the cluster, others join it
-    clusterInit = (config.networking.hostName == "gremlin-1");
+    # Only gremlin-4 initializes the cluster, others join it
+    clusterInit = (config.networking.hostName == "gremlin-4");
     # Non-leader servers need to know where to connect
-    serverAddr = lib.mkIf (config.networking.hostName != "gremlin-1") "https://10.1.1.12:6443";
+    serverAddr = lib.mkIf (config.networking.hostName != "gremlin-4") "https://10.1.1.15:6443";
     extraFlags = (toString [
       "--container-runtime-endpoint unix:///run/containerd/containerd.sock"
     ]); 
