@@ -42,6 +42,7 @@ in
     "hugepages=512"
   ] ++ lib.optionals (config.gremlin.graphics.intel.sriov) [
     # SR-IOV parameters only for Intel-only systems
+    "xe.enable_guc=3"
     "xe.max_vfs=7"
     "xe.force_probe=7d55"
     "module_blacklist=i915"  # Blacklist i915 for xe driver
