@@ -4,12 +4,12 @@ let
   cfg = config.gremlin.graphics;
   
   base-nvidia-package = config.boot.kernelPackages.nvidiaPackages.mkDriver ({
-    version = "580.105.08";
-    sha256_64bit = "sha256-2cboGIZy8+t03QTPpp3VhHn6HQFiyMKMjRdiV2MpNHU=";
+    version = "570.207";
+    sha256_64bit = "sha256-LWvSWZeWYjdItXuPkXBmh/i5uMvh4HeyGmPsLGWJfOI=";
     sha256_aarch64 = "";
-    openSha256 = "sha256-FGmMt3ShQrw4q6wsk8DSvm96ie5yELoDFYinSlGZcwQ=";
-    settingsSha256 = "sha256-YvzWO1U3am4Nt5cQ+b5IJ23yeWx5ud1HCu1U0KoojLY=";
-    persistencedSha256 = "";
+    openSha256 = "sha256-/E/q4N4eDelHKUApNmKBl+3IMwZGjwdo8eYQTTXdNHI=";
+    settingsSha256 = "sha256-khyOoXAp9FY4Yf6//dwnqxCqQQjWe2OESrNIoJAe0go=";
+    persistencedSha256 = "sha256-rtMLWpZ7s0kPUmz5xWHg6za0IjLgWauRyajkLZolj2A=";
     postPatch = ''
       substituteInPlace kernel-open/nvidia-uvm/uvm_va_range_device_p2p.c \
         --replace 'get_dev_pagemap(page_to_pfn(page), NULL)' 'get_dev_pagemap(page_to_pfn(page))'
@@ -85,7 +85,7 @@ in {
 
       hardware.nvidia = {
         package = nvidia-package;
-        nvidiaPersistenced = false;
+        nvidiaPersistenced = true;
         powerManagement.enable = false;
         open = true;
         nvidiaSettings = true;
