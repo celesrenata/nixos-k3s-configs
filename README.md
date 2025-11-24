@@ -39,7 +39,7 @@ This configuration manages a high-performance homelab cluster designed for:
 
 ### Kubernetes Infrastructure
 - **K3s Multi-Master**: High-availability cluster with embedded etcd
-- **Leader/Server Architecture**: gremlin-1 initializes cluster, others join at 10.1.1.12:6443
+- **Control Plane Architecture**: gremlin-4 initializes cluster, others join at 10.1.1.15:6443
 - **GPU Support**: Conditional NVIDIA Container Toolkit and Intel GPU integration
 - **CNI Networking**: Flannel with full CNI plugin suite (bridge, host-local, vlan)
 - **Container Runtime**: Containerd with adaptive GPU runtime configuration
@@ -187,8 +187,8 @@ gremlin.graphics = {
 
 ### Kubernetes Configuration
 - **Cluster Token**: Static token "532a3cf6ea" for node authentication
-- **Leader Node**: gremlin-1 initializes cluster with clusterInit = true
-- **Server Nodes**: gremlin-2/3/4 join cluster at https://10.1.1.12:6443
+- **Init Node**: gremlin-4 initializes cluster with clusterInit = true
+- **Control Plane Nodes**: gremlin-1/2/3 join cluster at https://10.1.1.15:6443
 - **Container Runtime**: Containerd with unix socket endpoint
 - **Default Runtime**: Automatically selects nvidia or runc based on graphics config
 - **GPU Runtimes**:
@@ -258,7 +258,7 @@ gremlin.graphics = {
 5. **Verify SR-IOV**: Check VF creation and GPU passthrough
 
 ### Cluster Operations
-1. **Initialize Cluster**: Deploy gremlin-1 first (cluster leader)
+1. **Initialize Cluster**: Deploy gremlin-4 first (cluster init node)
 2. **Join Nodes**: Deploy remaining nodes to join cluster
 3. **Verify Connectivity**: Check K3s cluster status and GPU availability
 4. **Monitor Health**: Verify monitoring and UPS integration
