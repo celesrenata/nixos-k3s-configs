@@ -34,6 +34,14 @@
     script = ''
       sleep 5
       echo 7 > /sys/devices/pci0000:00/0000:00:02.0/sriov_numvfs
+      sleep 2
+      for vf in /sys/devices/pci0000:00/0000:00:02.0/virtfn*; do
+        [ -d "$vf" ] || continue
+        vf_pci=$(basename $(readlink $vf))
+        echo "vfio-pci" > /sys/bus/pci/devices/$vf_pci/driver_override
+        echo $vf_pci > /sys/bus/pci/drivers/xe/unbind 2>/dev/null || true
+        echo $vf_pci > /sys/bus/pci/drivers/vfio-pci/bind 2>/dev/null || true
+      done
     '';
     
     preStop = ''
