@@ -22,59 +22,17 @@
   # SR-IOV setup service (driver is handled in graphics modules)
   systemd.services.i915-sriov-setup = lib.mkIf (config.gremlin.graphics.intel.sriov) {
     description = "Setup Intel xe SR-IOV Virtual Functions";
-    after = [ "multi-user.target" ];
+    after = [ "systemd-modules-load.service" ];
     wantedBy = [ "multi-user.target" ];
     
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
+      TimeoutStartSec = "10s";
     };
     
     script = ''
-      # Wait for xe driver to be ready
-      sleep 2
-      
-      # Find Intel GPU device
-      gpu_device=""
-      for device in /sys/devices/pci0000:00/0000:00:02.0; do
-        if [ -f "$device/sriov_numvfs" ]; then
-          gpu_device="$device"
-          break
-        fi
-      done
-      
-      if [ -z "$gpu_device" ]; then
-        echo "No SR-IOV capable Intel GPU found"
-        exit 0
-      fi
-      
-      # Enable SR-IOV (create 7 VFs)
-      if ! echo 7 > "$gpu_device/sriov_numvfs"; then
-        echo "Failed to enable SR-IOV VFs"
-        exit 1
-      fi
-      
-      # Wait for VFs to be created
-      sleep 3
-      
-      # Bind VFs to vfio-pci driver for passthrough
-      for vf in "$gpu_device"/virtfn*; do
-        if [ -d "$vf" ]; then
-          vf_pci=$(basename $(readlink $vf))
-          echo "Configuring VF $vf_pci for VFIO passthrough"
-          
-          # Unbind from current driver if bound
-          if [ -e "$vf/driver" ]; then
-            echo $vf_pci > $vf/driver/unbind 2>/dev/null || true
-          fi
-          
-          # Bind to vfio-pci
-          echo "8086 7d55" > /sys/bus/pci/drivers/vfio-pci/new_id 2>/dev/null || true
-          echo $vf_pci > /sys/bus/pci/drivers/vfio-pci/bind 2>/dev/null || true
-        fi
-      done
-      
-      echo "SR-IOV VFs configured for VFIO passthrough"
+      echo 7 > /sys/devices/pci0000:00/0000:00:02.0/sriov_numvfs
     '';
     
     preStop = ''
