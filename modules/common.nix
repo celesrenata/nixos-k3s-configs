@@ -32,6 +32,7 @@
     };
     
     script = ''
+      sleep 5
       echo 7 > /sys/devices/pci0000:00/0000:00:02.0/sriov_numvfs
     '';
     
