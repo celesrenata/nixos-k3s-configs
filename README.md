@@ -17,10 +17,10 @@ This configuration manages a high-performance homelab cluster designed for:
 
 | System | IP Address | Graphics | Role | Status |
 |--------|------------|----------|------|--------|
-| **gremlin-1** | 10.1.1.12 | Intel Arc + NVIDIA RTX 4070 Ti SUPER | K3s Leader, UPS Server | Active |
-| **gremlin-2** | 10.1.1.13 | Intel Arc (Rev2 Hardware) | K3s Server | Active |
-| **gremlin-3** | 10.1.1.14 | Intel Arc (Rev1 Hardware) | K3s Server | Active |
-| **gremlin-4** | 10.1.1.15 | Intel Arc | K3s Server | Planned |
+| **gremlin-1** | 10.1.1.12 | Intel Arc + NVIDIA RTX 4070 Ti SUPER | K3s Control Plane, UPS Server | Active |
+| **gremlin-2** | 10.1.1.13 | Intel Arc (Rev2 Hardware) | K3s Control Plane | Active |
+| **gremlin-3** | 10.1.1.14 | Intel Arc (Rev1 Hardware) | K3s Control Plane | Active |
+| **gremlin-4** | 10.1.1.15 | Intel Arc | K3s Control Plane | Active |
 
 ## Key Features
 
@@ -165,7 +165,7 @@ The system uses three custom overlays for hardware compatibility:
 - Adds: mtl_guc_70.6.4.bin, mtl_huc_8.4.3_gsc.bin, mtl_gsc_102.0.0.1511.bin
 - Target: `/lib/firmware/i915/` for xe driver support
 
-**kernel.nix**: Linux 6.17 kernel configuration
+**kernel.nix**: Linux 6.18-rc6 kernel configuration
 - Upgraded from 6.6 for better Meteor Lake support
 - SR-IOV compatibility improvements
 - PXP (Protected Xe Path) support available but disabled
@@ -199,7 +199,7 @@ gremlin.graphics = {
 - **Device Permissions**: Intel GPU devices (renderD128) accessible to video group
 
 ### Kernel Configuration
-- **Linux 6.17**: Latest stable kernel for Meteor Lake support
+- **Linux 6.18-rc6**: Latest kernel for Meteor Lake support
 - **xe Driver**: Intel's xe driver with SR-IOV patches
 - **SR-IOV Parameters**: Conditional based on graphics configuration
 - **VFIO Support**: GPU passthrough capabilities
@@ -208,10 +208,10 @@ gremlin.graphics = {
 
 ### SR-IOV Implementation
 - **xe-sriov Module**: Based on bbaa-bbaa/i915-sriov-dkms
-- **Modprobe Override**: Forces patched xe module over stock kernel module
+- **Systemd Service**: Automated VF creation with 5-second initialization delay
 - **Automatic VF Creation**: 7 virtual functions per Intel Arc iGPU
-- **VFIO Binding**: Automatic binding of VFs for passthrough
-- **Service Management**: Systemd service for VF configuration
+- **VFIO Binding**: Automatic binding of VFs to vfio-pci for passthrough
+- **Service Management**: Systemd service with timeout protection
 
 ### Graphics Stack
 - **Intel Arc Support**: Full hardware acceleration with xe driver
@@ -339,7 +339,6 @@ ping <other-nodes>
 
 ## Future Enhancements
 
-- **gremlin-4 Deployment**: Complete 4-node cluster
 - **NVIDIA Expansion**: Add NVIDIA GPU to gremlin-2
 - **Storage Integration**: Distributed storage with GPU acceleration
 - **Workload Optimization**: GPU-accelerated container workloads
