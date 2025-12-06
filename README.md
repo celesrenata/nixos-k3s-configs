@@ -17,10 +17,10 @@ This configuration manages a high-performance homelab cluster designed for:
 
 | System | IP Address | Graphics | Role | Status |
 |--------|------------|----------|------|--------|
-| **gremlin-1** | 10.1.1.12 | Intel Arc + NVIDIA RTX 4070 Ti SUPER | K3s Leader, UPS Server | Active |
-| **gremlin-2** | 10.1.1.13 | Intel Arc (Rev2 Hardware) | K3s Server | Active |
-| **gremlin-3** | 10.1.1.14 | Intel Arc (Rev1 Hardware) | K3s Server | Active |
-| **gremlin-4** | 10.1.1.15 | Intel Arc | K3s Server | Planned |
+| **gremlin-1** | 10.1.1.12 | Intel Arc + NVIDIA RTX 4070 Ti SUPER | K3s Control Plane, UPS Server | Active |
+| **gremlin-2** | 10.1.1.13 | Intel Arc (Rev2 Hardware) | K3s Control Plane | Active |
+| **gremlin-3** | 10.1.1.14 | Intel Arc (Rev1 Hardware) | K3s Control Plane | Active |
+| **gremlin-4** | 10.1.1.15 | Intel Arc | K3s Control Plane | Active |
 
 ## Key Features
 
@@ -39,7 +39,7 @@ This configuration manages a high-performance homelab cluster designed for:
 
 ### Kubernetes Infrastructure
 - **K3s Multi-Master**: High-availability cluster with embedded etcd
-- **Leader/Server Architecture**: gremlin-1 initializes cluster, others join at 10.1.1.12:6443
+- **Control Plane Architecture**: gremlin-4 initializes cluster, others join at 10.1.1.15:6443
 - **GPU Support**: Conditional NVIDIA Container Toolkit and Intel GPU integration
 - **CNI Networking**: Flannel with full CNI plugin suite (bridge, host-local, vlan)
 - **Container Runtime**: Containerd with adaptive GPU runtime configuration
@@ -165,7 +165,7 @@ The system uses three custom overlays for hardware compatibility:
 - Adds: mtl_guc_70.6.4.bin, mtl_huc_8.4.3_gsc.bin, mtl_gsc_102.0.0.1511.bin
 - Target: `/lib/firmware/i915/` for xe driver support
 
-**kernel.nix**: Linux 6.17 kernel configuration
+**kernel.nix**: Linux 6.18-rc6 kernel configuration
 - Upgraded from 6.6 for better Meteor Lake support
 - SR-IOV compatibility improvements
 - PXP (Protected Xe Path) support available but disabled
@@ -187,8 +187,8 @@ gremlin.graphics = {
 
 ### Kubernetes Configuration
 - **Cluster Token**: Static token "532a3cf6ea" for node authentication
-- **Leader Node**: gremlin-1 initializes cluster with clusterInit = true
-- **Server Nodes**: gremlin-2/3/4 join cluster at https://10.1.1.12:6443
+- **Init Node**: gremlin-4 initializes cluster with clusterInit = true
+- **Control Plane Nodes**: gremlin-1/2/3 join cluster at https://10.1.1.15:6443
 - **Container Runtime**: Containerd with unix socket endpoint
 - **Default Runtime**: Automatically selects nvidia or runc based on graphics config
 - **GPU Runtimes**:
@@ -199,7 +199,7 @@ gremlin.graphics = {
 - **Device Permissions**: Intel GPU devices (renderD128) accessible to video group
 
 ### Kernel Configuration
-- **Linux 6.17**: Latest stable kernel for Meteor Lake support
+- **Linux 6.18-rc6**: Latest kernel for Meteor Lake support
 - **xe Driver**: Intel's xe driver with SR-IOV patches
 - **SR-IOV Parameters**: Conditional based on graphics configuration
 - **VFIO Support**: GPU passthrough capabilities
@@ -208,10 +208,10 @@ gremlin.graphics = {
 
 ### SR-IOV Implementation
 - **xe-sriov Module**: Based on bbaa-bbaa/i915-sriov-dkms
-- **Modprobe Override**: Forces patched xe module over stock kernel module
+- **Systemd Service**: Automated VF creation with 5-second initialization delay
 - **Automatic VF Creation**: 7 virtual functions per Intel Arc iGPU
-- **VFIO Binding**: Automatic binding of VFs for passthrough
-- **Service Management**: Systemd service for VF configuration
+- **VFIO Binding**: Automatic binding of VFs to vfio-pci for passthrough
+- **Service Management**: Systemd service with timeout protection
 
 ### Graphics Stack
 - **Intel Arc Support**: Full hardware acceleration with xe driver
@@ -258,7 +258,7 @@ gremlin.graphics = {
 5. **Verify SR-IOV**: Check VF creation and GPU passthrough
 
 ### Cluster Operations
-1. **Initialize Cluster**: Deploy gremlin-1 first (cluster leader)
+1. **Initialize Cluster**: Deploy gremlin-4 first (cluster init node)
 2. **Join Nodes**: Deploy remaining nodes to join cluster
 3. **Verify Connectivity**: Check K3s cluster status and GPU availability
 4. **Monitor Health**: Verify monitoring and UPS integration
@@ -339,7 +339,6 @@ ping <other-nodes>
 
 ## Future Enhancements
 
-- **gremlin-4 Deployment**: Complete 4-node cluster
 - **NVIDIA Expansion**: Add NVIDIA GPU to gremlin-2
 - **Storage Integration**: Distributed storage with GPU acceleration
 - **Workload Optimization**: GPU-accelerated container workloads
