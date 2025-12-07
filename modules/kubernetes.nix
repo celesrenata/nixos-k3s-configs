@@ -133,6 +133,7 @@ in
             "${pkgs.coreutils}/bin/mkdir -p /usr/bin"
             "${pkgs.coreutils}/bin/ln -sf ${pkgs.libnvidia-container}/bin/nvidia-container-cli /usr/bin/nvidia-container-cli"
             "${pkgs.coreutils}/bin/ln -sf ${pkgs.nvidia-container-toolkit.tools}/bin/nvidia-cdi-hook /usr/bin/nvidia-cdi-hook"
+            "${pkgs.coreutils}/bin/ln -sf ${pkgs.nvidia-container-toolkit}/bin/nvidia-ctk /usr/bin/nvidia-ctk"
           ];
         };
       };
