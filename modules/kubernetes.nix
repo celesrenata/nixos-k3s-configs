@@ -109,15 +109,38 @@ in
       };
     }
     (lib.mkIf hasNvidia {
-      # Ensure CDI directory exists
+      # Ensure CDI directory exists and generate CDI specs
       nvidia-cdi-setup = {
-        description = "Setup NVIDIA CDI directory";
+        description = "Setup NVIDIA CDI directory and generate specs";
         wantedBy = [ "multi-user.target" ];
-        before = [ "nvidia-container-toolkit.service" ];
+        after = [ "nvidia-persistenced.service" ];
+        requires = [ "nvidia-persistenced.service" ];
+        before = [ "k3s.service" ];
         serviceConfig = {
           Type = "oneshot";
           RemainAfterExit = true;
-          ExecStart = "${pkgs.coreutils}/bin/mkdir -p /var/run/cdi";
+          ExecStart = pkgs.writeShellScript "nvidia-cdi-setup" ''
+            mkdir -p /var/run/cdi /etc/nvidia-container-runtime/host-files-for-container.d
+            
+            # Create CSV for binaries and glibc - NO SPACE after comma
+            cat > /etc/nvidia-container-runtime/host-files-for-container.d/binaries.csv << EOF
+bin,${config.hardware.nvidia.package.bin}/bin/nvidia-smi
+lib,${pkgs.glibc}/lib/ld-linux-x86-64.so.2
+EOF
+            
+            ${pkgs.nvidia-container-toolkit}/bin/nvidia-ctk cdi generate \
+              --mode=nvml \
+              --driver-root=/ \
+              --library-search-path=${config.hardware.nvidia.package}/lib \
+              --csv.file=/etc/nvidia-container-runtime/host-files-for-container.d/binaries.csv \
+              --output=/var/run/cdi/nvidia.yaml
+            
+            # Fix all symlinks - resolve /run/current-system and /run/opengl-driver to actual Nix store paths
+            ${pkgs.gnused}/bin/sed -i \
+              -e 's|/run/current-system/sw/bin/nvidia-smi|${config.hardware.nvidia.package.bin}/bin/nvidia-smi|g' \
+              -e 's|/run/opengl-driver/lib|${config.hardware.nvidia.package}/lib|g' \
+              /var/run/cdi/nvidia.yaml
+          '';
         };
       };
 
