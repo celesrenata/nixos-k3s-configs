@@ -93,6 +93,7 @@
     git
     nmap
     btop
+    perf
     usbutils
     pciutils
     waypipe

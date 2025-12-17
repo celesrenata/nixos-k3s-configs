@@ -5,15 +5,20 @@
     ./hardware-configuration.nix
   ];
 
+  # Make sure the same influx binaries are available in your shell
+  environment.systemPackages = with pkgs; [
+    influxdb2
+    influxdb2-cli
+    jq
+  ];
+
   # System-specific networking
   networking.hostName = systemHostname;
   systemd.network = {
     networks = {
       "40-bond0" = {
         matchConfig.Name = "bond0";
-        linkConfig = {
-          RequiredForOnline = "routable";
-        };
+        linkConfig.RequiredForOnline = "routable";
         address = [ "10.1.1.12/24" ];
         gateway = [ "10.1.1.1" ];
       };
@@ -27,7 +32,7 @@
     "--node-label workload=gpu-only"
   ]);
 
-  # InfluxDB service with provisioning
+  # InfluxDB service
   services.influxdb2 = {
     enable = true;
     provision = {
@@ -36,9 +41,10 @@
         organization = "celestium.life";
         bucket = "influx";
         username = "admin";
-        passwordFile = "/etc/nixos/.config/PasswordFiles/influx.pass";
-        tokenFile = "/etc/nixos/.config/PasswordFiles/influx.token";
+        passwordFile = "/etc/nixos/.config/PasswordFiles/influx-admin-password";
+        tokenFile = "/etc/nixos/.config/PasswordFiles/influx-token";
       };
     };
   };
 }
+
