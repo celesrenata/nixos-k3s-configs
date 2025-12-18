@@ -32,19 +32,6 @@
     "--node-label workload=gpu-only"
   ]);
 
-  # InfluxDB service
-  services.influxdb2 = {
-    enable = true;
-    provision = {
-      enable = true;
-      initialSetup = {
-        organization = "celestium.life";
-        bucket = "influx";
-        username = "admin";
-        passwordFile = "/etc/nixos/.config/PasswordFiles/influx-admin-password";
-        tokenFile = "/etc/nixos/.config/PasswordFiles/influx-token";
-      };
-    };
-  };
+
 }
 
