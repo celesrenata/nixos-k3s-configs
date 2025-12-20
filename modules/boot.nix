@@ -34,7 +34,7 @@ in
     "softlockup_panic=0"
     "intel_pstate=passive"
     "processor.max_cstate=1"
-    "intel_pstate.no_turbo=1"
+    "intel_pstate.max_perf_pct=75"
   ] ++ lib.optionals (config.gremlin.graphics.intel.sriov) [
     "xe.enable_guc=3"
     "xe.max_vfs=7"
