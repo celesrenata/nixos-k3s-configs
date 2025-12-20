@@ -34,6 +34,7 @@ in
     "softlockup_panic=0"
     "intel_pstate=passive"
     "processor.max_cstate=1"
+    "intel_pstate.no_turbo=1"
   ] ++ lib.optionals (config.gremlin.graphics.intel.sriov) [
     "xe.enable_guc=3"
     "xe.max_vfs=7"
@@ -43,6 +44,5 @@ in
 
   boot.kernel.sysctl."fs.inotify.max_user_instances" = 2147483647;
   
-  # Limit CPU frequency to reduce power/heat
-  powerManagement.cpuFreqGovernor = "powersave";
+  powerManagement.cpuFreqGovernor = "ondemand";
 }
