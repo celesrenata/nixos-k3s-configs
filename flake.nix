@@ -4,9 +4,10 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-25.11";
+    exo.url = "github:celesrenata/exo";
   };
 
-  outputs = { self, nixpkgs, nixpkgs-stable, ... }@inputs: 
+  outputs = { self, exo, nixpkgs, nixpkgs-stable, ... }@inputs: 
   let
     # Helper function to create system configurations
     mkSystem = { hostname, pkgs ? nixpkgs, intel ? true, nvidia ? false, sriov ? true, resetMode ? false }: 
@@ -31,6 +32,8 @@
               nvidia.enable = nvidia;
             };
           }
+          # External Modules
+          exo.nixosModules.default
           # Conditionally include kubernetes and monitoring based on resetMode
         ] ++ (if resetMode then [] else [
           ./modules/kubernetes.nix

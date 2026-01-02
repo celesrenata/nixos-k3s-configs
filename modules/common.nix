@@ -113,6 +113,13 @@
     jack.enable = true;
   };
 
+  services.exo = {
+    enable = true;
+    accelerator = "cpu";  # Changed from "cuda" to "cpu" for Linux compatibility
+    port = 52415;
+    openFirewall = true;
+  };
+
   # Storage Management
   nix.optimise.automatic = true;
   nix.optimise.dates = [ "03:45" ];
