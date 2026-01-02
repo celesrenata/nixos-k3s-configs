@@ -8,11 +8,11 @@
         "treefmt-nix": "treefmt-nix"
       },
       "locked": {
-        "lastModified": 1767390492,
-        "narHash": "sha256-BEOq/QG+A7Yq9jRj0jUc8BzTGUtatqk2D56vHRo5XFo=",
+        "lastModified": 1767391408,
+        "narHash": "sha256-w5VyhnziLbyP3OjSCcLw3lKA9kLtogb6LcdBWeP4AdU=",
         "owner": "celesrenata",
         "repo": "exo",
-        "rev": "6654cba8a4f0e62af804ac31f038cd2cc50877e7",
+        "rev": "8f7b86fb6b97a637e06897c47c373bf0622c089a",
         "type": "github"
       },
       "original": {
