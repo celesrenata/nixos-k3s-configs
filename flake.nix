@@ -31,6 +31,17 @@
               intel.sriov = intel && sriov;
               nvidia.enable = nvidia;
             };
+            boot.kernelParams = [ "intel_pstate=disable" ];
+            powerManagement.cpuFreqGovernor = pkgs.lib.mkForce "userspace";
+            systemd.services.disable-turbo = {
+              description = "Disable CPU Turbo Boost";
+              wantedBy = [ "multi-user.target" ];
+              script = "echo 0 > /sys/devices/system/cpu/cpufreq/boost";
+              serviceConfig = {
+                Type = "oneshot";
+                RemainAfterExit = true;
+              };
+            };
           }
           # External Modules
           exo.nixosModules.default
