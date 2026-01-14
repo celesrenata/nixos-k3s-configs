@@ -4,7 +4,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-25.11";
-    exo.url = "github:celesrenata/exo";
+    exo.url = "github:celesrenata/exo/mlx";
   };
 
   outputs = { self, exo, nixpkgs, nixpkgs-stable, ... }@inputs: 
