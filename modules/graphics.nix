@@ -3,27 +3,28 @@
 let
   cfg = config.gremlin.graphics;
   
-  base-nvidia-package = config.boot.kernelPackages.nvidiaPackages.mkDriver ({
-    version = "580.119.02";
-    sha256_64bit = "sha256-gCD139PuiK7no4mQ0MPSr+VHUemhcLqerdfqZwE47Nc=";
+  #base-nvidia-package = config.boot.kernelPackages.nvidiaPackages.mkDriver ({
+  nvidia-package = config.boot.kernelPackages.nvidiaPackages.mkDriver ({
+    version = "580.126.09";
+    sha256_64bit = "sha256-TKxT5I+K3/Zh1HyHiO0kBZokjJ/YCYzq/QiKSYmG7CY=";
     sha256_aarch64 = "";
-    openSha256 = "sha256-l3IQDoopOt0n0+Ig+Ee3AOcFCGJXhbH1Q1nh1TEAHTE=";
-    settingsSha256 = "sha256-sI/ly6gNaUw0QZFWWkMbrkSstzf0hvcdSaogTUoTecI=";
-    persistencedSha256 = "sha256-j74m3tAYON/q8WLU9Xioo3CkOSXfo1CwGmDx/ot0uUo=";
-    postPatch = ''
-      substituteInPlace kernel-open/nvidia-uvm/uvm_va_range_device_p2p.c \
-        --replace 'get_dev_pagemap(page_to_pfn(page), NULL)' 'get_dev_pagemap(page_to_pfn(page))'
-    '';
+    openSha256 = "sha256-ychsaurbQ2KNFr/SAprKI2tlvAigoKoFU1H7+SaxSrY=";
+    settingsSha256 = "sha256-4SfCWp3swUp+x+4cuIZ7SA5H7/NoizqgPJ6S9fm90fA=";
+    persistencedSha256 = "sha256-J1UwS0o/fxz45gIbH9uaKxARW+x4uOU1scvAO4rHU5Y=";
+    #postPatch = ''
+    #  substituteInPlace kernel-open/nvidia-uvm/uvm_va_range_device_p2p.c \
+    #    --replace 'get_dev_pagemap(page_to_pfn(page), NULL)' 'get_dev_pagemap(page_to_pfn(page))'
+    #'';
   });
   
-  nvidia-package = base-nvidia-package // {
-    open = base-nvidia-package.open.overrideAttrs (openAttrs: {
-      postPatch = (openAttrs.postPatch or "") + ''
-        substituteInPlace kernel-open/nvidia-uvm/uvm_va_range_device_p2p.c \
-          --replace 'get_dev_pagemap(page_to_pfn(page), NULL)' 'get_dev_pagemap(page_to_pfn(page))'
-      '';
-    });
-  };
+  #nvidia-package = base-nvidia-package // {
+  #  open = base-nvidia-package.open.overrideAttrs (openAttrs: {
+  #    postPatch = (openAttrs.postPatch or "") + ''
+  #      substituteInPlace kernel-open/nvidia-uvm/uvm_va_range_device_p2p.c \
+  #        --replace 'get_dev_pagemap(page_to_pfn(page), NULL)' 'get_dev_pagemap(page_to_pfn(page))'
+  #    '';
+  #  });
+  #};
 in {
   imports = [
     ./xe-sriov.nix
