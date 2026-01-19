@@ -3,6 +3,7 @@
 {
   imports = [
     ./hardware-configuration.nix
+    ./wyoming.nix
   ];
 
   # Make sure the same influx binaries are available in your shell
