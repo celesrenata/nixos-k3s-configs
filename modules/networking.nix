@@ -13,7 +13,7 @@
           Name = "bond0";
         };
         bondConfig = {
-          Mode = "802.3ad";
+          Mode = "active-backup";
           TransmitHashPolicy = "layer3+4";
         };
       };
