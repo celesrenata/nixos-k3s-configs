@@ -6,6 +6,7 @@
     ./iscsi.nix
     ./remote-build.nix
     ./rgb.nix
+    ./distcc-triplet.nix
   ];
 
   # Enable Flakes
