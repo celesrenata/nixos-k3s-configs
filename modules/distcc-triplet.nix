@@ -10,5 +10,8 @@ let
   '';
 in
 {
-  systemd.services.distccd.path = [ gccWithTriplet ];
+  systemd.services.distccd = {
+    path = [ gccWithTriplet ];
+    environment.PATH = lib.mkForce "${gccWithTriplet}/bin";
+  };
 }
