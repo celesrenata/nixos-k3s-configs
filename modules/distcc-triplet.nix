@@ -7,6 +7,12 @@ let
     ln -s ${pkgs.gcc}/bin/g++ $out/bin/g++
     ln -s ${pkgs.gcc}/bin/gcc $out/bin/x86_64-pc-linux-gnu-gcc
     ln -s ${pkgs.gcc}/bin/g++ $out/bin/x86_64-pc-linux-gnu-g++
+    ln -s ${pkgs.gcc}/bin/gcc-ar $out/bin/gcc-ar
+    ln -s ${pkgs.gcc}/bin/gcc-nm $out/bin/gcc-nm
+    ln -s ${pkgs.gcc}/bin/gcc-ranlib $out/bin/gcc-ranlib
+    ln -s ${pkgs.gcc}/bin/gcc-ar $out/bin/x86_64-pc-linux-gnu-gcc-ar
+    ln -s ${pkgs.gcc}/bin/gcc-nm $out/bin/x86_64-pc-linux-gnu-gcc-nm
+    ln -s ${pkgs.gcc}/bin/gcc-ranlib $out/bin/x86_64-pc-linux-gnu-gcc-ranlib
   '';
 in
 {
