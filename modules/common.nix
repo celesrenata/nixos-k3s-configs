@@ -72,16 +72,7 @@
   ];
 
   # DistCC configuration
-  services.distccd = {
-    enable = true;
-    allowedClients = [
-      "192.168.42.0/25"
-      "10.1.1.0/24"
-      "10.42.0.0/16"
-    ];
-    stats.enable = true;
-    zeroconf = true;
-  };
+services.distccd = {    enable = true;    allowedClients = [      "192.168.42.0/25"      "10.1.1.0/24"      "10.42.0.0/16"    ];    stats.enable = true;    zeroconf = true;  };  systemd.services.distccd.path = [ gccWithTriplet ];
 
   # Disable standalone etcd - K3s uses its own embedded etcd cluster
   # This prevents port conflicts on 2380 between standalone etcd and K3s embedded etcd
