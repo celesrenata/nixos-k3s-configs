@@ -3,7 +3,6 @@
 {
   imports = [
     ./hardware-configuration.nix
-    ../../modules/distcc-triplet.nix
     ./wyoming.nix
   ];
 
