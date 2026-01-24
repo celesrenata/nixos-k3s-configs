@@ -14,6 +14,14 @@
   nix.settings.require-sigs = false;
   nixpkgs.config.allowUnfree = true;
 
+  # Increase file descriptor limits for build processes
+  security.pam.loginLimits = [
+    { domain = "*"; type = "soft"; item = "nofile"; value = "65536"; }
+    { domain = "*"; type = "hard"; item = "nofile"; value = "65536"; }
+  ];
+  
+  systemd.settings.Manager.DefaultLimitNOFILE = 65536;
+
   # Common overlays for all systems (removed intel-firmware overlay)
   nixpkgs.overlays = [
     (import ../overlays/kernel.nix)
