@@ -11,7 +11,10 @@ let
 in
 {
   systemd.services.distccd = {
-    path = [ gccWithTriplet ];
-    environment.PATH = lib.mkForce "${gccWithTriplet}/bin";
+    path = [ gccWithTriplet pkgs.distcc ];
+    serviceConfig = {
+      ExecStart = lib.mkForce "${pkgs.distcc}/bin/distccd --no-detach --daemon --enable-tcp-insecure --port 3632 --log-level warning --stats --stats-port 3633 --zeroconf --allow 192.168.42.0/25 --allow 10.1.1.0/24 --allow 10.42.0.0/16";
+      Environment = lib.mkForce "PATH=${gccWithTriplet}/bin";
+    };
   };
 }
