@@ -7,12 +7,17 @@ let
     ln -s ${pkgs.gcc15}/bin/g++ $out/bin/g++
     ln -s ${pkgs.gcc15}/bin/gcc $out/bin/x86_64-pc-linux-gnu-gcc
     ln -s ${pkgs.gcc15}/bin/g++ $out/bin/x86_64-pc-linux-gnu-g++
+    ln -s ${pkgs.gcc15}/bin/gcc $out/bin/x86_64-linux-gnu-gcc
+    ln -s ${pkgs.gcc15}/bin/g++ $out/bin/x86_64-linux-gnu-g++
     ln -s ${pkgs.gcc15}/bin/gcc-ar $out/bin/gcc-ar
     ln -s ${pkgs.gcc15}/bin/gcc-nm $out/bin/gcc-nm
     ln -s ${pkgs.gcc15}/bin/gcc-ranlib $out/bin/gcc-ranlib
     ln -s ${pkgs.gcc15}/bin/gcc-ar $out/bin/x86_64-pc-linux-gnu-gcc-ar
     ln -s ${pkgs.gcc15}/bin/gcc-nm $out/bin/x86_64-pc-linux-gnu-gcc-nm
     ln -s ${pkgs.gcc15}/bin/gcc-ranlib $out/bin/x86_64-pc-linux-gnu-gcc-ranlib
+    ln -s ${pkgs.gcc15}/bin/gcc-ar $out/bin/x86_64-linux-gnu-gcc-ar
+    ln -s ${pkgs.gcc15}/bin/gcc-nm $out/bin/x86_64-linux-gnu-gcc-nm
+    ln -s ${pkgs.gcc15}/bin/gcc-ranlib $out/bin/x86_64-linux-gnu-gcc-ranlib
   '';
 in
 {
