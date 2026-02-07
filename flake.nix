@@ -15,6 +15,13 @@
         {
           networking.hostName = "gremlin-1";
           
+          # Boot loader configuration
+          boot.loader.systemd-boot.enable = true;
+          boot.loader.efi.canTouchEfiVariables = true;
+          
+          # System state version
+          system.stateVersion = "24.11";
+          
           # Enable Intel hardware support with tinygrad backend
           services.exo.intel = {
             enable = true;
