@@ -44,7 +44,6 @@
             };
           }
           # External Modules
-          exo.nixosModules.default
           # Conditionally include kubernetes and monitoring based on resetMode
         ] ++ (if resetMode then [] else [
           ./modules/kubernetes.nix
