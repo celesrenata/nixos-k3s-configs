@@ -4,13 +4,13 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-25.11";
-    exo.url = "github:celesrenata/exo";
+    exo.url = "github:celesrenata/exo/ipex";
   };
 
   outputs = { self, exo, nixpkgs, nixpkgs-stable, ... }@inputs: 
   let
     # Helper function to create system configurations
-    mkSystem = { hostname, pkgs ? nixpkgs, intel ? true, nvidia ? false, sriov ? true, resetMode ? false }: 
+    mkSystem = { hostname, pkgs ? nixpkgs, intel ? true, nvidia ? false, sriov ? true, resetMode ? false, exoIntel ? false }: 
       pkgs.lib.nixosSystem {
         system = "x86_64-linux";
         specialArgs = { 
@@ -49,7 +49,27 @@
         ] ++ (if resetMode then [] else [
           ./modules/kubernetes.nix
           ./modules/monitoring.nix
-        ]);
+        ]) ++ (if exoIntel then [
+          # Add exo Intel hardware support
+          exo.nixosModules.exo-intel
+          {
+            services.exo.intel = {
+              enable = true;
+              tinygrad = {
+                enable = true;
+                backend = "GPU";
+              };
+              arc = {
+                enable = true;
+                runtime = "auto";
+              };
+              npu = {
+                enable = false;
+                servicePort = 52416;
+              };
+            };
+          }
+        ] else []);
       };
   in {
     nixosConfigurations = {
@@ -59,6 +79,7 @@
         intel = true;
         nvidia = true;
         sriov = true;
+        exoIntel = true;  # Enable exo Intel support
       };
       
       gremlin-2 = mkSystem { 
