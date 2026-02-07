@@ -3,51 +3,48 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-25.05";
-    # Intel SR-IOV support
-    i915-sriov.url = "github:strongtz/i915-sriov-dkms";
-    # Exo with Intel hardware support
-    exo.url = "github:celesrenata/exo/ipex";
+    nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-25.11";
+    exo.url = "github:celesrenata/exo";
   };
 
-  outputs = { self, nixpkgs, nixpkgs-stable, i915-sriov, exo, ... }@inputs: 
+  outputs = { self, exo, nixpkgs, nixpkgs-stable, ... }@inputs: 
   let
-    # Helper function to create system configurations with reset mode support
-    mkSystem = { hostname, pkgs ? nixpkgs, hasNvidia ? false, resetMode ? false }: 
+    # Helper function to create system configurations
+    mkSystem = { hostname, pkgs ? nixpkgs, intel ? true, nvidia ? false, sriov ? true, resetMode ? false }: 
       pkgs.lib.nixosSystem {
         system = "x86_64-linux";
         specialArgs = { 
-          inherit inputs resetMode hasNvidia; 
+          inherit inputs resetMode nixpkgs-stable; 
           systemHostname = hostname;
         };
         modules = [
+          { nixpkgs.config.allowUnfree = true; }
           ./hosts/${hostname}/configuration.nix
           ./modules/common.nix
-          # Graphics modules now include comprehensive i915-sriov patches for all systems
-          (if hasNvidia then ./modules/graphics-nvidia.nix else ./modules/graphics-intel.nix)
+          ./modules/graphics.nix
           ./modules/networking.nix
           ./modules/virtualisation.nix
-          ./modules/ups.nix
-          # Add exo Intel hardware support module
-          exo.nixosModules.exo-intel
-          # Exo Intel hardware configuration
+          ./modules/ups.nix 
           {
-            services.exo.intel = {
-              enable = true;
-              tinygrad = {
-                enable = true;
-                backend = "GPU";
-              };
-              arc = {
-                enable = true;
-                runtime = "auto";
-              };
-              npu = {
-                enable = false;  # Disabled until fully implemented
-                servicePort = 52416;
+            gremlin.graphics = {
+              intel.enable = intel;
+              intel.sriov = intel && sriov;
+              nvidia.enable = nvidia;
+            };
+            boot.kernelParams = [ "intel_pstate=disable" ];
+            powerManagement.cpuFreqGovernor = pkgs.lib.mkForce "userspace";
+            systemd.services.disable-turbo = {
+              description = "Disable CPU Turbo Boost";
+              wantedBy = [ "multi-user.target" ];
+              script = "echo 0 > /sys/devices/system/cpu/cpufreq/boost";
+              serviceConfig = {
+                Type = "oneshot";
+                RemainAfterExit = true;
               };
             };
           }
+          # External Modules
+          exo.nixosModules.default
           # Conditionally include kubernetes and monitoring based on resetMode
         ] ++ (if resetMode then [] else [
           ./modules/kubernetes.nix
@@ -59,53 +56,71 @@
       # Normal configurations
       gremlin-1 = mkSystem { 
         hostname = "gremlin-1"; 
-        hasNvidia = true; 
+        intel = true;
+        nvidia = true;
+        sriov = true;
       };
       
       gremlin-2 = mkSystem { 
         hostname = "gremlin-2"; 
-        hasNvidia = false;
+        intel = true;
+        nvidia = false;
+        sriov = true;
       };
       
       gremlin-3 = mkSystem { 
         hostname = "gremlin-3"; 
-        hasNvidia = false; 
+        intel = true;
+        nvidia = false;
+        sriov = true;
       };
       
       gremlin-4 = mkSystem { 
         hostname = "gremlin-4";
-        hasNvidia = false; 
+        intel = true;
+        nvidia = false;
+        sriov = true;
       };
 
       # Reset mode configurations (for cluster reset)
       gremlin-1-reset = mkSystem { 
         hostname = "gremlin-1"; 
-        hasNvidia = true; 
+        intel = true;
+        nvidia = true;
+        sriov = true;
         resetMode = true;
       };
       
       gremlin-2-reset = mkSystem { 
         hostname = "gremlin-2"; 
-        hasNvidia = false;
+        intel = true;
+        nvidia = false;
+        sriov = true;
         resetMode = true;
       };
       
       gremlin-3-reset = mkSystem { 
         hostname = "gremlin-3"; 
-        hasNvidia = false;
+        intel = true;
+        nvidia = false;
+        sriov = true;
         resetMode = true;
       };
       
       gremlin-4-reset = mkSystem { 
         hostname = "gremlin-4"; 
-        hasNvidia = false;
+        intel = true;
+        nvidia = false;
+        sriov = true;
         resetMode = true;
       };
 
       # Future: gremlin-2 with NVIDIA (when ready)
       gremlin-2-nvidia = mkSystem { 
         hostname = "gremlin-2"; 
-        hasNvidia = true; 
+        intel = true;
+        nvidia = true;
+        sriov = true;
       };
     };
   };
