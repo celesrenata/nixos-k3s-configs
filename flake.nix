@@ -45,6 +45,20 @@
           }
           # External Modules
           exo.nixosModules.default
+          # Intel hardware acceleration for exo
+          exo.nixosModules.exo-intel
+          {
+            # Enable Intel Arc iGPU support for exo
+            services.exo.intel = {
+              enable = true;
+              arc = {
+                enable = true;
+                runtime = "auto";  # Auto-select between Level Zero and OpenCL
+              };
+              # NPU support is experimental, enable if needed
+              npu.enable = false;
+            };
+          }
           # Conditionally include kubernetes and monitoring based on resetMode
         ] ++ (if resetMode then [] else [
           ./modules/kubernetes.nix
