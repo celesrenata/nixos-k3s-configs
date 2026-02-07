@@ -10,7 +10,7 @@
     nixosConfigurations.gremlin-1 = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       modules = [
-        /etc/nixos/hardware-configuration.nix
+        ./hardware-configuration.nix
         exo.nixosModules.exo-intel
         {
           networking.hostName = "gremlin-1";
