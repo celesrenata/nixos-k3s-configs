@@ -1,65 +1,112 @@
 {
-  description = "gremlin-1 NixOS configuration with Intel hardware support";
+  description = "NixOS configuration flake for gremlin systems";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-25.05";
+    # Intel SR-IOV support
+    i915-sriov.url = "github:strongtz/i915-sriov-dkms";
+    # Exo with Intel hardware support
     exo.url = "github:celesrenata/exo/ipex";
   };
 
-  outputs = { self, nixpkgs, exo, ... }: {
-    nixosConfigurations.gremlin-1 = nixpkgs.lib.nixosSystem {
-      system = "x86_64-linux";
-      modules = [
-        ./hardware-configuration.nix
-        exo.nixosModules.exo-intel
-        {
-          networking.hostName = "gremlin-1";
-          
-          # Boot loader configuration
-          boot.loader.systemd-boot.enable = true;
-          boot.loader.efi.canTouchEfiVariables = true;
-          
-          # System state version
-          system.stateVersion = "24.11";
-          
-          # Enable Intel hardware support with tinygrad backend
-          services.exo.intel = {
-            enable = true;
-            
-            # Tinygrad backend configuration
-            tinygrad = {
+  outputs = { self, nixpkgs, nixpkgs-stable, i915-sriov, exo, ... }@inputs: 
+  let
+    # Helper function to create system configurations with reset mode support
+    mkSystem = { hostname, pkgs ? nixpkgs, hasNvidia ? false, resetMode ? false }: 
+      pkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        specialArgs = { 
+          inherit inputs resetMode hasNvidia; 
+          systemHostname = hostname;
+        };
+        modules = [
+          ./hosts/${hostname}/configuration.nix
+          ./modules/common.nix
+          # Graphics modules now include comprehensive i915-sriov patches for all systems
+          (if hasNvidia then ./modules/graphics-nvidia.nix else ./modules/graphics-intel.nix)
+          ./modules/networking.nix
+          ./modules/virtualisation.nix
+          ./modules/ups.nix
+          # Add exo Intel hardware support module
+          exo.nixosModules.exo-intel
+          # Exo Intel hardware configuration
+          {
+            services.exo.intel = {
               enable = true;
-              backend = "GPU";  # Use GPU acceleration
+              tinygrad = {
+                enable = true;
+                backend = "GPU";
+              };
+              arc = {
+                enable = true;
+                runtime = "auto";
+              };
+              npu = {
+                enable = false;  # Disabled until fully implemented
+                servicePort = 52416;
+              };
             };
-            
-            # Intel Arc iGPU configuration
-            arc = {
-              enable = true;
-              runtime = "auto";  # Auto-detect Level Zero or OpenCL
-            };
-            
-            # Intel NPU configuration (experimental)
-            npu = {
-              enable = true;
-              servicePort = 52416;
-            };
-          };
-          
-          # Additional packages for testing and monitoring
-          environment.systemPackages = with nixpkgs.legacyPackages.x86_64-linux; [
-            intel-gpu-tools  # intel_gpu_top for GPU monitoring
-            clinfo           # OpenCL device information
-            pciutils         # lspci for hardware detection
-            usbutils         # lsusb for USB devices
-          ];
-          
-          # Ensure graphics support is enabled
-          hardware.graphics = {
-            enable = true;
-            enable32Bit = false;  # Not needed for inference
-          };
-        }
-      ];
+          }
+          # Conditionally include kubernetes and monitoring based on resetMode
+        ] ++ (if resetMode then [] else [
+          ./modules/kubernetes.nix
+          ./modules/monitoring.nix
+        ]);
+      };
+  in {
+    nixosConfigurations = {
+      # Normal configurations
+      gremlin-1 = mkSystem { 
+        hostname = "gremlin-1"; 
+        hasNvidia = true; 
+      };
+      
+      gremlin-2 = mkSystem { 
+        hostname = "gremlin-2"; 
+        hasNvidia = false;
+      };
+      
+      gremlin-3 = mkSystem { 
+        hostname = "gremlin-3"; 
+        hasNvidia = false; 
+      };
+      
+      gremlin-4 = mkSystem { 
+        hostname = "gremlin-4";
+        hasNvidia = false; 
+      };
+
+      # Reset mode configurations (for cluster reset)
+      gremlin-1-reset = mkSystem { 
+        hostname = "gremlin-1"; 
+        hasNvidia = true; 
+        resetMode = true;
+      };
+      
+      gremlin-2-reset = mkSystem { 
+        hostname = "gremlin-2"; 
+        hasNvidia = false;
+        resetMode = true;
+      };
+      
+      gremlin-3-reset = mkSystem { 
+        hostname = "gremlin-3"; 
+        hasNvidia = false;
+        resetMode = true;
+      };
+      
+      gremlin-4-reset = mkSystem { 
+        hostname = "gremlin-4"; 
+        hasNvidia = false;
+        resetMode = true;
+      };
+
+      # Future: gremlin-2 with NVIDIA (when ready)
+      gremlin-2-nvidia = mkSystem { 
+        hostname = "gremlin-2"; 
+        hasNvidia = true; 
+      };
     };
   };
 }
