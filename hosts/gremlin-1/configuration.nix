@@ -34,10 +34,5 @@
     "--node-label workload=gpu-only"
   ]);
 
-  # Disable turbo boost for stability
-  boot.kernelParams = [ "intel_pstate.no_turbo=1" ];
-
-
-
 }
 
