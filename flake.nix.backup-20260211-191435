@@ -19,7 +19,6 @@
           systemHostname = hostname;
         };
         modules = [
-          sops-nix.nixosModules.sops
           { nixpkgs.config.allowUnfree = true; }
           ./hosts/${hostname}/configuration.nix
           ./modules/common.nix

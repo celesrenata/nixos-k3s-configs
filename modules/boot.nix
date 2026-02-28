@@ -17,7 +17,7 @@ in
     };
   };
   boot.initrd.kernelModules = [ "vmd" "md_mod" "raid0" ];
-  boot.kernelPackages = pkgs.linuxPackages_6_18_sriov;
+  boot.kernelPackages = pkgs.linuxPackages_6_19_sriov;
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
   boot.kernelModules = [ "xe" "vfio" "vfio_pci" "vfio_iommu_type1" ];
   boot.supportedFilesystems = [ "nfs" ];
@@ -32,9 +32,9 @@ in
     "hugepages=512"
     "nmi_watchdog=0"
     "softlockup_panic=0"
-    "intel_pstate=passive"
-    "processor.max_cstate=1"
-    "intel_pstate.max_perf_pct=50"
+#    "intel_pstate=passive"
+#    "processor.max_cstate=1"
+#    "intel_pstate.max_perf_pct=50"
   ] ++ lib.optionals (config.gremlin.graphics.intel.sriov) [
     "xe.enable_guc=3"
     "xe.max_vfs=7"

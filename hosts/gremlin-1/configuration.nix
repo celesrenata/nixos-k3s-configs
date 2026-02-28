@@ -2,6 +2,7 @@
 
 {
   imports = [
+    ./sops.nix
     ./hardware-configuration.nix
     ./wyoming.nix
   ];

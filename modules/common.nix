@@ -11,7 +11,7 @@
 
   # Enable Flakes
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
-  nix.settings.cores = 14;
+  nix.settings.cores = 16;
   nix.settings.require-sigs = false;
   nixpkgs.config.allowUnfree = true;
 

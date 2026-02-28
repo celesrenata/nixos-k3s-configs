@@ -5,10 +5,9 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-25.11";
     exo.url = "github:celesrenata/exo/ipex";
-    sops-nix.url = "github:Mic92/sops-nix";
   };
 
-  outputs = { self, exo, nixpkgs, nixpkgs-stable, sops-nix, ... }@inputs: 
+  outputs = { self, exo, nixpkgs, nixpkgs-stable, ... }@inputs: 
   let
     # Helper function to create system configurations
     mkSystem = { hostname, pkgs ? nixpkgs, intel ? true, nvidia ? false, sriov ? true, resetMode ? false, exoIntel ? false }: 
@@ -19,7 +18,6 @@
           systemHostname = hostname;
         };
         modules = [
-          sops-nix.nixosModules.sops
           { nixpkgs.config.allowUnfree = true; }
           ./hosts/${hostname}/configuration.nix
           ./modules/common.nix
