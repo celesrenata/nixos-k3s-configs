@@ -1,0 +1,21 @@
+#!/bin/bash
+
+test -f /etc/users.list || exit 0
+
+while read id username hash groups; do
+        # Skip, if user already exists
+        grep ^$username /etc/passwd && continue
+        # Create group
+        addgroup --gid $id $username
+        # Create user
+        useradd -m -u $id -s /bin/bash -g $username -d /workspace $username
+        # Set password
+        echo "$username:$hash" | /usr/sbin/chpasswd -e
+        # Add supplemental groups
+        if [ $groups ]; then
+                usermod -aG $groups $username
+        fi
+	chown -R $username /workspace
+	mkdir -p /run/user/$id
+	chown $username /run/user/$id
+done < /etc/users.list

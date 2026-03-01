@@ -1,0 +1,148 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "clusterjellyfin.fullname" . }}-workers
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "clusterjellyfin.labels" . | nindent 4 }}
+    component: workers
+spec:
+  serviceName: {{ include "clusterjellyfin.fullname" . }}-workers-headless
+  replicas: {{ .Values.workers.replicas }}
+  selector:
+    matchLabels:
+      {{- include "clusterjellyfin.selectorLabels" . | nindent 6 }}
+      component: workers
+  template:
+    metadata:
+      labels:
+        {{- include "clusterjellyfin.selectorLabels" . | nindent 8 }}
+        component: workers
+    spec:
+      {{- if .Values.workers.nodeSelector.enabled }}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                {{- toYaml .Values.workers.nodeSelector.nodes | nindent 16 }}
+      {{- end }}
+      securityContext:
+        runAsUser: {{ .Values.securityContext.runAsUser }}
+        runAsGroup: {{ .Values.securityContext.runAsGroup }}
+        fsGroup: {{ .Values.securityContext.fsGroup }}
+      initContainers:
+      - name: fix-ssh-permissions
+        image: "{{ .Values.image.worker.repository }}:{{ .Values.image.worker.tag }}"
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          # Generate SSH host keys
+          ssh-keygen -A
+          
+          # Fix permissions and ownership on host keys for jellyfin user
+          chmod 600 /etc/ssh/ssh_host_*
+          chown {{ .Values.securityContext.runAsUser }}:{{ .Values.securityContext.runAsGroup }} /etc/ssh/ssh_host_*
+          
+          # Create basic sshd_config
+          cat > /etc/ssh/sshd_config << 'EOF'
+          Port 22
+          PasswordAuthentication no
+          PubkeyAuthentication yes
+          PermitRootLogin no
+          HostKey /etc/ssh/ssh_host_rsa_key
+          HostKey /etc/ssh/ssh_host_ecdsa_key
+          HostKey /etc/ssh/ssh_host_ed25519_key
+          EOF
+          chown {{ .Values.securityContext.runAsUser }}:{{ .Values.securityContext.runAsGroup }} /etc/ssh/sshd_config
+          
+          # Debug: List what we created
+          echo "Generated SSH files:"
+          ls -la /etc/ssh/
+          
+          # Setup user SSH keys
+          mkdir -p /home/jellyfin/.ssh
+          cp /ssh-keys/* /home/jellyfin/.ssh/
+          
+          # Add main container's public key to authorized_keys
+          if [ -f /main-ssh/id_rsa.pub ]; then
+            cat /main-ssh/id_rsa.pub >> /home/jellyfin/.ssh/authorized_keys
+          fi
+          
+          chmod 700 /home/jellyfin/.ssh
+          chmod 600 /home/jellyfin/.ssh/*
+          chown -R {{ .Values.securityContext.runAsUser }}:{{ .Values.securityContext.runAsGroup }} /home/jellyfin/.ssh
+        volumeMounts:
+        - name: ssh-keys
+          mountPath: /ssh-keys
+        - name: main-ssh-keys
+          mountPath: /main-ssh
+          readOnly: true
+        - name: ssh-host-keys
+          mountPath: /etc/ssh
+        - name: ssh-home
+          mountPath: /home/jellyfin/.ssh
+        securityContext:
+          runAsUser: 0
+      containers:
+      - name: rffmpeg-worker
+        image: "{{ .Values.image.worker.repository }}:{{ .Values.image.worker.tag }}"
+        imagePullPolicy: {{ .Values.image.worker.pullPolicy }}
+        securityContext:
+          privileged: true
+        env:
+        - name: LIBVA_DRIVER_NAME
+          value: "iHD"
+        ports:
+        - containerPort: 22
+        volumeMounts:
+        - name: ssh-home
+          mountPath: /home/jellyfin/.ssh
+        - name: ssh-host-keys
+          mountPath: /etc/ssh
+        - name: dev-dri
+          mountPath: /dev/dri
+        - name: media
+          mountPath: /media
+        - name: cache
+          mountPath: /cache
+        - name: trickplay
+          mountPath: /tmp/jellyfin
+        {{- if .Values.workers.gpu.enabled }}
+        resources:
+          requests:
+            {{- toYaml .Values.workers.resources.requests | nindent 12 }}
+            {{ .Values.workers.gpu.resource }}: {{ .Values.workers.gpu.limit }}
+          limits:
+            {{- toYaml .Values.workers.resources.limits | nindent 12 }}
+            {{ .Values.workers.gpu.resource }}: {{ .Values.workers.gpu.limit }}
+        {{- else }}
+        resources:
+          {{- toYaml .Values.workers.resources | nindent 10 }}
+        {{- end }}
+      volumes:
+      - name: ssh-keys
+        secret:
+          secretName: {{ include "clusterjellyfin.fullname" . }}-ssh-keys
+      - name: ssh-home
+        emptyDir: {}
+      - name: main-ssh-keys
+        secret:
+          secretName: {{ include "clusterjellyfin.fullname" . }}-main-ssh
+      - name: ssh-host-keys
+        emptyDir: {}
+      - name: dev-dri
+        hostPath:
+          path: /dev/dri
+      - name: media
+        persistentVolumeClaim:
+          claimName: {{ include "clusterjellyfin.fullname" . }}-media
+      - name: trickplay
+        persistentVolumeClaim:
+          claimName: {{ include "clusterjellyfin.fullname" . }}-trickplay
+      - name: cache
+        persistentVolumeClaim:
+          claimName: {{ include "clusterjellyfin.fullname" . }}-cache

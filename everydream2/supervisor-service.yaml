@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: supervisor 
+spec:
+  ports:
+    - port: 28888
+      protocol: TCP
+      targetPort: 8888
+  selector:
+    io.kompose.service: supervisor
+  sessionAffinity: None
+  type: LoadBalancer
+status:
+  loadBalancer: {}

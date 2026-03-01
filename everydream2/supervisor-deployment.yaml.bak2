@@ -1,0 +1,135 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.34.0 (HEAD)
+  labels:
+    io.kompose.service: supervisor
+  name: supervisor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: supervisor
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.34.0 (HEAD)
+      labels:
+        io.kompose.service: supervisor
+    spec:
+      runtimeClassName: nvidia
+      containers:
+        - env:
+            - name: CF_QUICK_TUNNELS
+              value: "true"
+            - name: CF_TUNNEL_TOKEN
+            - name: COTURN_LISTEN_ADDRESS
+              value: 127.0.0.1
+            - name: COTURN_PASSWORD
+            - name: COTURN_PORT_HOST
+              value: "3478"
+            - name: COTURN_USER
+              value: user
+            - name: DIRECT_ADDRESS
+              value: 127.0.0.1
+            - name: DIRECT_ADDRESS_GET_WAN
+              value: "false"
+            - name: ENABLE_COTURN
+              value: "false"
+            - name: JUPYTER_METRICS_PORT
+              value: "28888"
+            - name: JUPYTER_PORT_HOST
+              value: "8888"
+            - name: JUPYTER_URL
+            - name: ONETRAINER_FLAGS
+            - name: SERVERLESS
+              value: "false"
+            - name: SERVICEPORTAL_METRICS_PORT
+              value: "21111"
+            - name: SERVICEPORTAL_PORT_HOST
+              value: "1111"
+            - name: SERVICEPORTAL_URL
+            - name: SSH_PORT_HOST
+              value: "2222"
+            - name: SSH_PORT_LOCAL
+              value: "22"
+            - name: SYNCTHING_TRANSPORT_PORT_HOST
+              value: "22999"
+            - name: SYNCTHING_UI_PORT_HOST
+              value: "8384"
+            - name: SYNCTHING_URL
+            - name: TURN_HOST
+              value: 127.0.0.1
+            - name: TURN_PASSWORD
+            - name: TURN_PORT
+              value: "3478"
+            - name: TURN_PROTOCOL
+              value: tcp
+            - name: TURN_USERNAME
+            - name: VNC_METRICS_PORT
+              value: "26200"
+            - name: VNC_PORT_HOST
+              value: "6200"
+            - name: VNC_URL
+            - name: WEBRTC_ENABLE_RESIZE
+              value: "false"
+            - name: WEBRTC_ENCODER
+              value: nvh264enc
+            - name: WEBRTC_METRICS_PORT
+              value: "26100"
+            - name: WEBRTC_PORT_HOST
+              value: "6100"
+            - name: WEBRTC_URL
+            - name: WEB_ENABLE_AUTH
+              value: "true"
+            - name: WEB_PASSWORD
+              value: password
+            - name: WEB_USER
+              value: user
+            - name: WORKSPACE
+              value: /workspace
+            - name: WORKSPACE_SYNC
+              value: "true"
+          image: ghcr.io/celesrenata/onetrainer:latest
+          name: supervisor
+          ports:
+            - containerPort: 22
+              protocol: TCP
+            - containerPort: 1111
+              protocol: TCP
+            - containerPort: 3478
+              protocol: TCP
+            - containerPort: 6100
+              protocol: TCP
+            - containerPort: 6200
+              protocol: TCP
+            - containerPort: 8384
+              protocol: TCP
+            - containerPort: 22999
+              protocol: TCP
+          resources:
+            limits:
+               nvidia.com/gpu: "1"
+          volumeMounts:
+            - mountPath: /workspace
+              name: supervisor-claim0
+            - mountPath: /root/.ssh/authorized_keys_mount
+              name: supervisor-claim1
+            - mountPath: /opt/ai-dock/bin/provisioning.sh
+              name: supervisor-claim2
+      restartPolicy: Always
+      volumes:
+        - name: supervisor-claim0
+          persistentVolumeClaim:
+            claimName: supervisor-claim0
+        - name: supervisor-claim1
+          persistentVolumeClaim:
+            claimName: supervisor-claim1
+        - name: supervisor-claim2
+          persistentVolumeClaim:
+            claimName: supervisor-claim2

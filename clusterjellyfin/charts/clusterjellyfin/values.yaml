@@ -1,0 +1,167 @@
+# Default values for clusterjellyfin
+image:
+  jellyfin:
+    repository: ghcr.io/celesrenata/jellyfin
+    tag: postgre
+    pullPolicy: IfNotPresent
+  worker:
+    repository: ghcr.io/celesrenata/clusterjellyfin-worker
+    tag: latest
+    pullPolicy: IfNotPresent
+
+jellyfin:
+  # Main Jellyfin instance configuration
+  replicas: 1
+  resources:
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+  
+  # Jellyfin configuration
+  publishedServerUrl: ""  # Set to your public URL if needed
+  
+  # Database configuration
+  database:
+    type: "postgresql"  # "sqlite" or "postgresql"
+    postgresql:
+      host: "postgresql"
+      port: 5432
+      database: "jellyfin"
+      username: "jellyfin"
+      password: "jellyfin"
+      # Connection string will be auto-generated if not provided
+      connectionString: ""
+  
+  # Environment variables
+  extraEnv:
+    - name: JELLYFIN_DATABASE_TYPE
+      value: "Jellyfin-PostgreSQL"
+  
+  # Storage configuration
+  storage:
+    config:
+      size: 10Gi
+      storageClass: ""  # Use default storage class or configure NFS below
+      accessMode: ReadWriteOnce
+      nfs:
+        server: ""  # Configure your NFS server IP
+        path: ""    # Configure your NFS path
+    cache:
+      size: 50Gi
+      storageClass: "longhorn"  # Fast storage recommended for cache
+      accessMode: ReadWriteMany
+    media:
+      size: 1Ti
+      storageClass: ""  # Use default storage class or configure NFS below
+      accessMode: ReadWriteMany
+      nfs:
+        server: ""  # Configure your NFS server IP
+        path: ""    # Configure your NFS media path
+
+# PostgreSQL database
+postgresql:
+  enabled: true
+  auth:
+    postgresPassword: "postgres"
+    username: "jellyfin"
+    password: "jellyfin"
+    database: "jellyfin"
+  primary:
+    persistence:
+      enabled: true
+      size: 20Gi
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+
+workers:
+  # Worker nodes for distributed transcoding
+  replicas: 3
+  resources:
+    requests:
+      cpu: 2000m
+      memory: 4Gi
+    limits:
+      cpu: 4000m
+      memory: 8Gi
+  
+  # Node selection for workers (optional)
+  nodeSelector:
+    enabled: false  # Set to true to use specific nodes
+    nodes: []       # List your worker node names
+  
+  # GPU configuration
+  gpu:
+    enabled: false  # Set to true for hardware acceleration
+    resource: "gpu.intel.com/i915"  # or "nvidia.com/gpu"
+    limit: 1
+  
+  # Enable privileged mode for GPU access
+  privileged: true
+
+# PostgreSQL configuration
+postgresql:
+  # Set to true to deploy CNPG PostgreSQL cluster
+  enabled: false
+  instances: 3
+  database: "jellyfin"
+  username: "jellyfin"
+  storage:
+    size: "20Gi"
+    storageClass: ""
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "2000m"
+  external:
+    host: ""
+    port: 5432
+    database: "jellyfin"
+    username: "jellyfin"
+    existingSecret: ""  # Name of existing secret with PostgreSQL credentials
+
+rffmpeg:
+  # rffmpeg configuration
+  config:
+    logging:
+      debug: false
+    fallback:
+      allow: true
+    ssh:
+      options: "-i /config/.ssh/id_rsa -o StrictHostKeyChecking=no"
+
+service:
+  type: ClusterIP
+  port: 8096
+  httpsPort: 8920
+
+ingress:
+  enabled: false  # Set to true for external access
+  className: ""
+  annotations: {}
+  hosts:
+    - host: jellyfin.example.com  # Configure your domain
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  httpsAnnotations: {}
+
+# Security context
+securityContext:
+  runAsUser: 1001
+  runAsGroup: 1001
+  fsGroup: 1001
+
+# Namespace
+namespace: jellyfin-system

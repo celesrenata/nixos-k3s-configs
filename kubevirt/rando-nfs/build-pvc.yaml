@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: disk-rando-nfs-pvc
+spec:
+  volumeName: disk-rando-nfs
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  storageClassName: nfs
+  resources:
+    requests:
+      storage: 1Ti

@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: hastebin-nfs
+spec:
+  persistentVolumeReclaimPolicy: Delete
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ""
+  nfs:
+    path: /volume1/Kubernetes/hastebin/data     # The path to your media
+    server: 192.168.42.8     # Your NFS server with Media
+  mountOptions:
+    - vers=4
+    - minorversion=1
+    - noac

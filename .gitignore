@@ -1,0 +1,86 @@
+# Python virtual environments
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Editor files
+*.swp
+*.swo
+*.swn
+*~
+.*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Large binary files
+*.tar
+*.tar.gz
+*.iso
+*.img
+*.qcow2
+*.vmdk
+*.vdi
+
+# AI/ML model files
+*.ckpt
+*.pth
+*.safetensors
+*.bin
+*.onnx
+*.pb
+models/
+
+# Docker/Container build artifacts
+*.log
+
+# Backup and temporary directories
+*.bak/
+*.old/
+*.backup/
+*.fucked/
+*.fucked2/
+*.fucked3/
+*.dead/
+*.dead2/
+*.works/
+*.dupe/
+*.new/
+.bak/
+.old/
+
+# Backup files
+*.bak
+*.old
+*.backup
+*.orig
+*.tmp
+
+# NFS/Storage data
+localhost/
+myminio/
+
+# Build artifacts
+result/
+output/
+temp/
+test/
+
+# Kubernetes secrets (be careful!)
+*-secret.yaml
+# But allow example secrets
+!*-secret.yaml.example
+
+# Local configuration
+.env
+.env.local
+
+# Specific large files
+deepweb-proxy.tar
+deepweb-proxy.tar.gz
+rainbow.tar.gz

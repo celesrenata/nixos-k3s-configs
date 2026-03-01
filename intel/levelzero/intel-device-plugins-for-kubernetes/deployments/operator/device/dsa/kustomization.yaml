@@ -1,0 +1,7 @@
+resources:
+ - ../../default
+
+patches:
+- path: dsa.yaml
+  target:
+    kind: Deployment

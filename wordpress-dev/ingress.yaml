@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wordpress-dev
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    cert-manager.io/cluster-issuer: ca-issuer
+  labels:
+    app: wordpress-dev
+spec:
+  rules:
+    - host: wordpressdev.celestium.life
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: wordpress-dev
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - wordpressdev.celestium.life
+      secretName: wordpress-dev-cert

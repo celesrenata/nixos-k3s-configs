@@ -1,0 +1,4 @@
+#!/bin/bash
+export XDG_RUNTIME_DIR="/run/user/1001"
+export PULSE_RUNTIME_PATH="/run/user/1001/pulse"
+exec startxfce4

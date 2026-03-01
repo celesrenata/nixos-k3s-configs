@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: qemu-wrapper
+  namespace: vms
+data:
+  qemu-wrapper.sh: |
+    #!/bin/bash
+    # Custom QEMU wrapper to handle ROM files
+    
+    # Extract ROM file from ConfigMap if it exists
+    if [ -f "/etc/rom-config/intelgopdriver_desktop.bin" ]; then
+        mkdir -p /usr/share/kvm
+        cp /etc/rom-config/intelgopdriver_desktop.bin /usr/share/kvm/
+        chmod 644 /usr/share/kvm/intelgopdriver_desktop.bin
+        echo "ROM file copied to /usr/share/kvm/" >&2
+    fi
+    
+    # Execute original QEMU with all arguments
+    exec /usr/libexec/qemu-kvm "$@"

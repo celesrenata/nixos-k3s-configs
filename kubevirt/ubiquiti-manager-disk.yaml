@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ubiquiti-manager-volume
+  annotations:
+    user.custom.annotation/storage.thin-provisioned: "true"
+spec:
+  storageClassName: longhorn
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 20Gi

@@ -1,0 +1,11 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: registry-buffering
+  namespace: git-server
+spec:
+  buffering:
+    maxRequestBodyBytes: 21474836480
+    maxResponseBodyBytes: 21474836480
+    memRequestBodyBytes: 104857600
+    memResponseBodyBytes: 104857600

@@ -1,0 +1,37 @@
+FROM nvidia/cuda:12.9.1-runtime-ubuntu24.04
+
+USER root
+
+# Install minimal system packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 \
+    python3-pip \
+    curl \
+    git \
+    wget \
+    libspeexdsp-dev \
+    portaudio19-dev \
+    gcc \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm /usr/lib/python*/EXTERNALLY-MANAGED \
+    && apt-get clean
+
+# Install only essential packages
+RUN pip3 install --no-cache-dir \
+    jupyterhub==5.4.3 \
+    notebook==7.3.1 \
+    jupyterlab==4.3.5 \
+    ipykernel \
+    openwakeword \
+    pyaudio \
+    numpy \
+    && pip3 cache purge
+
+# Create jovyan user
+RUN useradd -m -s /bin/bash -N jovyan
+
+USER jovyan
+WORKDIR /home/jovyan
+
+CMD ["jupyterhub-singleuser"]

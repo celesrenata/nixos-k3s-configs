@@ -1,0 +1,34 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  creationTimestamp: null
+  name: create-minio-buckets
+  namespace: minio-service
+spec:
+  template:
+    metadata:
+      creationTimestamp: null
+    spec:
+      containers:
+      - image: minio/mc:latest
+        name: create-minio-buckets
+        resources: {}
+      restartPolicy: Never
+status: {}
+  template:
+    spec:
+      containers:
+      - name: create-minio-buckets
+        image: minio/mc:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          sleep 30
+          mc alias set minio-crawler https://minio-crawler-hl.minio-service:9000 AKIA6V7J3N9B5P0D2YQH 8fG3!v2rJ7$wN@9mLpQ6zXbC4tKdPqW1 --insecure
+          mc mb minio-crawler/crawler-images --ignore-existing --insecure || true
+          mc mb minio-crawler/crawler-audio --ignore-existing --insecure || true
+          mc mb minio-crawler/crawler-videos --ignore-existing --insecure || true
+          mc mb minio-crawler/crawler-media --ignore-existing --insecure || true
+          echo "Buckets created successfully!"
+      restartPolicy: Never

@@ -1,0 +1,84 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: intel-vgpu-hooks
+data:
+  intel-vgpu.sh: |-
+    #!/usr/bin/env python3
+    import sys
+    import xml.etree.ElementTree as ET
+
+    # QEMU XML namespace
+    QEMU_NS = "http://libvirt.org/schemas/domain/qemu/1.0"
+    ET.register_namespace('qemu', QEMU_NS)
+
+    def main():
+        # --- version negotiation ---
+        if "--version" in sys.argv:
+            print("v1alpha2")
+            sys.exit(0)
+
+        # --- read incoming XML: stdin first, then argv[4] fallback ---
+        xml_data = sys.stdin.read()
+        if not xml_data.strip() and len(sys.argv) > 4:
+            xml_data = sys.argv[4]
+        if not xml_data.strip():
+            sys.exit(0)
+
+        try:
+            root = ET.fromstring(xml_data)
+        except ET.ParseError:
+            sys.exit(0)
+
+        # --- 1) Remap Q35 PCI root-port controller at 00:02 → slot 04 ---
+        for addr in root.findall('.//controller/address[@type="pci"]'):
+            if (addr.get('domain') == '0x0000' and
+                addr.get('bus')    == '0x00'   and
+                addr.get('slot')   == '0x02'):
+                addr.set('slot', '0x04')
+
+        # --- 2) CPU tweaks: disable hypervisor & hide kvm ---
+        cpu = root.find('cpu')
+        if cpu is None:
+            cpu = ET.SubElement(root, 'cpu',
+                                {'mode':'host-passthrough',
+                                 'check':'none'})
+        ET.SubElement(cpu, 'feature',
+                      {'policy':'disable',
+                       'name':'hypervisor'})
+
+        features = root.find('features')
+        if features is None:
+            features = ET.SubElement(root, 'features')
+        kvm = ET.SubElement(features, 'kvm')
+        ET.SubElement(kvm, 'hidden', {'state':'on'})
+
+        # --- 3) Push any non-GPU device at 00:02.0 → function .1 ---
+        devices = root.find('devices')
+        if devices is not None:
+            for dev in devices:
+                if dev.tag == 'controller':
+                    continue
+                addr = dev.find("address[@type='pci']")
+                if (addr is not None and
+                    addr.get('domain')   == '0x0000' and
+                    addr.get('bus')      == '0x00'   and
+                    addr.get('slot')     == '0x02'   and
+                    addr.get('function') == '0x0'):
+                    addr.set('function', '0x1')
+
+        # --- 4) Restore your vGPU hostdev back to 00:02.0 ---
+        for hostdev in root.findall("devices/hostdev[@type='pci']"):
+            tgt = hostdev.find("address[@type='pci']")
+            if tgt is not None:
+                tgt.set('bus',      '0x00')
+                tgt.set('slot',     '0x02')
+                tgt.set('function', '0x2')
+
+        # --- emit mutated XML ---
+        out = ET.tostring(root, encoding='unicode')
+        sys.stdout.write('<?xml version="1.0"?>\n' + out)
+
+    if __name__ == "__main__":
+        main()
+

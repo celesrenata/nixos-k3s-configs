@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: registry-ingress
+  namespace: git-server
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.middlewares: git-server-registry-buffering@kubernetescrd
+    traefik.ingress.kubernetes.io/service.serversTransport: git-server-registry-transport@kubernetescrd
+spec:
+  tls:
+  - hosts:
+    - registry.celestium.life
+    secretName: registry-tls
+  rules:
+  - host: registry.celestium.life
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: registry-service
+            port:
+              number: 5000

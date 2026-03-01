@@ -1,0 +1,144 @@
+FROM nvidia/cuda:12.5.0-runtime-ubuntu22.04
+ENV TZ=America/Los_Angeles
+ENV DEBIAN_FRONTEND noninteractive
+ENV DBUS_SESSION_BUS_ADDRESS=/dev/null
+
+RUN cd /root && \
+    sed -i 's/^#\s*\(deb.*partner\)$/\1/g' /etc/apt/sources.list && \
+    sed -i 's/^#\s*\(deb.*restricted\)$/\1/g' /etc/apt/sources.list && \
+    apt-get update -y && \
+    apt-get install -yqq locales  && \
+    apt-get install -yqq \
+        mate-desktop-environment-core \
+        mate-themes \
+        mate-accessibility-profiles \
+        mate-applet-appmenu \
+        mate-applet-brisk-menu \
+        mate-applets \
+        mate-applets-common \
+        mate-calc \
+        mate-calc-common \
+        mate-dock-applet \
+        mate-hud \
+        mate-indicator-applet \
+        mate-indicator-applet-common \
+        mate-menu \
+        mate-notification-daemon \
+        mate-notification-daemon-common \
+        mate-utils \
+        mate-utils-common \
+        mate-window-applets-common \
+        mate-window-buttons-applet \
+        mate-window-menu-applet \
+        mate-window-title-applet \
+        ubuntu-mate-icon-themes \
+        ubuntu-mate-themes \
+        tightvncserver \
+        pulseaudio && \
+    apt-get install --no-install-recommends -yqq \
+        supervisor \
+        sudo \
+        tzdata \
+        vim \
+        mc \
+        ca-certificates \
+        xterm \
+        curl \
+        wget \
+        wmctrl \
+        epiphany-browser && \
+    ln -fs /usr/share/zoneinfo/UTC /etc/localtime && dpkg-reconfigure -f noninteractive tzdata && \
+    apt-get -y install \
+        git \
+        libxfont-dev \
+        xserver-xorg-core \
+        libx11-dev \
+        libxfixes-dev \
+        libssl-dev \
+        libpam0g-dev \
+        libtool \
+        libjpeg-dev \
+        flex \
+        bison \
+        gettext \
+        autoconf \
+        libxml-parser-perl \
+        libfuse-dev \
+        xsltproc \
+        libxrandr-dev \
+        python3-libxml2 \
+        nasm \
+        xserver-xorg-dev \
+        fuse \
+        build-essential \
+        pkg-config \
+        libpulse-dev m4 intltool dpkg-dev \
+        libfdk-aac-dev \
+        libopus-dev \
+        libmp3lame-dev \
+        xorgxrdp \
+        xrdp && \
+
+    apt-get -y autoclean && apt-get -y autoremove && \
+    apt-get -y purge $(dpkg --get-selections | grep deinstall | sed s/deinstall//g) && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN echo "mate-session" > /etc/skel/.xsession && \
+    sed -i '/TerminalServerUsers/d' /etc/xrdp/sesman.ini  && \
+    sed -i '/TerminalServerAdmins/d' /etc/xrdp/sesman.ini  && \
+    sed -i -e '/DisconnectedTimeLimit=/ s/=.*/=0/' /etc/xrdp/sesman.ini && \
+    sed -i -e '/IdleTimeLimit=/ s/=.*/=0/' /etc/xrdp/sesman.ini && \
+    xrdp-keygen xrdp auto  && \
+    mkdir -p /var/run/xrdp && \
+    chmod 2775 /var/run/xrdp  && \
+    mkdir -p /var/run/xrdp/sockdir && \
+    chmod 3777 /var/run/xrdp/sockdir && \
+    touch /etc/skel/.Xauthority && \
+    mkdir /run/dbus/ && chown messagebus:messagebus /run/dbus/ && \
+    #dbus-uuidgen > /etc/machine-id && \
+    #ln -sf /var/lib/dbus/machine-id /etc/machine-id && \  
+    echo "[program:xrdp-sesman]" > /etc/supervisor/conf.d/xrdp.conf && \
+    echo "command=/usr/sbin/xrdp-sesman --nodaemon" >> /etc/supervisor/conf.d/xrdp.conf && \
+    echo "process_name = xrdp-sesman" >> /etc/supervisor/conf.d/xrdp.conf && \
+    echo "[program:xrdp]" >> /etc/supervisor/conf.d/xrdp.conf && \
+    echo "command=/usr/sbin/xrdp -nodaemon" >> /etc/supervisor/conf.d/xrdp.conf && \
+    echo "process_name = xrdp" >> /etc/supervisor/conf.d/xrdp.conf
+
+WORKDIR /home/workspace
+
+RUN curl -Ls https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xvj bin/micromamba
+
+ENV PYTHON=python3.10
+ENV ONETRAINER_PATH=/home/workspace/
+ENV PATH="$PATH:$ONETRAINER_PATH"
+
+# python
+RUN apt-get update \
+    && apt-get install -y mesa-utils libgl1-mesa-dri libgtkgl2.0-dev libgtkglext1-dev git software-properties-common apt-utils \
+    && add-apt-repository ppa:deadsnakes/ppa \
+    && apt-get update \
+    && apt install -y python3.10 python3.10-distutils curl \
+    && curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
+RUN apt-get install -y python3.10-dev python3.10-venv
+# clone OneTrainer
+RUN pip install torch==2.5.1+cu124 --extra-index-url https://download.pytorch.org/whl/cu124
+RUN pip install torchvision==0.20.1+cu124 --extra-index-url https://download.pytorch.org/whl/cu124
+RUN pip install onnxruntime-gpu==1.19.2
+RUN git clone https://github.com/Nerogar/OneTrainer.git \ 
+    && pip install -r OneTrainer/requirements-cuda.txt 
+RUN pip install -r OneTrainer/requirements-global.txt
+
+RUN apt install --yes --no-install-recommends nvidia-container-toolkit
+
+# RUN
+ENV PYTHON=python3.10
+ENV ONETRAINER_PATH=/home/workspace/
+ENV PATH="$PATH:$ONETRAINER_PATH"
+WORKDIR $ONETRAINER_PATH
+
+COPY xrdp.ini /etc/xrdp/xrdp.ini
+COPY createusers.txt /root/
+COPY autostartup.sh /root/
+CMD ["/bin/bash", "/root/autostartup.sh"]
+                                    
+EXPOSE 3389 22

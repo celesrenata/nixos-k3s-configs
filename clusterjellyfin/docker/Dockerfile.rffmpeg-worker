@@ -1,0 +1,50 @@
+FROM ubuntu:24.04
+
+# Add Intel graphics repository and install dependencies
+RUN apt-get update && apt-get install -y software-properties-common curl gpg wget && \
+    curl -fsSL https://repo.jellyfin.org/jellyfin_team.gpg.key | gpg --dearmor -o /etc/apt/trusted.gpg.d/jellyfin.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture)] https://repo.jellyfin.org/ubuntu noble main" | tee /etc/apt/sources.list.d/jellyfin.list && \
+    wget -qO - https://repositories.intel.com/gpu/intel-graphics.key | gpg --yes --dearmor --output /usr/share/keyrings/intel-graphics.gpg && \
+    echo "deb [arch=amd64,i386 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu noble unified" | tee /etc/apt/sources.list.d/intel-gpu-noble.list
+
+# Install dependencies and Intel Arc XE drivers
+RUN apt-get update && apt-get install -y \
+    jellyfin-ffmpeg7 \
+    openssh-server \
+    libze-intel-gpu1 \
+    libze1 \
+    intel-opencl-icd \
+    clinfo \
+    intel-gsc \
+    intel-media-va-driver-non-free \
+    libmfx-gen1 \
+    libvpl2 \
+    libvpl-tools \
+    libva-glx2 \
+    va-driver-all \
+    vainfo \
+    intel-gpu-tools \
+    libnuma1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create render group and jellyfin user with proper groups
+RUN groupadd -g 303 render || true && \
+    (id jellyfin || useradd -m -u 1001 -s /bin/bash jellyfin) && \
+    usermod -a -G render jellyfin
+
+# Configure SSH and generate host keys
+RUN mkdir /var/run/sshd && \
+    sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config && \
+    sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config && \
+    ssh-keygen -A
+
+# Setup SSH for jellyfin user
+RUN mkdir -p /home/jellyfin/.ssh && \
+    chown jellyfin:jellyfin /home/jellyfin/.ssh && \
+    chmod 700 /home/jellyfin/.ssh
+
+# Expose SSH port
+EXPOSE 22
+
+# Start SSH daemon
+CMD ["/usr/sbin/sshd", "-D"]

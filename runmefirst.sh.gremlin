@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+# Kubernetes Projects to Activate
+PROJECTS='dashboard
+longhorn
+prometheus
+influxdb2
+cert-manager
+traefik
+intel
+nvidia
+kasa-exporter
+grafana
+phpmyadmin
+portainer
+homeassistant
+git-server
+mariadb
+postgresql
+mongodb
+minio
+redis
+flame
+hastebin
+nextcloud
+ollama
+open-webui
+reviewboard
+whisper
+comfyui
+OneTrainer
+jupyterhub
+wordpress
+kubevirt
+sabnzbd
+sickchill
+radarr
+clusterjellyfin
+kubevirt/arch-nfs
+kubevirt/winvm-nfs
+kubevirt/ubuntu-nfs
+kubevirt/nixos'
+
+#intel
+# Build Project List
+readarray -t PROJECT_LIST <<<"$PROJECTS"; declare -p PROJECT_LIST;
+CWD=$(pwd)
+# Run fleet install
+for cmd in "${PROJECT_LIST[@]}"; do
+    echo -e "\e[32m##################\e[0m"
+    echo -e "\e[32mInstalling: ${cmd}\e[0m"
+    echo -e "\e[32m##################\e[0m"
+    cd ${cmd}
+    ./runmefirst.sh
+    cd ${CWD}
+    sleep 20
+done

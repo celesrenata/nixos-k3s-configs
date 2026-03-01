@@ -1,0 +1,45 @@
+ollama:
+  gpu:
+    # -- Enable GPU integration
+    enabled: true
+    
+    # -- GPU type: 'nvidia' or 'amd'
+    type: 'nvidia'
+    
+    # -- Specify the number of GPU to 1
+    number: 1
+   
+  # -- List of models to pull at container startup
+  models:
+    pull: 
+      - llama3.2
+      - name: gemma3:27b
+        extra_params:
+          num_ctx: 65536
+      - name: deepseek-r1:14b
+        extra_params:
+          num_ctx: 65536
+      - name: qwen2.5-coder:32b-instruct-q5_K_S
+        extra_params:
+          num_ctx: 65536
+      - name: phi4:14b
+        extra_params:
+          num_ctx: 65536
+#      - dolphin-llama3:8b
+       
+
+  persistentVolume:
+    enabled: true
+    accessModes:
+      - ReadWriteOnce
+      - ReadOnlyMany
+      - ReadWriteMany
+    existingClaim: ollama-storage-pvc
+
+livenessProbe:
+  initialDelaySeconds: 4000
+image:
+  repository: ollama/ollama
+  pullPolicy: Always
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "latest"

@@ -1,0 +1,219 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: steamvr-service
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.34.0 (HEAD)
+  labels:
+    io.kompose.service: steamvr
+  name: steamvr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: steamvr
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.34.0 (HEAD)
+      labels:
+        io.kompose.service: steamvr
+    spec:
+      runtimeClassName: nvidia
+      securityContext:
+        fsGroup: 1001
+      initContainers:
+        - name: fix-vt-permissions
+          image: busybox
+          command: ['sh', '-c', 'chmod 666 /dev/tty0 /dev/tty1 /dev/tty2 /dev/tty3 /dev/tty4 /dev/tty5 /dev/tty6 /dev/tty7 /dev/dri/*']
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - mountPath: /dev/tty0
+              name: tty0
+            - mountPath: /dev/tty1
+              name: tty1
+            - mountPath: /dev/tty2
+              name: tty2
+            - mountPath: /dev/tty3
+              name: tty3
+            - mountPath: /dev/tty4
+              name: tty4
+            - mountPath: /dev/tty5
+              name: tty5
+            - mountPath: /dev/tty6
+              name: tty6
+            - mountPath: /dev/tty7
+              name: tty7
+            - mountPath: /dev/dri
+              name: dri
+      containers:
+        - securityContext:
+            capabilities:
+              add:
+                - ALL
+                - NET_ADMIN
+                - NET_RAW
+                - SYS_ADMIN
+                - SYS_NICE
+            privileged: true
+            runAsUser: 0
+            runAsGroup: 0
+          env:
+            - name: NVIDIA_VISIBLE_DEVICES
+              value: all
+            - name: NVIDIA_DRIVER_CAPABILITIES
+              value: all
+            - name: WEB_ENABLE_AUTH
+              value: "true"
+            - name: WEB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: steamvr-auth
+                  key: web-user
+            - name: WEB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: steamvr-auth
+                  key: web-password
+            - name: WORKSPACE
+              value: "/workspace"
+          image: ghcr.io/celesrenata/steamvr:latest
+          imagePullPolicy: Always
+          name: steamvr
+          ports:
+            - containerPort: 3350
+              protocol: TCP
+            - containerPort: 22
+              protocol: TCP
+            - containerPort: 3389 
+              protocol: TCP
+            - containerPort: 27036
+              protocol: TCP
+            - containerPort: 27037
+              protocol: TCP
+            - containerPort: 10400
+              protocol: UDP
+            - containerPort: 10401
+              protocol: UDP
+            - containerPort: 9943
+              protocol: TCP
+            - containerPort: 9943
+              protocol: UDP
+            - containerPort: 9944
+              protocol: TCP
+            - containerPort: 9944
+              protocol: UDP
+          resources:
+            requests:
+              cpu: 0.1
+              memory: 2Gi
+            limits:
+               cpu: 12
+               memory: 64Gi
+               nvidia.com/gpu: "1"
+          volumeMounts:
+            - mountPath: /workspace
+              name: steamvr-workspace
+            - mountPath: /home/workspace
+              name: steamvr-home
+            - mountPath: /workspace/games
+              name: steamvr-games
+            - mountPath: /etc/X11/xorg.conf
+              name: xorg-config
+              subPath: xorg.conf
+            - mountPath: /dev/shm
+              name: dshm
+            - mountPath: /run/opengl-driver
+              name: opengl-driver
+              readOnly: true
+           # - mountPath: /var/run/dbus
+           #   name: dbus
+            - mountPath: /dev/input
+              name: dev 
+            - mountPath: /dev/dri
+              name: dri
+            - mountPath: /dev/tty0
+              name: tty0
+            - mountPath: /dev/tty1
+              name: tty1
+            - mountPath: /dev/tty2
+              name: tty2
+            - mountPath: /dev/tty3
+              name: tty3
+            - mountPath: /dev/tty4
+              name: tty4
+            - mountPath: /dev/tty5
+              name: tty5
+            - mountPath: /dev/tty6
+              name: tty6
+            - mountPath: /dev/tty7
+              name: tty7
+            - mountPath: /root/createusers.txt
+              name: createusers
+              subPath: createusers.txt 
+      restartPolicy: Always
+      tolerations:
+      - key: nvidia.com/gpu
+        operator: Equal
+        value: present
+        effect: NoSchedule
+      volumes:
+        - name: steamvr-workspace
+          persistentVolumeClaim:
+            claimName: steamvr-workspace
+        - name: steamvr-home
+          persistentVolumeClaim:
+            claimName: steamvr-home
+        - name: dshm
+          emptyDir:
+            medium: Memory
+        - name: opengl-driver
+          hostPath:
+            path: "/run/opengl-driver"
+       # - name: dbus
+       #   hostPath:
+       #     path: "/var/run/dbus"
+        - name: dev 
+          hostPath:
+            path: "/dev/input"
+        - name: dri
+          hostPath:
+            path: "/dev/dri"
+        - name: tty0
+          hostPath:
+            path: "/dev/tty0"
+        - name: tty1
+          hostPath:
+            path: "/dev/tty1"
+        - name: tty2
+          hostPath:
+            path: "/dev/tty2"
+        - name: tty3
+          hostPath:
+            path: "/dev/tty3"
+        - name: tty4
+          hostPath:
+            path: "/dev/tty4"
+        - name: tty5
+          hostPath:
+            path: "/dev/tty5"
+        - name: tty6
+          hostPath:
+            path: "/dev/tty6"
+        - name: tty7
+          hostPath:
+            path: "/dev/tty7"
+        - name: steamvr-games
+          persistentVolumeClaim:
+            claimName: steamvr-games
+        - name: createusers
+          configMap:
+            name: steamvr-createusers
+        - name: xorg-config
+          configMap:
+            name: xorg-intel-config

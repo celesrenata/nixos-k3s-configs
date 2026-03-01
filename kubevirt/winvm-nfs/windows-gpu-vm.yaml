@@ -1,0 +1,58 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: windows-gpu-vm
+spec:
+  running: false
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: windows-gpu-vm
+    spec:
+      domain:
+        cpu:
+          cores: 4
+          model: host-passthrough
+        memory:
+          guest: 8Gi
+        devices:
+          disks:
+          - name: harddrive
+            disk:
+              bus: virtio
+          - name: cdrom
+            cdrom:
+              bus: sata
+          - name: rom-disk
+            disk:
+              bus: virtio
+          interfaces:
+          - name: default
+            masquerade: {}
+          hostDevices:
+          - name: intel-gpu
+            deviceName: intel.com/i915
+        features:
+          acpi: {}
+          apic: {}
+          hyperv:
+            relaxed: {}
+            vapic: {}
+            spinlocks:
+              spinlocks: 8191
+        firmware:
+          bootloader:
+            efi: {}
+      networks:
+      - name: default
+        pod: {}
+      volumes:
+      - name: harddrive
+        persistentVolumeClaim:
+          claimName: windows-disk
+      - name: cdrom
+        persistentVolumeClaim:
+          claimName: windows-iso
+      - name: rom-disk
+        configMap:
+          name: intel-gpu-rom

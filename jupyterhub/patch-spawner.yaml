@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jupyterhub-config-patch
+  namespace: jupyterhub-service
+data:
+  patch_spawner.py: |
+    import json
+    from kubespawner import KubeSpawner
+    
+    # Override the init_containers property to remove cloud metadata blocking
+    class PatchedKubeSpawner(KubeSpawner):
+        def _get_init_containers(self):
+            # Return empty list to disable all init containers
+            return []
+        
+        @property
+        def init_containers(self):
+            return []
+        
+        @init_containers.setter
+        def init_containers(self, value):
+            # Ignore any attempts to set init containers
+            pass
+    
+    # Register the patched spawner
+    c.JupyterHub.spawner_class = PatchedKubeSpawner
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: patch-jupyterhub-spawner
+  namespace: jupyterhub-service
+spec:
+  template:
+    spec:
+      serviceAccountName: default
+      containers:
+      - name: patcher
+        image: bitnami/kubectl:latest
+        command:
+        - /bin/bash
+        - -c
+        - |
+          # Wait for hub pod
+          kubectl wait --for=condition=ready pod -l app=jupyterhub,component=hub -n jupyterhub-service --timeout=300s
+          
+          # Patch the hub deployment to mount our custom config
+          kubectl patch deployment hub -n jupyterhub-service --type='json' -p='[
+            {
+              "op": "add",
+              "path": "/spec/template/spec/volumes/-",
+              "value": {
+                "name": "custom-config",
+                "configMap": {"name": "jupyterhub-config-patch"}
+              }
+            },
+            {
+              "op": "add", 
+              "path": "/spec/template/spec/containers/0/volumeMounts/-",
+              "value": {
+                "name": "custom-config",
+                "mountPath": "/usr/local/etc/jupyterhub/patch_spawner.py",
+                "subPath": "patch_spawner.py"
+              }
+            },
+            {
+              "op": "add",
+              "path": "/spec/template/spec/containers/0/env/-", 
+              "value": {
+                "name": "JUPYTERHUB_CONFIG_PATH",
+                "value": "/usr/local/etc/jupyterhub/patch_spawner.py"
+              }
+            }
+          ]'
+          
+          echo "JupyterHub patched to disable init containers!"
+      restartPolicy: OnFailure
+  backoffLimit: 3

@@ -1,0 +1,140 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nextcloud-appapi-dsp 
+spec:
+  ports:
+    - name: "dockerport"
+      port: 2375
+      protocol: TCP
+      targetPort: 2375
+    - name: "appport00"
+      port: 23000
+      protocol: TCP
+      targetPort: 23000
+    - name: "appport01"
+      port: 23001
+      protocol: TCP
+      targetPort: 23001
+    - name: "appport02"
+      port: 23002
+      protocol: TCP
+      targetPort: 23002
+    - name: "appport03"
+      port: 23003
+      protocol: TCP
+      targetPort: 23003
+    - name: "appport04"
+      port: 23004
+      protocol: TCP
+      targetPort: 23004
+    - name: "appport05"
+      port: 23005
+      protocol: TCP
+      targetPort: 23005
+    - name: "appport06"
+      port: 23006
+      protocol: TCP
+      targetPort: 23006
+    - name: "appport07"
+      port: 23007
+      protocol: TCP
+      targetPort: 23007
+    - name: "appport08"
+      port: 23008
+      protocol: TCP
+      targetPort: 23008
+    - name: "appport09"
+      port: 23009
+      protocol: TCP
+      targetPort: 23009
+    - name: "appport10"
+      port: 23010
+      protocol: TCP
+      targetPort: 23010
+    - name: "appport11"
+      port: 23011
+      protocol: TCP
+      targetPort: 23011
+    - name: "appport12"
+      port: 23012
+      protocol: TCP
+      targetPort: 23012
+    - name: "appport13"
+      port: 23013
+      protocol: TCP
+      targetPort: 23013
+    - name: "appport14"
+      port: 23014
+      protocol: TCP
+      targetPort: 23014
+    - name: "appport15"
+      port: 23015
+      protocol: TCP
+      targetPort: 23015
+    - name: "appport16"
+      port: 23016
+      protocol: TCP
+      targetPort: 23016
+    - name: "appport17"
+      port: 23017
+      protocol: TCP
+      targetPort: 23017
+    - name: "appport18"
+      port: 23018
+      protocol: TCP
+      targetPort: 23018
+    - name: "appport19"
+      port: 23019
+      protocol: TCP
+      targetPort: 23019
+    - name: "appport20"
+      port: 23020
+      protocol: TCP
+      targetPort: 23020
+    - name: "appport21"
+      port: 23021
+      protocol: TCP
+      targetPort: 23021
+    - name: "appport22"
+      port: 23022
+      protocol: TCP
+      targetPort: 23022
+    - name: "appport23"
+      port: 23023
+      protocol: TCP
+      targetPort: 23023
+    - name: "appport24"
+      port: 23024
+      protocol: TCP
+      targetPort: 23024
+    - name: "appport25"
+      port: 23025
+      protocol: TCP
+      targetPort: 23025
+    - name: "appport26"
+      port: 23026
+      protocol: TCP
+      targetPort: 23026
+    - name: "appport27"
+      port: 23027
+      protocol: TCP
+      targetPort: 23027
+    - name: "appport28"
+      port: 23028
+      protocol: TCP
+      targetPort: 23028
+    - name: "appport29"
+      port: 23029
+      protocol: TCP
+      targetPort: 23029
+    - name: "appport30"
+      port: 23030
+      protocol: TCP
+      targetPort: 23030
+  selector:
+    io.kompose.service: nextcloud-appapi-dsp
+  sessionAffinity: None
+  type: LoadBalancer
+status:
+  loadBalancer: {}

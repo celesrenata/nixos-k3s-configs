@@ -1,0 +1,71 @@
+---
+# Default values for template.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+image:
+  repository: ghcr.io/linuxserver/sickchill
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  #tag: "2021.5.10-1-ls63"
+  tag: latest
+
+secret: {}
+
+env:
+  # https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+  TZ: "America/Los_Angeles"
+  # PUID: "1000"
+  # PGID: "1000"
+
+service:
+  port:
+    port: 8081
+
+ingress:
+  enabled: true
+  hosts:
+    - host: "sickchill.celestium.life"
+      paths:
+        - path: /
+          # Ignored if not kubeVersion >= 1.14-0
+          pathType: Prefix
+  tls:
+    - secretName: sickchill-tls
+      hosts:
+        - sickchill.celestium.life
+
+persistence:
+  config:
+    enabled: true
+    emptyDir: false
+    mountPath: /config
+    ## Template downloads data Persistent Volume Storage Class
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is
+    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    ##   GKE, AWS & OpenStack)
+    ##
+    # storageClass: "-"
+    ##
+    ## If you want to reuse an existing claim, you can pass the name of the PVC using
+    ## the existingClaim variable
+    existingClaim: sickchill-config-pvc
+    accessMode: ReadWriteOnce
+    size: 1Gi
+    ## Do not delete the pvc upon helm uninstall
+  downloads:
+    enabled: true
+    emptyDir: false
+    mountPath: /downloads
+    existingClaim: sickchill-downloads-pvc
+    accessMode: ReadWriteOnce
+    size: 1000Gi
+  tv:
+    enabled: true
+    emptyDir: false
+    mountPath: /tv
+    existingClaim: sickchill-tv-pvc
+    accessMode: ReadWriteOnce
+    size: 1000Gi
+

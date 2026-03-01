@@ -1,0 +1,72 @@
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachineInstance
+metadata:
+  labels:
+    special: vmi-pxe
+  name: vmi-pxe
+spec:
+  domain:
+    clock:
+      timer:
+        hpet:
+          present: false
+        hyperv: {}
+        pit:
+          tickPolicy: delay
+        rtc:
+          tickPolicy: catchup
+      utc: {}
+    cpu:
+      cores: 8 
+    devices:
+      gpus:
+        - deviceName: gpu.intel.com/xe
+          name: gpu1
+      disks:
+      - disk:
+          bus: virtio
+        name: pvcdisk
+      - cdrom:
+          bus: sata
+        name: virtioiso
+      - cdrom:
+          bus: sata
+        name: arciso
+      interfaces:
+      - masquerade: {}
+        model: virtio 
+        name: default
+      tpm: {}
+    features:
+      acpi: {}
+      apic: {}
+      hyperv:
+        relaxed: {}
+        spinlocks:
+          spinlocks: 8191
+        vapic: {}
+      smm: {}
+    firmware:
+      bootloader:
+        efi:
+          secureBoot: false
+      uuid: 5d307ca9-b3ef-428c-8861-06e72d69f223
+    resources:
+      requests:
+        memory: 16Gi
+            gpu.intel.com/xe: "1"
+  networks:
+  - name: default
+    pod: {}
+  terminationGracePeriodSeconds: 0
+  volumes:
+  - name: pvcdisk
+    persistentVolumeClaim:
+      claimName: disk-pxe
+  - name: virtioiso
+    persistentVolumeClaim:
+      claimName: virtio-drivers-pvc
+  - name: arciso
+    persistentVolumeClaim:
+      claimName: intel-arc-drivers-pvc 

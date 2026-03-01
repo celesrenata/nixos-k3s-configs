@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: jellyfin-service
+  namespace: jellyfin-system
+spec:
+  selector:
+    app.kubernetes.io/name: clusterjellyfin
+    app.kubernetes.io/instance: jellyfin
+    component: main
+  ports:
+  - name: web
+    port: 8096
+    targetPort: 8096
+  - name: dlna
+    port: 8920
+    targetPort: 8920
+  type: LoadBalancer

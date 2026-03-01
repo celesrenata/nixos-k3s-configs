@@ -1,0 +1,16 @@
+port = 3389
+fork = true
+tcp_nodelay = true
+tcp_keepalive = true
+security_layer = "negotiate"
+crypt_level = "high"
+allow_channels = true
+rdpsnd = true
+
+[Xorg]
+name = "Xorg"
+lib = "libxup.so"
+username = "ask"
+password = "ask"
+port = -1
+code = 20

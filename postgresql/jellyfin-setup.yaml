@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jellyfin-setup
+data:
+  setup.sql: |
+    CREATE USER jellyfin WITH PASSWORD 'PSCh4ng3me!';
+    CREATE DATABASE clusterjellyfin OWNER jellyfin;
+    GRANT ALL PRIVILEGES ON DATABASE clusterjellyfin TO jellyfin;

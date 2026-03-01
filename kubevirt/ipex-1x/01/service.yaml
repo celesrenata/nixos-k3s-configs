@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: vm-ipex-01 
+spec:
+  ports:
+    - nodePort: 31301
+      name: ssh
+      port: 2301 
+      protocol: TCP
+      targetPort: 22
+    - nodePort: 31407
+      name: ollama
+      port: 2401
+      targetPort: 11434
+    - nodePort: 31285
+      name: rdp
+      port: 2411
+      targetPort: 3389
+  selector:
+    kubevirt.io/vm: vm-ipex-01
+  sessionAffinity: None
+  type: LoadBalancer
+status:
+  loadBalancer: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vm-ipex-01-node-exporter
+  labels:
+    prometheus.kubevirt.io: "node-exporter"
+spec:
+  ports:
+  - name: metrics
+    port: 9100
+    targetPort: 9100
+    protocol: TCP
+  selector:
+    prometheus.kubevirt.io: "node-exporter"
+

@@ -1,0 +1,16 @@
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: Grant
+metadata:
+  name: reviewboard-grant 
+spec:
+  mariaDbRef: 
+    name: mariadb
+  privileges: 
+    - "ALL"
+  database: "reviewboard"
+  table: "*"
+  username: reviewboard
+  grantOption: true
+  host: "%"
+  requeueInterval: 30s
+  retryInterval: 5s

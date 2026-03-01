@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: disk-splinter-nfs-pvc
+spec:
+  volumeName: disk-splinter-nfs
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  storageClassName: nfs
+  resources:
+    requests:
+      storage: 1Ti

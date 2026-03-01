@@ -1,0 +1,28 @@
+# Default configuration for openldap as environment variables. These get injected directly in the container.
+# Use the env variables from https://github.com/osixia/docker-openldap#beginner-guide
+env:
+  LDAP_ORGANISATION: "Celestium.life"
+  LDAP_DOMAIN: "sso.celestium.life"
+  LDAP_BACKEND: "hdb"
+  LDAP_TLS: "true"
+  LDAP_TLS_ENFORCE: "false"
+  LDAP_REMOVE_CONFIG_AFTER_SETUP: "true"
+  LDAP_READONLY_USER: "true"
+  LDAP_READONLY_USER_USERNAME: readonly
+  LDAP_READONLY_USER_MASSWORD: password
+
+# Default Passwords to use, stored as a secret. If unset, passwords are auto-generated.
+# You can override these at install time with
+# helm install openldap --set openldap.adminPassword=<passwd>,openldap.configPassword=<passwd>
+adminPassword: admin
+configPassword: 9h8sdfg9sdgfjsdfg8sdgsdfjgklsdfg8sdgfhj
+
+customLdifFiles:
+  initial-ous.ldif: |-
+    dn: ou=People,dc=sso,dc=celestium,dc=life
+    objectClass: organizationalUnit
+    ou: People
+
+    dn: ou=Group,dc=sso,dc=celestium,dc=life
+    objectClass: organizationalUnit
+    ou: Group

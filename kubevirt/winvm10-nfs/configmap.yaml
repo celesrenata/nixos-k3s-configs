@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: intel-vgpu-configmap
+data:
+  intel-vgpu-pci-location.sh: |
+    #!/usr/bin/env python3
+    
+    import xml.etree.ElementTree as ET
+    import sys
+    
+    def main(s):
+        # write to a temporary file
+        f = open("/tmp/orig.xml", "w")
+        f.write(s)
+        f.close()
+
+        # parse xml from file
+        xml = ET.parse("/tmp/orig.xml")
+        # get the root element
+        root = xml.getroot()
+        for addr in root.findall('.//controller/address[@type="pci"]'):
+            if addr.attrib.get('bus', None) == '0x00' and addr.attrib.get('slot', None) == '0x02':
+                addr.set('slot', '0x04')
+ 
+        for addr in root.findall('.//address[@type="pci"]'):
+            if addr.attrib.get('bus', None) == '0x08':
+                addr.set('bus', '0x00')
+                addr.set('slot', '0x02')
+                addr.set('function', '0x0')
+
+        # write to a new file
+        xml.write("/tmp/new.xml")
+        # print file contents to stdout
+        f = open("/tmp/new.xml")
+        print(f.read())
+        f.close()
+
+    if __name__ == "__main__":
+        main(sys.argv[4])

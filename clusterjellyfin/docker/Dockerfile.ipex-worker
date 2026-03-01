@@ -1,0 +1,38 @@
+FROM intel/intel-extension-for-pytorch:2.1.10-xpu
+
+# Switch to root for package installation
+USER root
+
+# Fix Intel GPU repository key and add Jellyfin repository
+RUN apt-get update && apt-get install -y wget gnupg ca-certificates && \
+    wget -qO - https://repositories.intel.com/gpg/28DA432DAAC8BAEA.pub | gpg --dearmor > /usr/share/keyrings/intel-gpu-archive-keyring.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/intel-gpu-archive-keyring.gpg] https://repositories.intel.com/gpu/ubuntu noble main" | tee /etc/apt/sources.list.d/intel-gpu.list && \
+    apt-get update && apt-get install -y curl gpg software-properties-common && \
+    curl -fsSL https://repo.jellyfin.org/jellyfin_team.gpg.key | gpg --dearmor -o /etc/apt/trusted.gpg.d/jellyfin.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture)] https://repo.jellyfin.org/ubuntu noble main" | tee /etc/apt/sources.list.d/jellyfin.list
+
+# Install Jellyfin FFmpeg and SSH
+RUN apt-get update && apt-get install -y \
+    jellyfin-ffmpeg7 \
+    openssh-server \
+    vainfo \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create render group and jellyfin user with proper groups
+RUN groupadd -g 303 render || true && \
+    (id jellyfin || useradd -m -u 1001 -s /bin/bash jellyfin) && \
+    usermod -a -G render jellyfin
+
+# Configure SSH
+RUN mkdir /var/run/sshd && \
+    sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config && \
+    sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config && \
+    ssh-keygen -A
+
+# Setup SSH for jellyfin user
+RUN mkdir -p /home/jellyfin/.ssh && \
+    chown jellyfin:jellyfin /home/jellyfin/.ssh && \
+    chmod 700 /home/jellyfin/.ssh
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

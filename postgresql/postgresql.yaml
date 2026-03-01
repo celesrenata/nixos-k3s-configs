@@ -1,0 +1,46 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgresql
+spec:
+  instances: 1
+  
+  postgresql:
+    parameters:
+      max_connections: "200"
+      shared_buffers: "256MB"
+      effective_cache_size: "1GB"
+    pg_hba:
+      - "host all all 0.0.0.0/0 md5"
+      - "local all all peer"
+    
+  bootstrap:
+    initdb:
+      database: postgresql
+      owner: celes
+      secret:
+        name: postgresql-secret
+      postInitSQL:
+        - "CREATE USER jellyfin WITH PASSWORD 'PSCh4ng3me!';"
+        - "CREATE DATABASE clusterjellyfin OWNER jellyfin;"
+    
+  superuserSecret:
+    name: root-secret
+
+  storage:
+    size: 10Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgresql-external
+spec:
+  type: LoadBalancer
+  selector:
+    cnpg.io/cluster: postgresql
+    role: primary
+  ports:
+  - port: 5432
+    targetPort: 5432
+    protocol: TCP

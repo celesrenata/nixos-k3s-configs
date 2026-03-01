@@ -1,0 +1,21 @@
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: hastebin-ingress-route
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`hastebin.celestium.life`)
+      kind: Rule
+      services:
+      - name: hastebin
+        port: 7777
+        scheme: http
+    - match: Host(`hastebin.dev.celestium.life`)
+      kind: Rule
+      services:
+      - name: hastebin
+        port: 7777
+        scheme: http

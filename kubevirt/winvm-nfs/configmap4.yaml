@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: intel-vgpu-hooks
+data:
+  # give your hook file a name
+  intel-vgpu.sh: |-
+    #!/usr/bin/env python3
+    import sys
+    import xml.etree.ElementTree as ET
+
+    # QEMU XML namespace
+    QEMU_NS = "http://libvirt.org/schemas/domain/qemu/1.0"
+    ET.register_namespace('qemu', QEMU_NS)
+
+    def main():
+        xml_data = sys.stdin.read()
+        root = ET.fromstring(xml_data)
+
+        # Disable hypervisor feature
+        cpu = root.find('cpu')
+        if cpu is None:
+            cpu = ET.SubElement(root, 'cpu',
+                                {'mode':'host-passthrough',
+                                 'check':'none'})
+        ET.SubElement(cpu, 'feature',
+                      {'policy':'disable',
+                       'name':'hypervisor'})
+
+        # Ensure KVM hidden
+        features = root.find('features')
+        if features is None:
+            features = ET.SubElement(root, 'features')
+        kvm = ET.SubElement(features, 'kvm')
+        ET.SubElement(kvm, 'hidden', {'state':'on'})
+
+        # ------------- PCI Reassignment -------------
+        devs = root.find('devices')
+        if devs is not None:
+            for dev in devs:
+                # Skip PCI controllers entirely
+                if dev.tag == 'controller':
+                    continue
+                addr = dev.find("address[@type='pci']")
+                if addr is not None and \
+                   addr.get('domain')=='0x0000' and \
+                   addr.get('bus')=='0x00' and \
+                   addr.get('slot')=='0x02' and \
+                   addr.get('function')=='0x0':
+                    addr.set('function', '0x1')
+
+        # 2) Put the GPU hostdev back at 00:02.0
+        for hostdev in root.findall("devices/hostdev[@type='pci']"):
+            tgt = hostdev.find("address[@type='pci']")
+            if tgt is not None:
+                tgt.set('bus', '0x00')
+                tgt.set('slot','0x02')
+                tgt.set('function','0x0')
+
+        # Emit XML
+        out = ET.tostring(root, encoding='unicode')
+        sys.stdout.write('<?xml version="1.0"?>\n' + out)
+
+    if __name__ == "__main__":
+        main()
+

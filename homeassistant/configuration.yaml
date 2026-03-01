@@ -1,0 +1,27 @@
+# Loads default set of integrations. Do not remove.
+default_config:
+
+# Wyoming Assist Satellite Configuration
+assist_satellite:
+  - name: "Wyoming Assist Server"
+    port: 10700
+    pipeline:
+      conversation_engine: homeassistant
+      conversation_language: en
+      tts_engine: tts.google_translate_say
+      tts_language: en
+      tts_voice: en-us
+      wake_word_entity: ""
+
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 10.42.0.0/16
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml

@@ -1,0 +1,59 @@
+apiVersion: v1
+data:
+  xorg.conf: |
+    Section "ServerLayout"
+      Identifier "XRDP GPU Server"
+      Screen 0 "iGPU"
+      InputDevice "xrdpMouse" "CorePointer"
+      InputDevice "xrdpKeyboard" "CoreKeyboard"
+    EndSection
+
+    Section "ServerFlags"
+      Option "DefaultServerLayout" "XRDP GPU Server"
+      Option "DontVTSwitch" "on"
+      Option "AutoAddDevices" "off"
+      Option "AutoAddGPU" "off"
+      Option "AutoEnableDevices" "off"
+    EndSection
+
+    Section "Files"
+      ModulePath "/usr/lib/xorg/modules"
+    EndSection
+
+    Section "Module"
+      Load "xorgxrdp"
+      Load "glamoregl"
+    EndSection
+
+    Section "InputDevice"
+      Identifier "xrdpKeyboard"
+      Driver "xrdpkeyb"
+    EndSection
+
+    Section "InputDevice"
+      Identifier "xrdpMouse"
+      Driver "xrdpmouse"
+    EndSection
+
+    Section "Monitor"
+      Identifier "Monitor0"
+    EndSection
+
+    Section "Screen"
+      Identifier "iGPU"
+      Device "iGPU"
+      Monitor "Monitor0"
+      DefaultDepth 24
+      Option "DPI" "96 x 96"
+    EndSection
+
+    Section "Device"
+      Identifier "iGPU"
+      Driver "modesetting"
+      Option "AccelMethod" "glamor"
+      Option "DRI" "3"
+    EndSection
+kind: ConfigMap
+metadata:
+  name: xorg-intel-config
+  namespace: steamvr-service

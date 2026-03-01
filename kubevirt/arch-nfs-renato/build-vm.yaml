@@ -1,0 +1,59 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  creationTimestamp: null
+  labels:
+    kubevirt.io/vm: arch-nfs-renato
+  name: arch-nfs-renato
+spec:
+  running: true 
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: arch-nfs-renato
+        prometheus.kubevirt.io: "node-exporter" 
+    spec:
+      domain:
+        cpu:
+          sockets: 1
+          cores: 8 
+          threads: 2
+        devices:
+          autoattachGraphicsDevice: false
+          gpus:
+          - deviceName: gpu.intel.com/xe
+            name: gpu1
+          disks:
+          - disk:
+              bus: virtio
+            name: arch-nfs-data-volume-pv-renato
+          - cdrom:
+              bus: sata
+            name: archiso
+        machine:
+          type: q35
+        features:
+          acpi:
+            enabled: true
+          apic:
+            enabled: true
+          smm: {}
+        firmware:
+          bootloader:
+            efi:
+              secureBoot: false
+          uuid: 9cb0b7ec-5fcd-4e9a-8b06-b3acaae3a61a
+        resources:
+          requests:
+            cpu: 0.1
+            memory: 16G
+            gpu.intel.com/xe: "1"
+      terminationGracePeriodSeconds: 180
+      volumes:
+      - name: arch-nfs-data-volume-pv-renato 
+        persistentVolumeClaim:
+          claimName: disk-arch-nfs-renato-pvc
+      - name: archiso
+        persistentVolumeClaim:
+          claimName: arch-iso-pvc
+status: {}

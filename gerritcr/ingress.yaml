@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gerritcr
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    cert-manager.io/cluster-issuer: ca-issuer
+  labels:
+    app: gerrit
+spec:
+  rules:
+    - host: cr.celestium.life
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: gerrit-gerrit-service
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - cr.celestium.life
+      secretName: gerritcr-cert

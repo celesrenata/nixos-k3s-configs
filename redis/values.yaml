@@ -1,0 +1,4 @@
+master:
+  password: 'PSCh4ng3me!'
+persistence:
+  enabled: true

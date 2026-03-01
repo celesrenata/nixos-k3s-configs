@@ -1,0 +1,8 @@
+resources:
+ - ../../default
+
+patches:
+- path: fpga.yaml
+  target:
+    kind: Deployment
+

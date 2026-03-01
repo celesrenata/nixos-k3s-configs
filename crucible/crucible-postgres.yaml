@@ -1,0 +1,18 @@
+apiVersion: "acid.zalan.do/v1"
+kind: postgresql
+metadata:
+  name: postgresql
+spec:
+  teamId: "crucible"
+  volume:
+    size: 10Gi
+  numberOfInstances: 1
+  users:
+    crucible:  # database owner
+    - superuser
+    - createdb
+    crucible_user: []  # role for application foo
+  databases:
+    crucible: crucible  # dbname: owner
+  postgresql :
+    version: "16"

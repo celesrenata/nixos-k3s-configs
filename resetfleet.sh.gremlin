@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+
+# Define Variables
+
+## Hosts defines the kube cluster, use the cluster leader as first host
+#HOSTS="gremlin-1,gremlin-2,gremlin-3"
+HOSTS="10.1.1.15,10.1.1.14,10.1.1.13,10.1.1.12"
+
+## Switches used by PSSH
+PSSH_OPTIONS="--user root -h /tmp/resetfleet -t 0 -O StrictHostKeyChecking=no -O ConnectionAttempts=3"
+
+## Commands to iterate with PSSH before reboot (now using flake reset configurations)
+COMMANDS='cd /etc/nixos && git pull origin dev
+nixos-rebuild switch --flake /etc/nixos#$(hostname -s)-reset
+export KUBELET_PATH=$(mount | grep kubelet | cut -d " " -f3); ${KUBELET_PATH:+umount $KUBELET_PATH}; while [ $? -ne 0 ]; do ${KUBELET_PATH:+umount $KUBELET_PATH}; sleep 10; done
+rm -rf /etc/rancher/{k3s,node};while [ $? -ne 0 ]; do rm -rf /etc/rancher/{k3s,node}; sleep 10; done
+rm -rf /var/lib/{rancher/k3s,kubelet,longhorn,etcd,cni}; while [ $? -ne 0 ]; do rm -rf /var/lib/{rancher/k3s,kubelet,longhorn,etcd,cni}; sleep 10; done
+rm -rf /var/lib/etcd/; while [ $? -ne 0 ]; do rm -rf /var/lib/etcd/; sleep 10; done
+reboot'
+
+# Build Host list
+readarray -td, HOST_LIST <<<"$HOSTS"; declare -p HOST_LIST;
+printf '%s\n' "${HOST_LIST[@]}" > /tmp/resetfleet
+echo
+echo "These Hosts kubernetes configurations will be nuked by this change:"
+printf '%s\n' "${HOST_LIST[@]}"
+sleep 10
+
+# Build Command list
+readarray -t COMMAND_LIST <<<"$COMMANDS"; declare -p COMMAND_LIST;
+
+# Iterate PSSH Tasks
+echo "nuking fleet with flake reset configurations"
+
+for cmd in "${COMMAND_LIST[@]}"; do
+    echo "Executing: ${cmd}"
+    pssh $PSSH_OPTIONS "$cmd"
+    sleep 10
+done
+
+sleep 60
+# Wait for hosts to reboot
+while [ "$active" != "true" ]; do
+    active=false
+    count=0
+    for i in $(cat /tmp/resetfleet); do
+        ssh-ping -c 4 -i 5 $i > /dev/null
+	if [ $? -eq 0 ]; then
+	    count=$((count+1))
+	fi
+	if [ $count -eq 4 ]; then
+	    active=true
+	fi
+    done
+done
+sleep 10
+
+# Re-enable Kube using flake normal configurations - SEQUENTIAL STARTUP (-p 1)
+echo 'Executing: nixos-rebuild switch --flake /etc/nixos#$(hostname -s)'
+pssh $PSSH_OPTIONS -p 1 'cd /etc/nixos && nixos-rebuild switch --flake /etc/nixos#$(hostname -s)'
+
+# Aggressively stop and disable standalone etcd service to avoid conflict with k3s embedded etcd
+echo "Stopping and disabling standalone etcd service to avoid port conflicts"
+pssh $PSSH_OPTIONS 'systemctl stop etcd || true'
+pssh $PSSH_OPTIONS 'systemctl disable etcd || true'
+pssh $PSSH_OPTIONS 'pkill -f "etcd" || true'
+
+# Restart k3s to ensure clean startup after etcd cleanup
+echo "Restarting k3s service after etcd cleanup"
+pssh $PSSH_OPTIONS -p 1 'systemctl restart k3s'
+
+pssh $PSSH_OPTIONS 'mkdir -p /top/cni/bin'
+pssh $PSSH_OPTIONS 'systemd-tmpfiles --create'
+echo ${HOST_LIST[0]} > /tmp/resetfleet1
+sleep 10
+
+# Wait for k3s to fully start on the leader node
+echo "Waiting for k3s to start on leader node..."
+leader_host=$(cat /tmp/resetfleet1)
+while ! ssh root@$leader_host "systemctl is-active k3s >/dev/null 2>&1"; do
+    echo "k3s not ready yet, waiting..."
+    sleep 5
+done
+
+# Wait a bit more for k3s to generate the config file
+sleep 15
+
+# Verify k3s config exists before trying to copy it
+echo "Verifying k3s config exists..."
+if ssh root@$leader_host "test -f /etc/rancher/k3s/k3s.yaml"; then
+    echo "k3s config found, copying..."
+    # Copy Config
+    echo "Executing: cat /etc/rancher/k3s/k3s.yaml"
+    pssh -i --user root -h /tmp/resetfleet1 -t 0 -O StrictHostKeyChecking=no 'cat /etc/rancher/k3s/k3s.yaml' | sed "s/127\.0\.0\.1/$leader_host/g" | sed '1d' | sed '/^Stderr/d' > ~/.kube/config
+    
+    # Verify the config was written
+    if [ -s ~/.kube/config ]; then
+        echo "config written successfully!"
+    else
+        echo "ERROR: config file is empty!"
+        exit 1
+    fi
+else
+    echo "ERROR: k3s config file not found on leader node!"
+    exit 1
+fi

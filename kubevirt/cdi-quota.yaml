@@ -1,0 +1,16 @@
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: CDIConfig
+metadata:
+  labels:
+    app: containerized-data-importer
+    cdi.kubevirt.io: ""
+  name: config
+spec:
+    podResourceRequirements:
+      limits:
+        cpu: "4"
+        memory: "8Gi"
+      requests:
+        cpu: "1"
+        memory: "250Mi"
+

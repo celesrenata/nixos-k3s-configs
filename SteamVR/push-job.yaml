@@ -1,0 +1,14 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: push-steamvr
+spec:
+  template:
+    spec:
+      containers:
+      - name: skopeo
+        image: quay.io/skopeo/stable
+        command: ["skopeo", "copy", "--dest-tls-verify=false", 
+                  "docker://ghcr.io/celesrenata/steamvr:latest", 
+                  "docker://registry.celestium.life/steamvr:latest"]
+      restartPolicy: Never

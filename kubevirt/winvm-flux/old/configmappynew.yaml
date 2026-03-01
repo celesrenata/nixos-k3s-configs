@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: intel-vgpu-configmap
+data:
+  intel-vgpu-pci-location.sh: |
+    #!/usr/bin/env python3
+
+    import os
+    import subprocess
+    
+    # Define the new environment variable and its value
+    MDEV_PCI_RESOURCE_INTEL_COM_SRIOV-GPUDEVICE = '0000:00:02.0'
+    
+    # Print the new environment variable to stdout
+    print(f'export {NEW_ENV_VAR_NAME}={NEW_ENV_VAR_VALUE}')
+    
+    # Write the environment variables to /etc/environ
+    with open('/etc/environ', 'w') as f:
+        for var in os.environ:
+            f.write(f'{var}={os.environ[var]}\n')

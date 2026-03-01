@@ -1,0 +1,32 @@
+FROM nvidia/cuda:12.5.0-runtime-ubuntu22.04
+ENV TZ=America/Los_Angeles
+ENV DEBIAN_FRONTEND=noninteractive
+
+WORKDIR /home/workspace
+
+# python
+RUN apt-get update \
+    && apt-get install -y mesa-utils libgl1-mesa-dri libgtkgl2.0-dev libgtkglext1-dev git software-properties-common apt-utils \
+    && add-apt-repository ppa:deadsnakes/ppa \
+    && apt-get update \
+    && apt install -y python3.10 python3.10-distutils curl \
+    && curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
+RUN apt-get install -y python3.10-dev python3.10-venv
+# clone OneTrainer
+RUN pip install torch==2.5.1+cu124 --extra-index-url https://download.pytorch.org/whl/cu124
+RUN pip install torchvision==0.20.1+cu124 --extra-index-url https://download.pytorch.org/whl/cu124
+RUN pip install onnxruntime-gpu==1.19.2
+RUN git clone https://github.com/Nerogar/OneTrainer.git \ 
+    && cd OneTrainer \
+    && pip install -r requirements-cuda.txt 
+RUN cd OneTrainer \
+    && pip install -r requirements-global.txt
+
+# RUN
+ENV PYTHON=python3.10
+ENV COMFYUI_PATH=/home/workspace/
+ENV PATH="$PATH:$COMFYUI_PATH"
+WORKDIR $COMFYUI_PATH
+# CMD ["/bin/bash", "-c", "start-ui.sh"]
+# CMD ["/bin/bash", "-c", "$PYTHON", "scripts/train_ui.py"]
+CMD ["/bin/bash", "-c", "sleep infinity"]

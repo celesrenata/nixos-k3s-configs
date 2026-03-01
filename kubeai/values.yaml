@@ -1,0 +1,5 @@
+models:
+  catalog:
+    faster-whisper-medium-en-gpu:
+      enabled: true
+      minReplicas: 1

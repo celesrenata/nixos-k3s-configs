@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.26.1 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: onetrainer
+  name: onetrainer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: onetrainer
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.26.1 (HEAD)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: onetrainer
+    spec:
+      containers:
+          image: ghcr.io/ai-dock/onetrainer:latest
+          name: onetrainer
+          ports:
+            - containerPort: 5005
+          resources:
+            limits:
+              nvidia.com/gpu: "1"
+          volumeMounts:
+            - mountPath: /
+              name: flame-config
+      restartPolicy: Always
+      volumes:
+        - name: flame-config
+          persistentVolumeClaim:
+            claimName: flame-config
+status: {}

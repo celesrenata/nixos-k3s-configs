@@ -1,0 +1,22 @@
+--- openwakeword/train.py
++++ openwakeword/train.py
+@@ -678,7 +678,8 @@ if __name__ == "__main__":
+                 batch_size=config["tts_batch_size"],
+                 noise_scales=[0.98], noise_scale_ws=[0.98], length_scales=[0.75, 1.0, 1.25],
+                 output_dir=positive_train_output_dir, auto_reduce_batch_size=True,
+-                file_names=[uuid.uuid4().hex + ".wav" for i in range(config["n_samples"])]
++                file_names=[uuid.uuid4().hex + ".wav" for i in range(config["n_samples"])],
++                model=config.get("piper_model_path", "./piper-sample-generator/models/en_US-libritts_r-medium.pt")
+             )
+             torch.cuda.empty_cache()
+         else:
+@@ -693,7 +694,8 @@ if __name__ == "__main__":
+         if n_current_samples <= 0.95*config["n_samples_val"]:
+             generate_samples(text=config["target_phrase"], max_samples=config["n_samples_val"]-n_current_samples,
+                              batch_size=config["tts_batch_size"],
+                              noise_scales=[1.0], noise_scale_ws=[1.0], length_scales=[0.75, 1.0, 1.25],
+-                             output_dir=positive_test_output_dir, auto_reduce_batch_size=True)
++                             output_dir=positive_test_output_dir, auto_reduce_batch_size=True,
++                             model=config.get("piper_model_path", "./piper-sample-generator/models/en_US-libritts_r-medium.pt"))
+             torch.cuda.empty_cache()
+         else:

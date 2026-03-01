@@ -1,0 +1,11 @@
+apiVersion: traefik.io/v1alpha1
+kind: ServersTransport
+metadata:
+  name: registry-transport
+  namespace: git-server
+spec:
+  forwardingTimeouts:
+    dialTimeout: "300s"
+    responseHeaderTimeout: "7200s"
+    idleConnTimeout: "7200s"
+  maxIdleConnsPerHost: 10

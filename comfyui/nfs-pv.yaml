@@ -1,0 +1,127 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: comfyui-model
+spec:
+  persistentVolumeReclaimPolicy: Delete
+  capacity:
+    storage: 1000Gi
+  accessModes:
+    - ReadWriteOnce
+    - ReadOnlyMany
+    - ReadWriteMany
+  storageClassName: ""
+  nfs:
+    path: /volume1/Kubernetes/comfyui/models     # The path to your media
+    server: 192.168.42.8     # Your NFS server with Media
+  mountOptions:
+    - vers=4
+    - minorversion=1
+    - noac
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: comfyui-user
+spec:
+  persistentVolumeReclaimPolicy: Delete
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+    - ReadOnlyMany
+    - ReadWriteMany
+  storageClassName: ""
+  nfs:
+    path: /volume1/Kubernetes/comfyui/user
+    server: 192.168.42.8
+  mountOptions:
+    - vers=4
+    - minorversion=1
+    - noac
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: comfyui-tmp
+spec:
+  persistentVolumeReclaimPolicy: Delete
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteOnce
+    - ReadOnlyMany
+    - ReadWriteMany
+  storageClassName: ""
+  nfs:
+    path: /volume1/Kubernetes/comfyui/tmp     # The path to your media
+    server: 192.168.42.8     # Your NFS server with Media
+  mountOptions:
+    - vers=4
+    - minorversion=1
+    - noac
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: comfyui-custom-nodes
+spec:
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: local-storage       # must match the StorageClass above
+  local:
+    path: /var/lib/comfyui-nodes            # this directory must exist on the node
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - gremlin-1         # replace with the actual node hostname
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: comfyui-venv
+spec:
+  capacity:
+    storage: 40Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: local-storage       # must match the StorageClass above
+  local:
+    path: /var/lib/comfyui-venv            # this directory must exist on the node
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+                - gremlin-1         # replace with the actual node hostname
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: comfyui-tmp
+spec:
+  persistentVolumeReclaimPolicy: Delete
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteOnce
+    - ReadOnlyMany
+    - ReadWriteMany
+  storageClassName: ""
+  nfs:
+    path: /volume1/Kubernetes/comfyui/tmp     # The path to your media
+    server: 192.168.42.8     # Your NFS server with Media
+  mountOptions:
+    - vers=4
+    - minorversion=1
+    - noac

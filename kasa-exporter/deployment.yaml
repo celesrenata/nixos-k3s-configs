@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.26.1 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: kasa-exporter
+  name: kasa-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: kasa-exporter
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.26.1 (HEAD)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: kasa-exporter
+    spec:
+      containers:
+        - env:
+            - name: PASSWORD
+              value: renata
+          image: fffonion/tplink-plug-exporter
+          name: kasa-exporter
+          ports:
+            - containerPort: 9233
+          resources: {}
+          volumeMounts:
+            - mountPath: /app/data
+              name: kasa-exporter-config
+      restartPolicy: Always
+      volumes:
+        - name: kasa-exporter-config
+          persistentVolumeClaim:
+            claimName: kasa-exporter-config
+status: {}

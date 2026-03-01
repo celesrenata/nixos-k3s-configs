@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:latest
+          resources:
+            requests:
+              cpu: 200m
+              memory: 128Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          ports:
+            - name: nginx
+              containerPort: 80
+          volumeMounts:
+          - name: nginx-config
+            mountPath: /etc/nginx/conf.d/default.conf
+            readOnly: true
+            subPath: default.conf
+          - name: startup-rb-data
+            mountPath: /var/www/reviewboard
+          - name: docker-sock
+            mountPath: /var/run/docker.sock
+            readOnly: false
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: nginx
+      - name: startup-rb-data
+        persistentVolumeClaim:
+          claimName: startup-rb-data-pvc
+      - name: docker-sock
+        hostPath:
+          path: /var/run/docker.sock
+          type: Socket

@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "clusterjellyfin.fullname" . }}-main
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "clusterjellyfin.labels" . | nindent 4 }}
+    component: main
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+  - port: {{ .Values.service.port }}
+    targetPort: 8096
+    protocol: TCP
+    name: http
+  - port: {{ .Values.service.httpsPort }}
+    targetPort: 8920
+    protocol: TCP
+    name: https
+  - port: 1900
+    targetPort: 1900
+    protocol: UDP
+    name: dlna
+  - port: 7359
+    targetPort: 7359
+    protocol: UDP
+    name: discovery
+  selector:
+    {{- include "clusterjellyfin.selectorLabels" . | nindent 4 }}
+    component: main
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "clusterjellyfin.fullname" . }}-workers
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "clusterjellyfin.labels" . | nindent 4 }}
+    component: workers
+spec:
+  clusterIP: None
+  selector:
+    {{- include "clusterjellyfin.selectorLabels" . | nindent 4 }}
+    component: workers
+  ports:
+  - port: 22
+    targetPort: 22

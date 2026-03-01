@@ -1,0 +1,129 @@
+name: publish
+on:
+  workflow_call:
+    inputs:
+      image_tag:
+        default: "devel"
+        required: false
+        type: string
+      registry:
+        default: "docker.io/intel"
+        required: false
+        type: string
+env:
+  no_base_check: "['intel-qat-plugin-kerneldrv', 'intel-idxd-config-initcontainer', 'crypto-perf', 'opae-nlb-demo', 'intel-gpu-levelzero']"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  av_database:
+    name: Download AV database
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Install clamav and update databases
+        run: |
+          sudo apt-get update -y
+          sudo apt-get -y --no-install-recommends install clamav ca-certificates
+          sudo systemctl stop clamav-freshclam.service
+          sudo freshclam
+      - name: Cache clamav databases
+        uses: actions/cache/save@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        with:
+          path: /var/lib/clamav
+          key: clamav-${{ github.run_id }}
+  image:
+    name: Build image
+    needs: av_database
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - intel-fpga-admissionwebhook
+          - intel-fpga-initcontainer
+          - intel-gpu-initcontainer
+          - intel-gpu-plugin
+          #- intel-gpu-levelzero
+          - intel-fpga-plugin
+          - intel-qat-initcontainer
+          - intel-qat-plugin
+          - intel-deviceplugin-operator
+          - intel-sgx-admissionwebhook
+          - intel-sgx-plugin
+          - intel-sgx-initcontainer
+          - intel-dsa-plugin
+          - intel-iaa-plugin
+          - intel-idxd-config-initcontainer
+          - intel-dlb-plugin
+          - intel-dlb-initcontainer
+          - intel-xpumanager-sidecar
+
+          # # Demo images
+          - crypto-perf
+          - opae-nlb-demo
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
+      - uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5
+        with:
+          go-version-file: go.mod
+          check-latest: true
+      - run: make -e vendor
+      - name: Build image
+        env:
+          IMAGE_NAME: ${{ matrix.image }}
+        run: |
+          ORG=${{ inputs.registry }} TAG=${{ inputs.image_tag }} make ${IMAGE_NAME} BUILDER=docker
+      - name: Trivy scan for image
+        uses: aquasecurity/trivy-action@6e7b7d1fd3e4fef0c5fa8cce1229c54b2c9bd0d8 # 0.24.0
+        with:
+          scan-type: image
+          image-ref: ${{ inputs.registry }}/${{ matrix.image }}:${{ inputs.image_tag }}
+          exit-code: 1
+      - name: Prepare cache directory
+        run: |
+          sudo mkdir -p /var/lib/clamav
+          sudo chmod a+rwx /var/lib/clamav
+      - name: Retrieve AV database
+        uses: actions/cache/restore@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        with:
+          path: /var/lib/clamav
+          key: clamav-${{ github.run_id }}
+      - name: Malware scan
+        env:
+          FULL_IMAGE: ${{ inputs.registry }}/${{ matrix.image }}:${{ inputs.image_tag }}
+          IMG_FILE: ${{ matrix.image }}-${{ inputs.image_tag }}.tar
+        run: |
+          sudo apt-get update -y
+          sudo apt-get -y --no-install-recommends install clamav ca-certificates
+          sudo systemctl stop clamav-freshclam.service
+          sudo freshclam
+          docker save $FULL_IMAGE -o $IMG_FILE
+          clamscan $IMG_FILE
+      - name: Test image base layer
+        # Don't run base layer check for selected images
+        if: ${{ !contains(fromJson(env.no_base_check), matrix.image) }}
+        run: IMG=${{ inputs.registry }}/${{ matrix.image }}:${{ inputs.image_tag }} make test-image-base-layer BUILDER=docker
+      - name: Login
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_PASS }}
+      - name: Push
+        run: docker push ${{ inputs.registry }}/${{ matrix.image }}:${{ inputs.image_tag }}
+      - name: Get image digest
+        if: ${{ inputs.image_tag != 'devel' }}
+        id: digest
+        run: |
+          echo "image_sha=$(docker inspect --format='{{index .RepoDigests 0}}' ${{ inputs.registry }}/${{ matrix.image }}:${{ inputs.image_tag }})" >> $GITHUB_OUTPUT
+      - name: Install cosign
+        if: ${{ inputs.image_tag != 'devel' }}
+        uses: sigstore/cosign-installer@4959ce089c160fddf62f7b42464195ba1a56d382 #v3.6.0
+      - name: Keyless image sign
+        if: ${{ inputs.image_tag != 'devel' }}
+        run: |
+          cosign sign --yes ${{ steps.digest.outputs.image_sha }}

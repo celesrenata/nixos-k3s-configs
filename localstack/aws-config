@@ -1,0 +1,4 @@
+[default]
+region = us-east-1
+output = json
+endpoint_url = https://aws.celestium.life

@@ -1,0 +1,15 @@
+apiVersion: cdi.kubevirt.io/v1alpha1
+kind: DataVolume
+metadata:
+  name: elkubearchra-cloud-base
+spec:
+  source:
+    http:
+      url: "https://geo.mirror.pkgbuild.com/images/latest/Arch-Linux-x86_64-cloudimg.qcow2"
+  pvc:
+    claimName: disk-elkubearchra-nfs-pvc
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: 1Ti

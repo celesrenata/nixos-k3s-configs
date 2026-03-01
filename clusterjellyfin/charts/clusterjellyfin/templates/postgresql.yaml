@@ -1,0 +1,66 @@
+{{- if .Values.postgresql.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "clusterjellyfin.fullname" . }}-postgresql
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "clusterjellyfin.fullname" . }}-postgresql
+  template:
+    metadata:
+      labels:
+        app: {{ include "clusterjellyfin.fullname" . }}-postgresql
+    spec:
+      containers:
+      - name: postgresql
+        image: postgres:15
+        env:
+        - name: POSTGRES_DB
+          value: {{ .Values.postgresql.auth.database }}
+        - name: POSTGRES_USER
+          value: {{ .Values.postgresql.auth.username }}
+        - name: POSTGRES_PASSWORD
+          value: {{ .Values.postgresql.auth.password }}
+        - name: POSTGRES_ROOT_PASSWORD
+          value: {{ .Values.postgresql.auth.postgresPassword }}
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        ports:
+        - containerPort: 5432
+        resources:
+          {{- toYaml .Values.postgresql.primary.resources | nindent 10 }}
+        volumeMounts:
+        - name: postgresql-data
+          mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: postgresql-data
+        persistentVolumeClaim:
+          claimName: {{ include "clusterjellyfin.fullname" . }}-postgresql-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "clusterjellyfin.fullname" . }}-postgresql
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    app: {{ include "clusterjellyfin.fullname" . }}-postgresql
+  ports:
+  - port: 5432
+    targetPort: 5432
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "clusterjellyfin.fullname" . }}-postgresql-pvc
+  namespace: {{ .Values.namespace }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.postgresql.primary.persistence.size }}
+{{- end }}

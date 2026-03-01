@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jellyfin-manual
+  namespace: jellyfin-system
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    cert-manager.io/cluster-issuer: celestium-le-production
+    traefik.ingress.kubernetes.io/service.sticky.cookie: "true"
+    traefik.ingress.kubernetes.io/service.sticky.cookie.name: "jellyfin-server"
+spec:
+  ingressClassName: traefik
+  tls:
+  - hosts:
+    - jellyfin.celestium.life
+    secretName: jellyfin-cert
+  rules:
+  - host: jellyfin.celestium.life
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: jellyfin-clusterjellyfin-main
+            port:
+              number: 8096

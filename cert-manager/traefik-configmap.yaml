@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: traefik-config
+  labels:
+    name: traefik-config
+  namespace: kube-system
+data:
+  traefik-config.yaml: |
+    # https://doc.traefik.io/traefik/https/tls/
+    tls:
+      stores:
+        default:
+          defaultCertificate:
+            certFile: 'home.crt'
+            keyFile: 'home.key'

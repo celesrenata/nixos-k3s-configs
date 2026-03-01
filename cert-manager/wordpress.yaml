@@ -1,0 +1,57 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wordpress-celestium-life
+  namespace: cert-manager
+spec:
+  # Secret names are always required.
+  secretName: wordpress-celestium-life-tls
+
+  # secretTemplate is optional. If set, these annotations and labels will be
+  # copied to the Secret named example-com-tls. These labels and annotations will
+  # be re-reconciled if the Certificate's secretTemplate changes. secretTemplate
+  # is also enforced, so relevant label and annotation changes on the Secret by a
+  # third party will be overwriten by cert-manager to match the secretTemplate.
+  #secretTemplate:
+  #  annotations:
+  #    my-secret-annotation-1: "foo"
+  #    my-secret-annotation-2: "bar"
+  #  labels:
+  #    my-secret-label: foo
+
+  duration: 2160h # 90d
+  renewBefore: 360h # 15d
+  subject:
+    organizations:
+      - jetstack
+  # The use of the common name field has been deprecated since 2000 and is
+  # discouraged from being used.
+  commonName: celestium.life
+  isCA: false
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS1
+    size: 2048
+  usages:
+    - server auth
+    - client auth
+  # At least one of a DNS Name, URI, IP address or otherName is required.
+  dnsNames:
+    - wordpressdev.celestium.life 
+      #ipAddresses:
+      #- 192.168.0.5
+  # Needs cert-manager 1.14+ and "OtherNames" feature flag
+  #otherNames:
+    # Should only supply oid of ut8 valued types
+    #  - oid: 1.3.6.1.4.1.311.20.2.3 # User Principal Name "OID"
+    #  utf8Value: upn@example.local
+  # Issuer references are always required.
+  issuerRef:
+    name: ca-issuer
+    # We can reference ClusterIssuers by changing the kind here.
+    # The default value is Issuer (i.e. a locally namespaced Issuer)
+    kind: Issuer
+    # This is optional since cert-manager will default to this value however
+    # if you are using an external issuer, change this to that issuer group.
+    group: cert-manager.io
+

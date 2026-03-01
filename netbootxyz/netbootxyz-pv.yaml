@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: netbootxyz-config
+spec:
+  persistentVolumeReclaimPolicy: Retain
+  capacity:
+    storage: 100Mi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ""
+  nfs:
+    path: /volume1/pxe/config     # The path to your media
+    server: 192.168.42.8     # Your NFS server with Media
+  mountOptions:
+    - vers=4
+    - minorversion=1
+    - noac
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: netbootxyz-assets
+spec:
+  persistentVolumeReclaimPolicy: Retain
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ""
+  nfs:
+    path: /volume1/pxe/assets     # The path to your media
+    server: 192.168.42.8     # Your NFS server with Media
+  mountOptions:
+    - vers=4
+    - minorversion=1
+    - noac

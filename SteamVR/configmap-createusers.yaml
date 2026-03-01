@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: steamvr-createusers
+data:
+  createusers.txt: |
+    celes:renata:Y

@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# expect $TESTCMD, $PTEST, and $QAT* are set
+set -u
+
+if [ "${TESTCMD}" != "crypto" ] && [ "${TESTCMD}" != "compress" ]; then
+	echo "run-dpdk-test: TESTCMD must be either crypto or compress"
+	exit 1
+fi
+
+PCI_ALLOWLIST=""
+
+for i in ${!QAT*}; do PCI_ALLOWLIST="$PCI_ALLOWLIST -a ${!i}"; done
+
+CGROUP_PATH="/sys/fs/cgroup/"
+
+if [ -d "${CGROUP_PATH}"/cpuset ]; then
+	CGROUP_PATH="${CGROUP_PATH}"/cpuset
+fi
+
+LCORE=$(cat "${CGROUP_PATH}"/cpuset.cpus)
+
+EAL="--no-telemetry -l ${LCORE} ${PCI_ALLOWLIST}"
+
+dpdk-test-"${TESTCMD}"-perf ${EAL} -- ${PTEST} \

@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dsa-accel-config-demo
+  labels:
+    app: dsa-accel-config-demo
+spec:
+  containers:
+  - name: dsa-accel-config-demo
+    image: intel/accel-config-demo:devel
+    imagePullPolicy: IfNotPresent
+    workingDir: "/usr/libexec/accel-config/test/"
+    command:
+      - "./dsa_user_test_runner.sh"
+    args:
+      - "--skip-config"
+    resources:
+      limits:
+        dsa.intel.com/wq-user-dedicated: 1
+        # dsa.intel.com/wq-user-shared: 1
+    securityContext:
+      capabilities:
+        add:
+          ["SYS_RAWIO"]
+  restartPolicy: Never

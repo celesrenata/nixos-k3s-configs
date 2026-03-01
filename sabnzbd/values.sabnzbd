@@ -1,0 +1,75 @@
+#
+# IMPORTANT NOTE
+#
+# This chart inherits from our common library chart. You can check the default values/options here:
+# https://github.com/k8s-at-home/library-charts/tree/main/charts/stable/common/values.yaml
+#
+
+image:
+  # -- image repository
+  repository: ghcr.io/k8s-at-home/sabnzbd
+  # -- image tag
+  tag: latest
+  #tag: v3.3.1
+  # -- image pull policy
+  pullPolicy: IfNotPresent
+
+# -- environment variables.
+# @default -- See below
+env:
+  # -- Set the container timezone
+  TZ: America/Los_Angeles
+  HOST_WHITELIST_ENTRIES: https://sabnzbd.celestium.life
+  PUID: 1026
+  PGID: 101
+
+# -- Configures service settings for the chart.
+# @default -- See values.yaml
+service:
+  main:
+    ports:
+      http:
+        port: 8080
+
+ingress:
+  # -- Enable and configure ingress settings for the chart under this key.
+  # @default -- See values.yaml
+  main:
+    enabled: false
+
+# -- Configure persistence settings for the chart under this key.
+# @default -- See values.yaml
+persistence:
+  config:
+    enabled: true 
+    mountPath: /config
+    existingClaim: sabnzbd-config-pvc
+    accessMode: ReadWriteOnce
+    size: 1Gi
+
+  media:
+    enabled: true
+    mountPath: /media
+    existingClaim: sabnzbd-media-pvc
+    accessMode: ReadWriteMany
+    size: 1000Gi
+
+  downloads:
+    enabled: true
+    mountPath: /downloads
+    existingClaim: sabnzbd-downloads-pvc
+    accessMode: ReadWriteMany
+    size: 1000Gi
+
+  downloads-incomplete:
+    enabled: true
+    mountPath: /incomplete-downloads
+    existingClaim: sabnzbd-downloads-incomplete-pvc
+    size: 1000Gi
+
+  scripts:
+    enabled: true
+    mountPath: /app/sabnzbd/scripts
+    existingClaim: sabnzbd-scripts-pvc
+    accessMode: ReadWriteOnce
+    size: 100Mi

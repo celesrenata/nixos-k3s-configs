@@ -1,0 +1,35 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgresql-backup
+  namespace: postgresql-service
+spec:
+  schedule: "0 2 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: backup
+            image: postgres:18
+            env:
+            - name: PGPASSWORD
+              value: "PSCh4ng3me!"
+            command:
+            - /bin/bash
+            - -c
+            - |
+              DATE=$(date +%Y%m%d)
+              pg_dump -h postgresql-rw -U celes -d postgresql > /backup/postgresql_$DATE.sql
+              pg_dump -h postgresql-rw -U celes -d testdb > /backup/testdb_$DATE.sql
+              pg_dump -h postgresql-rw -U jellyfin -d clusterjellyfin > /backup/clusterjellyfin_$DATE.sql
+              find /backup -name "*.sql" -mtime +30 -delete
+            volumeMounts:
+            - name: backup-storage
+              mountPath: /backup
+          volumes:
+          - name: backup-storage
+            nfs:
+              server: 192.168.42.8
+              path: /volume1/Kubernetes/postgresql
+          restartPolicy: OnFailure

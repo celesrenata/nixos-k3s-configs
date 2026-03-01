@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: windows-nfs
+spec:
+  ports:
+    - nodePort: 31308
+      name: ssh
+      port: 2306
+      protocol: TCP
+      targetPort: 22
+  selector:
+    kubevirt.io/vm: windows-nfs
+  sessionAffinity: None
+  type: LoadBalancer
+status:
+  loadBalancer: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: windows-nfs-node-exporter
+  labels:
+    prometheus.kubevirt.io: "node-exporter"
+spec:
+  ports:
+  - name: metrics
+    port: 9100
+    targetPort: 9100
+    protocol: TCP
+  selector:
+    prometheus.kubevirt.io: "node-exporter"

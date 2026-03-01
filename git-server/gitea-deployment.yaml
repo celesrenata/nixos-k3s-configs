@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gitea
+  namespace: git-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gitea
+  template:
+    metadata:
+      labels:
+        app: gitea
+    spec:
+      containers:
+      - name: gitea
+        image: gitea/gitea:latest
+        ports:
+        - containerPort: 3000
+        - containerPort: 22
+        volumeMounts:
+        - name: gitea-data
+          mountPath: /data
+      volumes:
+      - name: gitea-data
+        hostPath:
+          path: /kubedata-local/gitea
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gitea-service
+  namespace: git-server
+spec:
+  selector:
+    app: gitea
+  ports:
+  - name: web
+    port: 3000
+    targetPort: 3000
+    nodePort: 30300
+  - name: ssh
+    port: 22
+    targetPort: 22
+    nodePort: 30022
+  type: NodePort

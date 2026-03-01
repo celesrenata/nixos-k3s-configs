@@ -1,0 +1,51 @@
+{{- if .Values.postgresql.enabled }}
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: {{ include "clusterjellyfin.fullname" . }}-postgresql
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "clusterjellyfin.labels" . | nindent 4 }}
+    component: postgresql
+spec:
+  instances: {{ .Values.postgresql.instances | default 3 }}
+  
+  postgresql:
+    parameters:
+      max_connections: "200"
+      shared_buffers: "256MB"
+      effective_cache_size: "1GB"
+      maintenance_work_mem: "64MB"
+      checkpoint_completion_target: "0.9"
+      wal_buffers: "16MB"
+      default_statistics_target: "100"
+      random_page_cost: "1.1"
+      effective_io_concurrency: "200"
+      work_mem: "4MB"
+      min_wal_size: "1GB"
+      max_wal_size: "4GB"
+  
+  bootstrap:
+    initdb:
+      database: {{ .Values.postgresql.database | default "jellyfin" }}
+      owner: {{ .Values.postgresql.username | default "jellyfin" }}
+      secret:
+        name: {{ include "clusterjellyfin.fullname" . }}-postgresql-credentials
+  
+  storage:
+    size: {{ .Values.postgresql.storage.size | default "20Gi" }}
+    {{- if .Values.postgresql.storage.storageClass }}
+    storageClass: {{ .Values.postgresql.storage.storageClass }}
+    {{- end }}
+  
+  resources:
+    requests:
+      memory: {{ .Values.postgresql.resources.requests.memory | default "512Mi" }}
+      cpu: {{ .Values.postgresql.resources.requests.cpu | default "500m" }}
+    limits:
+      memory: {{ .Values.postgresql.resources.limits.memory | default "2Gi" }}
+      cpu: {{ .Values.postgresql.resources.limits.cpu | default "2000m" }}
+  
+  monitoring:
+    enabled: true
+{{- end }}

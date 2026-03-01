@@ -1,0 +1,47 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: startup-wekan-http
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    traefik.ingress.kubernetes.io/router.middlewares: default-redirectscheme@kubernetescrd
+  labels:
+    app: wekan
+spec:
+  rules:
+    - host: wekan.startup.celestium.life
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: startup-wekan
+                port:
+                  number: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: startup-wekan-https
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    cert-manager.io/cluster-issuer: startup-le-production
+  labels:
+    app: wekan
+spec:
+  rules:
+    - host: wekan.startup.celestium.life
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: startup-wekan
+                port:
+                  number: 8080
+  tls:
+    - hosts:
+        - wekan.startup.celestium.life
+      secretName: startup-wekan-cert

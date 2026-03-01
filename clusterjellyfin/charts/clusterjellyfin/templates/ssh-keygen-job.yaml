@@ -1,0 +1,68 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "clusterjellyfin.fullname" . }}-ssh-keygen
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: ssh-keygen
+        image: debian:trixie-slim
+        command:
+        - /bin/bash
+        - -c
+        - |
+          apt-get update && apt-get install -y openssh-client kubectl
+          ssh-keygen -t rsa -b 2048 -f /tmp/id_rsa -N ""
+          
+          # Create secret with SSH keys
+          kubectl create secret generic {{ include "clusterjellyfin.fullname" . }}-main-ssh \
+            --from-file=id_rsa=/tmp/id_rsa \
+            --from-file=id_rsa.pub=/tmp/id_rsa.pub \
+            --namespace={{ .Release.Namespace }} || true
+      serviceAccountName: {{ include "clusterjellyfin.fullname" . }}-ssh-keygen
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "clusterjellyfin.fullname" . }}-ssh-keygen
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-10"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "clusterjellyfin.fullname" . }}-ssh-keygen
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-10"
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["create", "get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "clusterjellyfin.fullname" . }}-ssh-keygen
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-10"
+subjects:
+- kind: ServiceAccount
+  name: {{ include "clusterjellyfin.fullname" . }}-ssh-keygen
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: {{ include "clusterjellyfin.fullname" . }}-ssh-keygen
+  apiGroup: rbac.authorization.k8s.io

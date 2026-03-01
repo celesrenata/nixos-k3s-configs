@@ -1,0 +1,119 @@
+prometheus:
+  enabled: true
+  prometheusSpec:
+    scrapeInterval: 5s
+    tolerations:
+    - key: nvidia.com/gpu
+      operator: Equal
+      value: present
+      effect: NoSchedule
+    storageSpec:
+      volumeClaimTemplate:
+        metadata:
+          name: prometheus-data
+        spec:
+          storageClassName: ""
+          accessModes:
+            - ReadWriteMany
+          resources:
+            requests:
+              storage: 1Ti
+    additionalScrapeConfigs: |
+      - job_name: prometheus
+        static_configs:
+          - targets:
+            - 10.1.1.12:9000
+            - 10.1.1.12:9400
+            - 10.1.1.12:9400
+            - 10.1.1.12:9199
+            - 10.1.1.13:9000
+            - 10.1.1.14:9000
+            - 192.168.42.1:9100
+            - 192.168.42.8:9100
+            - 192.168.42.254:9100
+            - 192.168.42.201:9100
+      - job_name: myapp
+        static_configs: 
+          - targets: ["myapp-service:3000"]
+      - job_name: kasa
+        static_configs:
+          - targets:
+            - 192.168.42.253
+        metrics_path: /scrape
+        relabel_configs:
+          - source_labels : [__address__]
+            target_label: __param_target
+          - source_labels: [__param_target]
+            target_label: instance
+          - target_label: __address__
+            replacement: 10.1.1.12:9233 
+      - job_name: kasa_exporter
+        static_configs:
+          - targets:
+            - 10.1.1.12:9233 
+      - job_name: snmp
+        static_configs:
+          - targets:
+            - 192.168.42.8
+        metrics_path: /snmp
+        params:
+          auth: [public_v2]
+          module: 
+            - if_mib
+            - synology
+            - ucd_la_table
+        relabel_configs:
+          - source_labels: [__address__]
+            target_label: __param_target
+          - source_labels: [__param_target]
+            target_label: instance
+          - target_label: __address__
+            replacement: 192.168.42.8:9116
+      - job_name: snmp_exporter
+        static_configs:
+          - targets: ['192.168.42.8:9116']
+
+alertmanager:
+  alertmanagerSpec:
+    tolerations:
+    - key: nvidia.com/gpu
+      operator: Equal
+      value: present
+      effect: NoSchedule
+
+grafana:
+  tolerations:
+  - key: nvidia.com/gpu
+    operator: Equal
+    value: present
+    effect: NoSchedule
+  additionalDataSources:
+  - name: Prometheus-5s
+    type: prometheus
+    url: http://prometheus-kube-prometheus-prometheus.prometheus-service:9090/
+    access: proxy
+    isDefault: false
+    jsonData:
+      timeInterval: 5s
+      httpMethod: POST
+
+prometheusOperator:
+  tolerations:
+  - key: nvidia.com/gpu
+    operator: Equal
+    value: present
+    effect: NoSchedule
+
+nodeExporter:
+  tolerations:
+  - key: nvidia.com/gpu
+    operator: Equal
+    value: present
+    effect: NoSchedule
+
+kubeStateMetrics:
+  tolerations:
+  - key: nvidia.com/gpu
+    operator: Equal
+    value: present
+    effect: NoSchedule

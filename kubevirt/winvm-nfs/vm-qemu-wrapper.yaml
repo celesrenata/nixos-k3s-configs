@@ -1,0 +1,114 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: windows-nfs
+  namespace: vms
+spec:
+  runStrategy: Manual
+  template:
+    metadata:
+      annotations:
+        hooks.kubevirt.io/hookSidecars: >-
+          [{"args":["onDefineDomain","--version","v1alpha2"],
+             "configMap":{"name":"intel-vgpu-hooks","key":"intel-vgpu.sh","hookPath":"/usr/bin/onDefineDomain"}
+             }]
+      labels:
+        kubevirt.io/vm: windows-nfs
+        prometheus.kubevirt.io: node-exporter
+    spec:
+      domain:
+        clock:
+          timer:
+            hpet:
+              present: false
+            pit:
+              tickPolicy: delay
+            rtc:
+              tickPolicy: catchup
+          utc: {}
+        cpu:
+          sockets: 1
+          cores: 4
+          threads: 2
+          model: host-passthrough
+        devices:
+          autoattachGraphicsDevice: false
+          disks:
+          - disk:
+              bus: virtio
+            name: pvcdisk
+          - cdrom:
+              bus: sata
+            name: winiso
+          - cdrom:
+              bus: sata
+            name: virtioiso
+          - cdrom:
+              bus: sata
+            name: arciso
+          gpus:
+          - deviceName: gpu.intel.com/xe
+            name: gpu0
+          interfaces:
+          - masquerade: {}
+            name: podnet
+            ports:
+            - port: 3389
+          tpm: {}
+        features:
+          acpi:
+            enabled: true
+          apic:
+            enabled: true
+          hyperv:
+            relaxed: {}
+            spinlocks:
+              spinlocks: 8191
+            vapic: {}
+            vendorid:
+              enabled: true
+              vendorid: GenuineIntel
+          kvm:
+            hidden: true
+          smm: {}
+        firmware:
+          bootloader:
+            efi:
+              secureBoot: true
+          uuid: 5d307ca9-b3ef-428c-8861-06e72d69f223
+        machine:
+          type: q35
+        resources:
+          requests:
+            cpu: 1
+            memory: 16Gi
+            gpu.intel.com/xe: "1"
+      networks:
+      - name: podnet
+        pod: {}
+      terminationGracePeriodSeconds: 360
+      volumes:
+      - name: pvcdisk
+        persistentVolumeClaim:
+          claimName: disk-windows-nfs-pvc
+      - name: winiso
+        persistentVolumeClaim:
+          claimName: win11cd-pvc
+      - name: virtioiso
+        persistentVolumeClaim:
+          claimName: virtio-drivers-pvc
+      - name: arciso
+        persistentVolumeClaim:
+          claimName: intel-arc-drivers-pvc
+      - name: hooks-volume
+        configMap:
+          name: intel-vgpu-hooks
+      - name: rom-volume
+        configMap:
+          name: intel-vgpu-hooks
+      - name: qemu-wrapper-volume
+        configMap:
+          name: qemu-wrapper
+      - name: rom-config-volume
+        configMap:
+          name: rom-config

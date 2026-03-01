@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wordpressdev-cert
+spec:
+  commonName: wordpressdev.celestium.life
+  secretName: wordpressdev-cert 
+  dnsNames:
+    - wordpressdev.celestium.life
+  issuerRef:
+    kind: Issuer
+    name: ca-issuer

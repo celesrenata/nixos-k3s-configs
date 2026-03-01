@@ -1,0 +1,10 @@
+#!/bin/bash
+# XFCE4 startup script for XRDP
+
+# Set up environment
+export DESKTOP_SESSION=xfce
+export XDG_SESSION_DESKTOP=xfce
+export XDG_CURRENT_DESKTOP=XFCE
+
+# Start XFCE4 session
+exec startxfce4

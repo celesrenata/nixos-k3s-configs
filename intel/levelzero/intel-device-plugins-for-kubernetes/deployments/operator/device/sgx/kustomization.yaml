@@ -1,0 +1,7 @@
+resources:
+ - ../../default
+
+patches:
+- path: sgx.yaml
+  target:
+    kind: Deployment

@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "clusterjellyfin.fullname" . }}-rffmpeg-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "clusterjellyfin.labels" . | nindent 4 }}
+data:
+  rffmpeg.yml: |
+    logging:
+      debug: {{ .Values.rffmpeg.config.logging.debug }}
+    
+    ffmpeg:
+      path: /usr/lib/jellyfin-ffmpeg/ffmpeg
+      probe_path: /usr/lib/jellyfin-ffmpeg/ffprobe
+    
+    ssh:
+      options: "{{ .Values.rffmpeg.config.ssh.options }}"
+    
+    fallback:
+      allow: {{ .Values.rffmpeg.config.fallback.allow }}
+    
+    database:
+      path: /config/rffmpeg.db
+    
+    hosts:
+      {{- $root := . }}
+      {{- range $i := until (int .Values.workers.replicas) }}
+      - host: jellyfin@{{ include "clusterjellyfin.fullname" $root }}-workers-{{ $i }}.{{ include "clusterjellyfin.fullname" $root }}-workers-headless.{{ $root.Release.Namespace }}.svc.cluster.local
+        weight: 1
+      {{- end }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "clusterjellyfin.fullname" . }}-ssh-keys
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "clusterjellyfin.labels" . | nindent 4 }}
+type: Opaque
+data:
+  id_rsa: {{ .Files.Get "docker/jellyfin_rsa" | b64enc }}
+  id_rsa.pub: {{ .Files.Get "docker/jellyfin_rsa.pub" | b64enc }}

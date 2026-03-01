@@ -1,0 +1,53 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: comfyui
+  labels:
+    helm.sh/chart: comfyui-0.1.0
+    app.kubernetes.io/name: comfyui
+    app.kubernetes.io/instance: comfyui
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: default-comfyui-stripprefix@kubernetescrd
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    cert-manager.io/cluster-issuer: ca-issuer
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: comfyui.celestium.life
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: comfyui
+                port:
+                  number: 50000
+    - host: comfyui.dev.celestium.life
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: comfyui
+                port:
+                  number: 50000
+  tls:
+    - hosts:
+        - comfyui.celestium.life
+        - comfyui.dev.celestium.life
+      secretName: comfyui-cert
+---
+# Source: comfyui/templates/ingress.yaml
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: comfyui-stripprefix
+spec:
+  stripPrefix:
+    prefixes:
+      - /assets
+      - /comfyui

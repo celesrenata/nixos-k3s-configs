@@ -1,0 +1,80 @@
+run:
+  tests: true
+  build-tags:
+    - kerneldrv
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+linters:
+  disable-all: true
+  enable:
+    - asciicheck
+    - bodyclose
+    - dogsled
+    - errcheck
+    - copyloopvar
+    - gocognit
+    - goconst
+    - gocyclo
+    - godot
+    - err113
+    - gofmt
+    - goimports
+    - gomodguard
+    - gosimple
+    - gosec
+    - govet
+    - goprintffuncname
+    - ineffassign
+    - misspell
+    - nakedret
+    - noctx
+    - nolintlint
+    - prealloc
+    - revive
+    - staticcheck
+    - stylecheck
+    - typecheck
+    - unconvert
+    - unused
+    - whitespace
+    - wsl
+
+linters-settings:
+  revive:
+    rules:
+      - name: unused-parameter
+        disabled: true
+  gofmt:
+    simplify: true
+  golint:
+    min-confidence: 0.9
+  goconst:
+    ignore-tests: true
+  govet:
+    shadow: true
+    enable:
+    - "fieldalignment"
+  gocyclo:
+    min-complexity: 15
+  gocognit:
+    min-complexity: 31
+
+issues:
+  exclude-rules:
+    - linters:
+        - gosec
+      text: "G115"
+    - path: _test\.go
+      linters:
+        - gocognit
+        - wsl
+        - gocyclo
+    - path: test/e2e/
+      linters:
+        - wsl
+        - gocognit
+        - gocyclo
+    - path: cmd/gpu_fakedev/
+      linters:
+        - wsl

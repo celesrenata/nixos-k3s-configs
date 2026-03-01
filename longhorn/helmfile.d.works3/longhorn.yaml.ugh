@@ -1,0 +1,23 @@
+repositories:
+  - name: longhorn
+    url: https://charts.longhorn.io
+  - name: kyverno
+    url: https://kyverno.github.io/kyverno
+  - name: bedag 
+    url: https://bedag.github.io/helm-charts
+releases:
+  - name: longhorn
+    namespace: longhorn-system
+    chart: longhorn/longhorn
+    version: 1.7.2
+    needs:
+      - kyverno/kyverno
+  - name: kyverno
+    namespace: kyverno
+    chart: kyverno/kyverno
+    version: 3.2.6
+    hooks:
+      - events: ["prepare"]
+    showlogs: true
+    command: "sh"
+    args: ["kubectl apply -f configmap.yaml"]

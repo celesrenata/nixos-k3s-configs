@@ -1,0 +1,71 @@
+singleuser:
+  cloudMetadata:
+    blockWithIptables: false
+  profileList:
+    - display_name: "CUDA 12.9 with Python 3.10"
+      description: "Ubuntu 22.04, Python 3.10, CUDA 12.9, GPU enabled"
+      kubespawner_override:
+        image: ghcr.io/celesrenata/jupyter-cuda-notebooks:12.9-py310
+        extra_resource_limits:
+          nvidia.com/gpu: "1"
+    - display_name: "CUDA 12.9 with Python 3.12"
+      description: "Ubuntu 24.04, Python 3.12, CUDA 12.9, GPU enabled"
+      default: true
+      kubespawner_override:
+        image: ghcr.io/celesrenata/jupyter-cuda-notebooks:12.9
+        extra_resource_limits:
+          nvidia.com/gpu: "1"
+    - display_name: "CPU Server"
+      description: "Spawns a notebook server with access to a CPU"
+  image:
+    name: jupyter/datascience-notebook
+    tag: latest
+
+  memory:
+    limit: 32G
+    guarantee: 1G
+
+  cpu:
+    limit: 16
+    guarantee: 0.5
+
+  storage:
+    dynamic:
+      storageClass: longhorn
+    capacity: 100Gi
+    extraVolumes:
+      - name: jupyterhub-shared
+        persistentVolumeClaim:
+          claimName: jupyterhub-shared-pvc
+      - name: shm-volume
+        emptyDir:
+          medium: Memory
+    extraVolumeMounts:
+      - name: jupyterhub-shared
+        mountPath: /home/shared
+      - name: shm-volume
+        mountPath: /dev/shm
+
+  extraFiles:
+    jupyter_notebook_config.json:
+      mountPath: /etc/jupyter/jupyter_notebook_config.json
+      data:
+        MappingKernelManager:
+          cull_idle_timeout: 0
+          cull_interval: 0
+          cull_connected: false
+          cull_busy: false
+
+  cmd: null
+
+hub:
+  config:
+    Authenticator:
+      admin_users:
+        - celes
+    DummyAuthenticator:
+      password: PSCh4ng3me!
+
+cull:
+  enabled: false
+

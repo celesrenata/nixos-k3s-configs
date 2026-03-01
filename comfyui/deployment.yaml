@@ -1,0 +1,134 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: comfyui
+  labels:
+    helm.sh/chart: comfyui-0.1.0
+    app.kubernetes.io/name: comfyui
+    app.kubernetes.io/instance: comfyui
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: comfyui
+      app.kubernetes.io/instance: comfyui
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: comfyui-0.1.0
+        app.kubernetes.io/name: comfyui
+        app.kubernetes.io/instance: comfyui
+        app.kubernetes.io/version: "1.16.0"
+        app.kubernetes.io/managed-by: Helm
+    spec:
+      runtimeClassName: nvidia
+      serviceAccountName: comfyui
+      securityContext:
+        fsGroup: 1000
+      tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: comfyui
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+          image: "ghcr.io/celesrenata/comfyui-onprem-k8s:comfyui-8f40b43"
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 50000
+              protocol: TCP
+            - name: training
+              containerPort: 46781
+              protocol: TCP
+          env:
+          - name: NVIDIA_VISIBLE_DEVICES
+            value: "all"
+          - name: NVIDIA_DRIVER_CAPABILITIES
+            value: "compute,utility"
+          - name: PYTORCH_CUDA_ALLOC_CONF
+            value: "max_split_size_mb:512"
+          livenessProbe:
+            httpGet:
+              path: /queue
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /queue
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /queue
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 30
+          resources:
+            requests:
+              cpu: "1"
+              memory: "8Gi"
+              nvidia.com/gpu: "1"
+            limits:
+              cpu: "12"
+              memory: "64Gi"
+              nvidia.com/gpu: "1"
+          volumeMounts:
+            - name: model-storage
+              mountPath: /home/workspace/ComfyUI/models
+            - name: custom-nodes
+              mountPath: /home/workspace/ComfyUI/custom_nodes
+            - name: tmp
+              mountPath: /home/workspace/ComfyUI/input
+              subPath: input
+            - name: tmp
+              mountPath: /home/workspace/ComfyUI/output
+              subPath: output
+            - name: tmp
+              mountPath: /home/workspace/ComfyUI/temp
+              subPath: temp
+            - name: user
+              mountPath: /home/workspace/ComfyUI/user
+            - name: venv
+              mountPath: /opt/venv
+            - name: shm
+              mountPath: /dev/shm
+      volumes:
+        - name: model-storage
+          persistentVolumeClaim:
+            claimName: comfyui-model-pvc-local
+        - name: tmp
+          persistentVolumeClaim:
+            claimName: comfyui-tmp-pvc-local
+        - name: custom-nodes
+          persistentVolumeClaim:
+            claimName: comfyui-custom-nodes-pvc
+        - name: user
+          persistentVolumeClaim:
+            claimName: comfyui-user-pvc-local
+        - name: venv
+          persistentVolumeClaim:
+            claimName: comfyui-venv-pvc
+        - name: shm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 2Gi

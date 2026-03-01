@@ -1,0 +1,332 @@
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: mutating-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-deviceplugin-intel-com-v1-dlbdeviceplugin
+  failurePolicy: Fail
+  name: mdlbdeviceplugin.kb.io
+  rules:
+  - apiGroups:
+    - deviceplugin.intel.com
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - dlbdeviceplugins
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-deviceplugin-intel-com-v1-dsadeviceplugin
+  failurePolicy: Fail
+  name: mdsadeviceplugin.kb.io
+  rules:
+  - apiGroups:
+    - deviceplugin.intel.com
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - dsadeviceplugins
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-deviceplugin-intel-com-v1-fpgadeviceplugin
+  failurePolicy: Fail
+  name: mfpgadeviceplugin.kb.io
+  rules:
+  - apiGroups:
+    - deviceplugin.intel.com
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - fpgadeviceplugins
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-deviceplugin-intel-com-v1-gpudeviceplugin
+  failurePolicy: Fail
+  name: mgpudeviceplugin.kb.io
+  rules:
+  - apiGroups:
+    - deviceplugin.intel.com
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - gpudeviceplugins
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-deviceplugin-intel-com-v1-iaadeviceplugin
+  failurePolicy: Fail
+  name: miaadeviceplugin.kb.io
+  rules:
+  - apiGroups:
+    - deviceplugin.intel.com
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - iaadeviceplugins
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-deviceplugin-intel-com-v1-qatdeviceplugin
+  failurePolicy: Fail
+  name: mqatdeviceplugin.kb.io
+  rules:
+  - apiGroups:
+    - deviceplugin.intel.com
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - qatdeviceplugins
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-deviceplugin-intel-com-v1-sgxdeviceplugin
+  failurePolicy: Fail
+  name: msgxdeviceplugin.kb.io
+  reinvocationPolicy: IfNeeded
+  rules:
+  - apiGroups:
+    - deviceplugin.intel.com
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - sgxdeviceplugins
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /pods
+  failurePolicy: Ignore
+  name: fpga.mutator.webhooks.intel.com
+  rules:
+  - apiGroups:
+    - ""
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    resources:
+    - pods
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate--v1-pod
+  failurePolicy: Ignore
+  name: sgx.mutator.webhooks.intel.com
+  reinvocationPolicy: IfNeeded
+  rules:
+  - apiGroups:
+    - ""
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    resources:
+    - pods
+  sideEffects: None
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: validating-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-deviceplugin-intel-com-v1-dlbdeviceplugin
+  failurePolicy: Fail
+  name: vdlbdeviceplugin.kb.io
+  rules:
+  - apiGroups:
+    - deviceplugin.intel.com
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - dlbdeviceplugins
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-deviceplugin-intel-com-v1-dsadeviceplugin
+  failurePolicy: Fail
+  name: vdsadeviceplugin.kb.io
+  rules:
+  - apiGroups:
+    - deviceplugin.intel.com
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - dsadeviceplugins
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-deviceplugin-intel-com-v1-fpgadeviceplugin
+  failurePolicy: Fail
+  name: vfpgadeviceplugin.kb.io
+  rules:
+  - apiGroups:
+    - deviceplugin.intel.com
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - fpgadeviceplugins
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-deviceplugin-intel-com-v1-gpudeviceplugin
+  failurePolicy: Fail
+  name: vgpudeviceplugin.kb.io
+  rules:
+  - apiGroups:
+    - deviceplugin.intel.com
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - gpudeviceplugins
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-deviceplugin-intel-com-v1-iaadeviceplugin
+  failurePolicy: Fail
+  name: viaadeviceplugin.kb.io
+  rules:
+  - apiGroups:
+    - deviceplugin.intel.com
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - iaadeviceplugins
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-deviceplugin-intel-com-v1-qatdeviceplugin
+  failurePolicy: Fail
+  name: vqatdeviceplugin.kb.io
+  rules:
+  - apiGroups:
+    - deviceplugin.intel.com
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - qatdeviceplugins
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-deviceplugin-intel-com-v1-sgxdeviceplugin
+  failurePolicy: Fail
+  name: vsgxdeviceplugin.kb.io
+  rules:
+  - apiGroups:
+    - deviceplugin.intel.com
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - sgxdeviceplugins
+  sideEffects: None

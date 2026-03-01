@@ -1,0 +1,89 @@
+name: Publish
+
+on:
+  push:
+    branches:
+        - main
+        - release-0.28
+        - release-0.29
+        - release-0.30
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+
+    permissions:
+      contents: write # for Git to git push
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-venv git
+    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
+      with:
+        fetch-depth: 0
+        ref: main
+    - name: Set up doc directory
+      run: |
+        mkdir $HOME/output
+        touch $HOME/output/.nojekyll
+    - name: Set up git
+      run: |
+        author=$(git log --merges --pretty=format:%an -n 1)
+        email=$(git log --merges --pretty=format:%ae -n 1)
+        git config --global user.name "$author"
+        git config --global user.email "$email"
+    - name: Build latest
+      run: |
+        GITHUB_SHA=$(git rev-parse HEAD)
+        export GITHUB_SHA
+        rm -rf _work/venv
+        make vhtml
+        mv _build/html/* $HOME/output/
+    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
+      with:
+        fetch-depth: 0
+        ref: release-0.28
+    - name: Build release-0.28
+      run: |
+        GITHUB_SHA=$(git rev-parse HEAD)
+        export GITHUB_SHA
+        rm -rf _work/venv
+        make vhtml
+        mv _build/html $HOME/output/0.28
+    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
+      with:
+        fetch-depth: 0
+        ref: release-0.29
+    - name: Build release-0.29
+      run: |
+        GITHUB_SHA=$(git rev-parse HEAD)
+        export GITHUB_SHA
+        rm -rf _work/venv
+        make vhtml
+        mv _build/html $HOME/output/0.29
+    - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4
+      with:
+        fetch-depth: 0
+        ref: release-0.30
+    - name: Build release-0.30
+      run: |
+        GITHUB_SHA=$(git rev-parse HEAD)
+        export GITHUB_SHA
+        rm -rf _work/venv
+        make vhtml
+        mv _build/html $HOME/output/0.30
+    - name: Deploy the docs
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        cd $HOME/output
+        git init
+        git add .
+        git commit -m "latest html output"
+        git push -f https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git HEAD:gh-pages

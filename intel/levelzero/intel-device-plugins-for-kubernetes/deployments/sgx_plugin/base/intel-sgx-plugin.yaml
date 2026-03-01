@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: intel-sgx-plugin
+  labels:
+    app: intel-sgx-plugin
+spec:
+  selector:
+    matchLabels:
+      app: intel-sgx-plugin
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app: intel-sgx-plugin
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - name: intel-sgx-plugin
+        image: intel/intel-sgx-plugin:devel
+        securityContext:
+          seLinuxOptions:
+            type: "container_device_plugin_t"
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - name: kubeletsockets
+          mountPath: /var/lib/kubelet/device-plugins
+        - name: sgx-enclave
+          mountPath: /dev/sgx_enclave
+          readOnly: true
+        - name: sgx-provision
+          mountPath: /dev/sgx_provision
+          readOnly: true
+      volumes:
+      - name: kubeletsockets
+        hostPath:
+          path: /var/lib/kubelet/device-plugins
+      - name: sgx-enclave
+        hostPath:
+          path: /dev/sgx_enclave
+          type: CharDevice
+      - name: sgx-provision
+        hostPath:
+          path: /dev/sgx_provision
+          type: CharDevice
+      nodeSelector:
+        kubernetes.io/arch: amd64

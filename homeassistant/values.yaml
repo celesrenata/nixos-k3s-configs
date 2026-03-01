@@ -1,0 +1,22 @@
+persistence:
+  enabled: true
+  existingVolume: "ha-data"
+  accessMode: ReadWriteOnce
+  size: 10Gi
+  storageClass: "nfs"
+configuration:
+  enabled: true
+  trusted_proxies: [ "10.42.0.0/16" ]
+ingress:
+  enabled: true
+additionalPorts:
+  - name: wyoming
+    containerPort: 10700
+    protocol: TCP
+additionalServices:
+  - name: wyoming
+    port: 10700
+    targetPort: wyoming
+    type: LoadBalancer
+    loadBalancerIP: 10.1.1.12
+    protocol: TCP

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nextcloud-nosslcert
+data:
+  config.php: |-
+    'mail_smtpstreamoptions' =>
+    array (
+    'ssl' =>
+    array (
+    'allow_self_signed' => true,
+    'verify_peer' => false,
+    'verify_peer_name' => false,
+    ),
+    ),

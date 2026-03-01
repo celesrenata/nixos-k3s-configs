@@ -1,0 +1,46 @@
+FROM ghcr.io/celesrenata/jellyfin:postgres
+
+# Install dependencies and Intel Arc GPU drivers
+RUN apt-get update && apt-get install -y software-properties-common curl gpg wget gnupg lsb-release && \
+    # Add Jellyfin repository
+    curl -fsSL https://repo.jellyfin.org/jellyfin_team.gpg.key | gpg --dearmor -o /etc/apt/trusted.gpg.d/jellyfin.gpg && \
+    echo "deb [arch=$(dpkg --print-architecture)] https://repo.jellyfin.org/debian $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/jellyfin.list && \
+    # Add PostgreSQL repository
+    wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - && \
+    echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list && \
+    # Update and install packages
+    apt-get update && apt-get install -y \
+    python3 \
+    python3-click \
+    python3-yaml \
+    python3-psycopg2 \
+    openssh-client \
+    jellyfin-ffmpeg7 \
+    postgresql-client-18 \
+    intel-media-va-driver \
+    intel-gpu-tools \
+    vainfo \
+    libdrm2 \
+    libva-drm2 \
+    libva2 \
+    libigdgmm12 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Initialize Intel Arc GPU environment
+ENV LIBVA_DRIVER_NAME=iHD
+ENV LIBVA_DRIVERS_PATH=/usr/lib/x86_64-linux-gnu/dri
+
+# Override hardcoded PostgreSQL environment variables to use Kubernetes secrets
+ENV JELLYFIN_POSTGRES_HOST=""
+ENV JELLYFIN_POSTGRES_PORT=""
+ENV JELLYFIN_POSTGRES_DATABASE=""
+ENV JELLYFIN_POSTGRES_USER=""
+ENV JELLYFIN_POSTGRES_PASSWORD=""
+ENV JELLYFIN_POSTGRES_CONNECTION_STRING=""
+
+# Create directories (jellyfin user already exists in base image)
+RUN mkdir -p /config/.ssh /tmp/.fontconfig && \
+    chmod 777 /tmp/.fontconfig
+
+# Set fontconfig cache directory
+ENV FONTCONFIG_PATH=/tmp/.fontconfig

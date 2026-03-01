@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.26.1 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: flame
+  name: flame
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: flame
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.26.1 (HEAD)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: flame
+    spec:
+      containers:
+        - env:
+            - name: PASSWORD
+              value: renata
+          image: pawelmalak/flame:multiarch
+          name: flame
+          ports:
+            - containerPort: 5005
+          resources: {}
+          volumeMounts:
+            - mountPath: /app/data
+              name: flame-config
+      restartPolicy: Always
+      volumes:
+        - name: flame-config
+          persistentVolumeClaim:
+            claimName: flame-config
+status: {}

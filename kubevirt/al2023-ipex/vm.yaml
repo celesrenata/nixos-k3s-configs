@@ -1,0 +1,72 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  creationTimestamp: null
+  labels:
+    kubevirt.io/vm: al2023-ipex
+  name: al2023-ipex
+spec:
+  dataVolumeTemplates:
+  - metadata:
+      creationTimestamp: null
+      name: al2023-ipex-volume
+    spec:
+      storage:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 100G
+        storageClassName: longhorn 
+      source:
+        http:
+          url: https://cdn.amazonlinux.com/al2023/os-images/2023.5.20240805.0/kvm/al2023-kvm-2023.5.20240805.0-kernel-6.1-x86_64.xfs.gpt.qcow2 
+  running: true
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: al2023-ipex 
+    spec:
+      domain:
+        devices:
+          gpus:
+            - deviceName: gpu.intel.com/xe
+              name: gpu1
+          disks:
+          - disk:
+              bus: virtio
+            name: datavolumevolume-ipex
+        machine:
+          type: ""
+        resources:
+          requests:
+            cpu: 4
+            memory: 8G
+            gpu.intel.com/xe: "1"
+      terminationGracePeriodSeconds: 180
+      volumes:
+      - dataVolume:
+          name: al2023-ipex-volume 
+        name: datavolumevolume-ipex
+      - cloudInitNoCloud:
+          userData: |-
+            #cloud-config
+            resize_rootfs: true
+            hostname: intel-ollama-2 
+            manage_etc_hosts: true
+            users:
+            - name: celes
+              groups: wheel
+              sudo: ['ALL=(ALL) NOPASSWD:ALL']
+              shell: /bin/bash
+              ssh-authorized-keys:
+                - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEqvp+XbCqCMFZiflp+2gkRjORFp2RkN5o+LvRb2kjL9 celes@esnixi
+              package_update: true
+              packages:
+               - git
+               - vim
+              runcmd:
+               - systemctl enable sshd.service
+               - yum install libXcomposite libXcursor libXi libXtst libXrandr alsa-lib mesa-libEGL libXdamage mesa-libGL libXScrnSaver -y
+        name: cloudinit
+status: {}

@@ -1,0 +1,7 @@
+resources:
+ - ../../default
+
+patches:
+- path: gpu.yaml
+  target:
+    kind: Deployment

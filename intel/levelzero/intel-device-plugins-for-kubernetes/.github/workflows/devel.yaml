@@ -1,0 +1,58 @@
+name: Devel
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  trivy:
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    uses: "./.github/workflows/lib-trivy.yaml"
+    with:
+      upload-to-github-security-tab: true
+
+  validate:
+    uses: "./.github/workflows/lib-validate.yaml"
+
+  codeql:
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    uses: "./.github/workflows/lib-codeql.yaml"
+
+  scorecard:
+    permissions:
+      contents: read
+      id-token: write
+      security-events: write
+    uses: "./.github/workflows/lib-scorecard.yaml"
+
+  build:
+    needs:
+      - validate
+      - trivy
+    uses: "./.github/workflows/lib-build.yaml"
+
+  e2e:
+    needs:
+      - build
+    uses: "./.github/workflows/lib-e2e.yaml"
+
+  # devel image push
+  publish:
+    permissions:
+      contents: read
+      id-token: write
+    needs:
+      - e2e
+      - build
+    uses: "./.github/workflows/lib-publish.yaml"
+    secrets: inherit

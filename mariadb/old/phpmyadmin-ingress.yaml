@@ -1,0 +1,26 @@
+---    
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mariadb-sql
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: tcpep
+spec:
+  rules:
+    - host: mariadb.celestium.life
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: phpmyadmin
+                port:
+                  number: 80
+#          - path: /
+#            pathType: Prefix
+#            backend:
+#              service:
+#                name: phpmyadmin
+#                port:
+#                  number: 443

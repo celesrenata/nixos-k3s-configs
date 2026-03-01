@@ -1,0 +1,126 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.34.0 (HEAD)
+  labels:
+    io.kompose.service: nextcloud-appapi-dsp
+  name: nextcloud-appapi-dsp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: nextcloud-appapi-dsp
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.34.0 (HEAD)
+      labels:
+        io.kompose.service: nextcloud-appapi-dsp
+    spec:
+      containers:
+        - securityContext:
+            capabilities:
+              add:
+                - ALL
+            privileged: true
+          env:
+          - name: NC_HAPROXY_PASSWORD
+            value: "PSCh4ng3me!!"
+          - name: BIND_ADDRESS
+            value: "0.0.0.0"
+          - name: EX_APPS_NET
+            value: "ipv4@127.0.0.1"
+          image: ghcr.io/nextcloud/nextcloud-appapi-dsp:release
+          imagePullPolicy: Always
+          name: nextcloud-appapi-dsp
+          ports:
+            - containerPort: 2375 
+              protocol: TCP
+            - containerPort: 23000
+              protocol: TCP
+            - containerPort: 23001
+              protocol: TCP
+            - containerPort: 23002
+              protocol: TCP
+            - containerPort: 23003
+              protocol: TCP
+            - containerPort: 23004
+              protocol: TCP
+            - containerPort: 23005
+              protocol: TCP
+            - containerPort: 23006
+              protocol: TCP
+            - containerPort: 23007
+              protocol: TCP
+            - containerPort: 23008
+              protocol: TCP
+            - containerPort: 23009
+              protocol: TCP
+            - containerPort: 23010
+              protocol: TCP
+            - containerPort: 23011
+              protocol: TCP
+            - containerPort: 23012
+              protocol: TCP
+            - containerPort: 23013
+              protocol: TCP
+            - containerPort: 23014
+              protocol: TCP
+            - containerPort: 23015
+              protocol: TCP
+            - containerPort: 23016
+              protocol: TCP
+            - containerPort: 23017
+              protocol: TCP
+            - containerPort: 23018
+              protocol: TCP
+            - containerPort: 23019
+              protocol: TCP
+            - containerPort: 23020
+              protocol: TCP
+            - containerPort: 23021
+              protocol: TCP
+            - containerPort: 23022
+              protocol: TCP
+            - containerPort: 23023
+              protocol: TCP
+            - containerPort: 23024
+              protocol: TCP
+            - containerPort: 23025
+              protocol: TCP
+            - containerPort: 23026
+              protocol: TCP
+            - containerPort: 23027
+              protocol: TCP
+            - containerPort: 23028
+              protocol: TCP
+            - containerPort: 23029
+              protocol: TCP
+            - containerPort: 23030
+              protocol: TCP
+
+          resources:
+            requests:
+              cpu: 0.1
+              memory: 256Mi
+            limits:
+               cpu: 1
+               memory: 1Gi
+               nvidia.com/gpu: "1"
+          volumeMounts:
+            - name: docker-sock
+              mountPath: /var/run/docker.sock
+      restartPolicy: Always
+      volumes:
+        - name: docker-certs
+          persistentVolumeClaim:
+            claimName: startup-docker-certs-pvc
+        - name: docker-sock
+          hostPath:
+            path: /var/run/docker.sock
+            type: Socket

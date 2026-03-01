@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.266.1 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: reviewboard
+  name: reviewboard
+spec:
+  ports:
+    - name: "8080"
+      port: 8080
+      targetPort: 8080
+  selector:
+    io.kompose.service: reviewboard
+status:
+  loadBalancer: {}

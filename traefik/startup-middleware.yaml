@@ -1,0 +1,41 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+ name: startup-le-production
+spec:
+ acme:
+   email: celes@celestium.life
+   # Production letsencrypt server
+   server: https://acme-v02.api.letsencrypt.org/directory
+   privateKeySecretRef:
+     # if not existing, it will register a new account and stores it
+     name: startup-issuer-account-key
+   solvers:
+     - dns01:
+         route53:
+           accessKeyID: ABCDEFGHIJKLMNOPQRST
+           secretAccessKeySecretRef:
+             name: cert-manager-secret
+             key: secret-access-key
+           region: us-west-2
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+ name: startup-le-staging
+spec:
+ acme:
+   email: startup@celestium.life
+   # We use the staging server here for testing to avoid hitting
+   server: https://acme-staging-v02.api.letsencrypt.org/directory
+   privateKeySecretRef:
+     # if not existing, it will register a new account and stores it
+     name: startup-issuer-account-key
+   solvers:
+     - dns01:
+         route53:
+           accessKeyID: ABCDEFGHIJKLMNOPQRST
+           secretAccessKeySecretRef:
+             name: cert-manager-secret-startup
+             key: secret-access-key
+           region: us-west-2

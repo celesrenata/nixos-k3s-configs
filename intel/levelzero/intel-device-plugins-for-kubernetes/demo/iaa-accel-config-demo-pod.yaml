@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: iaa-accel-config-demo
+  labels:
+    app: iaa-accel-config-demo
+spec:
+  containers:
+  - name: iaa-accel-config-demo
+    image: intel/accel-config-demo:devel
+    workingDir: "/usr/libexec/accel-config/test/"
+    command:
+      - "./iaa_user_test_runner.sh"
+    args:
+      - "--skip-config"
+    imagePullPolicy: IfNotPresent
+    resources:
+      limits:
+        iaa.intel.com/wq-user-dedicated: 1
+        # iaa.intel.com/wq-user-shared: 1
+    securityContext:
+      capabilities:
+        add:
+          ["SYS_RAWIO"]
+  restartPolicy: Never

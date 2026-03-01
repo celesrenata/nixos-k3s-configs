@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: unifi-data-pvc 
+spec:
+  volumeName: unifi-data
+  storageClassName: ""
+  accessModes:
+    - ReadWriteMany
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi

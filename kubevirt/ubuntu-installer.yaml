@@ -1,0 +1,34 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachineInstance
+metadata:
+  name: testvmi-filesystems
+spec:
+  domain:
+    devices:
+      filesystems:
+        - name: foo
+          virtiofs: {}
+      disks:
+        - name: containerdisk
+          disk:
+            bus: virtio
+        - name: cloudinitdisk
+          disk:
+            bus: virtio
+    volumes:
+      - containerDisk:
+          image: quay.io/containerdisks/fedora:latest
+        name: containerdisk 
+      - cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              chpasswd:
+                expire: false
+              password: fedora
+              user: fedora
+              bootcmd:
+                - "sudo mkdir /tmp/foo"
+                - "sudo mount -t virtiofs foo /tmp/foo"
+      - persistentVolumeClaim:
+          claimName: mypvc
+        name: foo

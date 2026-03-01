@@ -1,0 +1,9 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: testdb
+spec:
+  cluster:
+    name: postgresql
+  name: testdb
+  owner: celes

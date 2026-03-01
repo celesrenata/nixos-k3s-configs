@@ -1,0 +1,35 @@
+repositories:
+  - name: longhorn
+    url: https://charts.longhorn.io
+releases:
+  - name: longhorn
+    namespace: longhorn-system
+    chart: longhorn/longhorn
+    version: 1.6.2
+    strategicMergePatches:
+      - kind: DaemonSet
+        apiVersion: apps/v1
+        metadata:
+          name: longhorn-manager
+          namespace: longhorn-system
+        spec:
+          template:
+            spec:
+              containers:
+                - name: longhorn-manager
+                  env:
+                    - name: PATH
+                      value: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/run/wrappers/bin:/nix/var/nix/profiles/default/bin:/run/current-system/sw/bin
+      - kind: Deployments
+        apiVersion: apps/v1
+        metadata:
+          name: csi-attacher
+          namespace: longhorn-system
+        spec:
+          template:
+            spec:
+               containers:
+                 - name: csi-attacher
+                   env:
+                     - name: PATH
+                       value: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/run/wrappers/bin:/nix/var/nix/profiles/default/bin:/run/current-system/sw/bin

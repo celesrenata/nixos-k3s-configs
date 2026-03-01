@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: whisper
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: whisper
+  template:
+    metadata:
+      labels:
+        app: whisper
+    spec:
+      containers:
+      - name: whisper
+        image: lscr.io/linuxserver/faster-whisper:gpu
+        env:
+          - name: PUID 
+            value: "1026"
+          - name: PGID
+            value: "101"
+          - name: TZ
+            value: America/Los_Angeles
+          - name: WHISPER_MODEL
+            value: small.en
+          - name: WHISPER_BEAM
+            value: "1"
+          - name: WHISPER_LANG
+            value: en
+        ports:
+        - containerPort: 10300
+        resources:
+          limits:
+            nvidia.com/gpu: "1"
+        volumeMounts:
+          - mountPath: /config
+            name: whisper-data
+      volumes:
+        - name: whisper-data
+          persistentVolumeClaim:
+            claimName: whisper-data-pvc
+status: {}

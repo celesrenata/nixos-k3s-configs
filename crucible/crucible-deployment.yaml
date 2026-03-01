@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.32.0 (HEAD)
+  labels:
+    io.kompose.service: crucible
+  name: crucible
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: crucible
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.32.0 (HEAD)
+      labels:
+        io.kompose.network/crucible-default: "true"
+        io.kompose.service: crucible
+    spec:
+      containers:
+        - env:
+            - name: FECRU_CONFIGURE_ADMIN_PASSWORD
+              value: Wrtcruc1ble!
+            - name: FECRU_CONFIGURE_DB_HOST
+              value: 192.168.42.8
+            - name: FECRU_CONFIGURE_DB_NAME
+              value: crucible
+            - name: FECRU_CONFIGURE_DB_PASSWORD
+              value: Wrtcruc1ble!
+            - name: FECRU_CONFIGURE_DB_PORT
+              value: "2665"
+            - name: FECRU_CONFIGURE_DB_TYPE
+              value: postgresql
+            - name: FECRU_CONFIGURE_DB_USER
+              value: crucible
+            - name: FECRU_CONFIGURE_LICENSE_CRUCIBLE
+              value: AAABdg0ODAoPeNpVkV9PwjAUxd/7KZr4ojGYbnPjT9JE0k2ZYcxsaNDwUstFqqWQrgPnp3eDEeXxn nvvub/TXiQbjSebHXYJdt0B8QfEwyyf1rXrIWaAW7nRIbdAG6XjOB3XQSEUwsht06LMlEK+K8CXO ZgdmCvs4+cCTDEf4NxyY8HgsRSgC0AJl9qC5lpA9L2VpjoZ3x6MCZqU63cw6fJgQH3ULv4bLrWSa 2lhgdSx91JPNhwuinZclQdeuuSqPpeaD65lcZQYKCisLNc3Si4BiRb7hgsrd0CtKQGxjbZ1HdWci opm4U6cr7VHR7xY0YTt2f3o7atKnx78l/h6pGd5XH3+RGmPEOkFw1WWhYt+uXT3t/1g6rxus+fsU QU8+J597Od0Tk/54pCO4zCPJh2f9Lpd3+2jL6hOyZyAkC7peZ7zR92+7BH7qTRixQs4/ybyN92em VZbmPA1UJYmSZSxeDg+RT7KTVY8kkpVYBao5qFnTL8M8LmgMCwCFAfGr4ptSq6Z779FAwmvG+E2d drMAhRoG15rSH+cM1fMVhewnk7akuUQFw==X02ia
+          image: atlassian/crucible
+          name: crucible
+          ports:
+            - containerPort: 8059
+              hostPort: 8059
+              protocol: TCP
+            - containerPort: 8080
+              hostPort: 8080
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /atlassian/data/crucible
+              name: crucible-claim0
+      restartPolicy: Always
+      volumes:
+        - name: crucible-claim0
+          persistentVolumeClaim:
+            claimName: crucible-claim0

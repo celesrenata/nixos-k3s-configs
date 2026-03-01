@@ -1,0 +1,59 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: startup-nextcloud-data-pvc
+spec:
+  volumeName: startup-nextcloud-data
+  storageClassName: ""
+  accessModes:
+    - ReadWriteOnce
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Ti
+status: {}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: startup-chat-backend-pvc
+spec:
+  volumeName: startup-chat-backend
+  storageClassName: ""
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+status: {}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: startup-nextcloud-nextcloud-pvc
+spec:
+  volumeName: startup-nextcloud-nextcloud
+  storageClassName: ""
+  accessModes:
+    - ReadWriteOnce
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 80Gi
+status: {}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: startup-docker-certs-pvc
+spec:
+  volumeName: startup-docker-certs
+  storageClassName: ""
+  accessModes:
+    - ReadWriteOnce
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Mi
+status: {}

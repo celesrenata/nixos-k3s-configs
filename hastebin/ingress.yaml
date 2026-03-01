@@ -1,0 +1,78 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hastebin-http
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    traefik.ingress.kubernetes.io/router.middlewares: default-redirectscheme@kubernetescrd
+  labels:
+    app: hastebin
+spec:
+  rules:
+    - host: hastebin.celestium.life
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: hastebin
+                port:
+                  number: 7777
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hastebin-https
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    cert-manager.io/cluster-issuer: ca-issuer
+  labels:
+    app: hastebin
+spec:
+  rules:
+    - host: hastebin.celestium.life
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: hastebin
+                port:
+                  number: 7777
+  tls:
+    - hosts:
+        - hastebin.celestium.life
+      secretName: hastebin-cert
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+# Name the Ingress resource
+  name: hastebin-dev-https
+  annotations:
+    # Use Traefik as the Ingress controller
+    spec.ingressClassName: traefik
+    # Add Cert-Manager SSL certificates as the name of the ClusterIssuer resource
+    cert-manager.io/cluster-issuer: celestium-letsencrypt
+    cert-manager.io/acme-challenge-type: http01
+    acme.cert-manager.io/http01-edit-in-place: "true"
+spec:
+  rules:
+    - host: hastebin.dev.celestium.life
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: hastebin
+                port:
+                  number: 7777
+  # TLS configuration for HTTPS
+  tls:
+    # TLS secretName used on ClusterIssuer
+     - hosts:
+        - hastebin.dev.celestium.life
+       secretName: celestium.letsencrypt.key.tls

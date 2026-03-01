@@ -1,0 +1,11 @@
+apiVersion: deviceplugin.intel.com/v1
+kind: DsaDevicePlugin
+metadata:
+  name: dsadeviceplugin-sample
+spec:
+  image: intel/intel-dsa-plugin:0.30.0
+  initImage: intel/intel-idxd-config-initcontainer:0.30.0
+  sharedDevNum: 10
+  logLevel: 4
+  nodeSelector:
+    intel.feature.node.kubernetes.io/dsa: 'true'

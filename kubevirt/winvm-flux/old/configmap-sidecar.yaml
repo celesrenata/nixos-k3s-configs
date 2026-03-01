@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: intel-vgpu-configmap
+spec:
+  containers:
+  - name: kubevirt
+    image: <image-name>
+    env:
+    - name: MDEV_PCI_RESOURCE_INTEL_COM_SRIOV-GPUDEVICE
+      valueFrom:
+        configMapKeyRef:
+          name: intel-vgpu-configmap
+          key: MDEV_PCI_RESOURCE_INTEL_COM_SRIOV-GPUDEVICE

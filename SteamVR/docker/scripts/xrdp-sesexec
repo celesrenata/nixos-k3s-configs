@@ -1,0 +1,46 @@
+#!/bin/bash
+# Simple sesexec wrapper for XRDP authentication
+# This handles user authentication and session startup
+
+# Log all calls for debugging
+echo "$(date): xrdp-sesexec called with args: $*" >> /tmp/sesexec.log
+
+case "$1" in
+    auth)
+        # Authenticate user using PAM
+        username="$2"
+        password="$3"
+        echo "$(date): Authenticating user $username" >> /tmp/sesexec.log
+        echo "$password" | su - "$username" -c "exit 0" 2>/dev/null
+        result=$?
+        echo "$(date): Authentication result: $result" >> /tmp/sesexec.log
+        exit $result
+        ;;
+    session)
+        # Start user session
+        username="$2"
+        display="$3"
+        echo "$(date): Starting session for user $username on display $display" >> /tmp/sesexec.log
+        export DISPLAY="$display"
+        export USER="$username"
+        export HOME="/home/$username"
+        cd "$HOME"
+        
+        # Start the desktop session
+        if [ -f "$HOME/.xsession" ]; then
+            echo "$(date): Using .xsession" >> /tmp/sesexec.log
+            exec su - "$username" -c "DISPLAY=$display $HOME/.xsession"
+        elif [ -f "$HOME/.Xclients" ]; then
+            echo "$(date): Using .Xclients" >> /tmp/sesexec.log
+            exec su - "$username" -c "DISPLAY=$display $HOME/.Xclients"
+        else
+            echo "$(date): Using startxfce4" >> /tmp/sesexec.log
+            exec su - "$username" -c "DISPLAY=$display startxfce4"
+        fi
+        ;;
+    *)
+        echo "$(date): Unknown command: $1" >> /tmp/sesexec.log
+        echo "Usage: $0 {auth|session} ..."
+        exit 1
+        ;;
+esac

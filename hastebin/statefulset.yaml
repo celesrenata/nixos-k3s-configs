@@ -1,0 +1,37 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: hastebin
+spec:
+  serviceName: hastebin
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - name: hastebin
+        image: flippinturt/hastebin
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: STORAGE_TYPE
+          value: file
+        - name: STORAGE_FILEPATH
+          value: /tmp
+        ports:
+        - name: service
+          containerPort: 7777
+          protocol: TCP
+        resources:
+          requests:
+            cpu: "150m"
+            memory: "100Mi"
+          limits:
+            cpu: "512m"
+            memory: "256Mi"
+        volumeMounts:
+          - name: hastebin-data
+            mountPath: /tmp
+      volumes:
+        - name: hastebin-data
+          persistentVolumeClaim:
+            claimName: hastebin-nfs-pvc

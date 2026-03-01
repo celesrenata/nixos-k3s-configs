@@ -1,0 +1,79 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: celestium-nextcloud-data
+spec:
+  persistentVolumeReclaimPolicy: Delete
+  capacity:
+    storage: 1Ti
+  accessModes:
+    - ReadWriteOnce
+    - ReadWriteMany
+  storageClassName: ""
+  nfs:
+    path: /volume1/Kubernetes/celestium/nextcloud/data    # The path to your media
+    server: 192.168.42.8     # Your NFS server with Media
+  mountOptions:
+    - vers=4
+    - minorversion=1
+    - noac
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: startup-chat-backend
+spec:
+  persistentVolumeReclaimPolicy: Delete
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ""
+  nfs:
+    path: /volume1/Kubernetes/celestium/nextcloud/chat-backend/data    # The path to your media
+    server: 192.168.42.8     # Your NFS server with Media
+  mountOptions:
+    - vers=4
+    - minorversion=1
+    - noac
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: celestium-nextcloud-nextcloud
+spec:
+  persistentVolumeReclaimPolicy: Delete
+  capacity:
+    storage: 80Gi
+  accessModes:
+    - ReadWriteOnce
+    - ReadWriteMany
+  storageClassName: ""
+  nfs:
+    path: /volume1/Kubernetes/celestium/nextcloud/nextcloud    # The path to your media
+    server: 192.168.42.8     # Your NFS server with Media
+  mountOptions:
+    - vers=4
+    - minorversion=1
+    - noac
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: startup-docker-certs
+spec:
+  persistentVolumeReclaimPolicy: Delete
+  capacity:
+    storage: 1Mi
+  accessModes:
+    - ReadWriteOnce
+    - ReadWriteMany
+  storageClassName: ""
+  nfs:
+    path: /volume1/Kubernetes/celestium/nextcloud/docker-certs    # The path to your media
+    server: 192.168.42.8     # Your NFS server with Media
+  mountOptions:
+    - vers=4
+    - minorversion=1
+    - noac

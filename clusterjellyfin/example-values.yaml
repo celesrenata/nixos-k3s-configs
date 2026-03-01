@@ -1,0 +1,178 @@
+# Example values.yaml for ClusterJellyfin
+# Copy and modify this file for your deployment
+
+# Container images (usually defaults are fine)
+image:
+  jellyfin:
+    repository: ghcr.io/celesrenata/clusterjellyfin-main
+    tag: latest
+    pullPolicy: IfNotPresent
+  worker:
+    repository: ghcr.io/celesrenata/clusterjellyfin-worker
+    tag: latest
+    pullPolicy: IfNotPresent
+
+# Main Jellyfin pod configuration
+jellyfin:
+  replicas: 1
+  
+  # Resource allocation for main pod
+  resources:
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+  
+  # Public URL for Jellyfin (optional)
+  publishedServerUrl: "https://jellyfin.example.com"
+  
+  # Storage configuration
+  storage:
+    # Jellyfin configuration storage
+    config:
+      size: 10Gi
+      storageClass: "longhorn"  # Use your preferred storage class
+      accessMode: ReadWriteOnce
+      # For NFS storage, use empty storageClass and configure NFS:
+      # storageClass: ""
+      # nfs:
+      #   server: "192.168.1.100"
+      #   path: "/mnt/jellyfin/config"
+    
+    # Transcoding cache (should be fast storage)
+    cache:
+      size: 50Gi
+      storageClass: "longhorn"  # Fast SSD storage recommended
+      accessMode: ReadWriteMany
+    
+    # Media library storage
+    media:
+      size: 5Ti
+      storageClass: "nfs-client"  # Large capacity storage
+      accessMode: ReadWriteMany
+      # For NFS storage:
+      # storageClass: ""
+      # nfs:
+      #   server: "192.168.1.100"
+      #   path: "/mnt/media"
+
+# Transcoding worker configuration
+workers:
+  replicas: 3  # Number of worker pods
+  
+  # Resource allocation per worker
+  resources:
+    requests:
+      cpu: 2000m
+      memory: 4Gi
+    limits:
+      cpu: 4000m
+      memory: 8Gi
+  
+  # Node selection (optional - for nodes with GPUs)
+  nodeSelector:
+    enabled: false  # Set to true to use specific nodes
+    nodes:
+      - worker-node-1
+      - worker-node-2
+  
+  # GPU configuration
+  gpu:
+    enabled: false  # Set to true for hardware acceleration
+    resource: "gpu.intel.com/i915"  # or "nvidia.com/gpu"
+    limit: 1
+  
+  # Enable privileged mode for GPU access
+  privileged: true  # Required for Intel Arc Graphics
+
+# Service configuration
+service:
+  type: ClusterIP  # Change to LoadBalancer or NodePort for external access
+  port: 8096
+  httpsPort: 8920
+
+# Ingress configuration (optional)
+ingress:
+  enabled: false  # Set to true for external access
+  className: "nginx"  # Your ingress controller
+  annotations: {}
+    # cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: jellyfin.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+    # - hosts:
+    #     - jellyfin.example.com
+    #   secretName: jellyfin-tls
+
+# Security context
+securityContext:
+  runAsUser: 1001
+  runAsGroup: 1001
+  fsGroup: 1001
+
+# Namespace (optional)
+namespace: jellyfin-system
+
+# Example configurations for different scenarios:
+
+# Example 1: NVIDIA GPU Configuration
+# workers:
+#   replicas: 2
+#   privileged: true
+#   gpu:
+#     enabled: true
+#     resource: "nvidia.com/gpu"
+#     limit: 1
+#   resources:
+#     limits:
+#       nvidia.com/gpu: 1
+
+# Example 2: Intel Arc Graphics Configuration
+# workers:
+#   replicas: 3
+#   privileged: true
+#   gpu:
+#     enabled: true
+#     resource: "gpu.intel.com/i915"
+#     limit: 1
+
+# Example 3: LoadBalancer Service with MetalLB
+# service:
+#   type: LoadBalancer
+#   annotations:
+#     metallb.universe.tf/address-pool: default
+
+# Example 4: NFS Storage Configuration
+# jellyfin:
+#   storage:
+#     config:
+#       storageClass: ""
+#       nfs:
+#         server: "192.168.1.100"
+#         path: "/mnt/jellyfin/config"
+#     media:
+#       storageClass: ""
+#       nfs:
+#         server: "192.168.1.100"
+#         path: "/mnt/media"
+
+# Example 5: Ingress with TLS
+# ingress:
+#   enabled: true
+#   className: "nginx"
+#   annotations:
+#     cert-manager.io/cluster-issuer: letsencrypt-prod
+#   hosts:
+#     - host: jellyfin.yourdomain.com
+#       paths:
+#         - path: /
+#           pathType: Prefix
+#   tls:
+#     - secretName: jellyfin-tls
+#       hosts:
+#         - jellyfin.yourdomain.com

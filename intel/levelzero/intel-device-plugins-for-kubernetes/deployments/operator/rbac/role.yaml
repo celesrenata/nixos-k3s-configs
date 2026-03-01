@@ -1,0 +1,127 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - nodes/proxy
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - serviceaccounts
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - daemonsets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - create
+- apiGroups:
+  - coordination.k8s.io
+  resourceNames:
+  - d1c7b6d5.intel.com
+  resources:
+  - leases
+  verbs:
+  - get
+  - update
+- apiGroups:
+  - deviceplugin.intel.com
+  resources:
+  - dlbdeviceplugins
+  - dsadeviceplugins
+  - fpgadeviceplugins
+  - gpudeviceplugins
+  - iaadeviceplugins
+  - qatdeviceplugins
+  - sgxdeviceplugins
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - deviceplugin.intel.com
+  resources:
+  - dlbdeviceplugins/finalizers
+  - dsadeviceplugins/finalizers
+  - fpgadeviceplugins/finalizers
+  - gpudeviceplugins/finalizers
+  - iaadeviceplugins/finalizers
+  - qatdeviceplugins/finalizers
+  - sgxdeviceplugins/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - deviceplugin.intel.com
+  resources:
+  - dlbdeviceplugins/status
+  - dsadeviceplugins/status
+  - fpgadeviceplugins/status
+  - gpudeviceplugins/status
+  - iaadeviceplugins/status
+  - qatdeviceplugins/status
+  - sgxdeviceplugins/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - fpga.intel.com
+  resources:
+  - acceleratorfunctions
+  - fpgaregions
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - clusterrolebindings
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - watch
+- apiGroups:
+  - security.openshift.io
+  resources:
+  - securitycontextconstraints
+  verbs:
+  - use

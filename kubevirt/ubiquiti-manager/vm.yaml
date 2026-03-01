@@ -1,0 +1,65 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  creationTimestamp: null
+  labels:
+    kubevirt.io/vm: vm-fedora-datavolume
+  name: ubiquiti-manager
+spec:
+  dataVolumeTemplates:
+  - metadata:
+      creationTimestamp: null
+      name: ubiquiti-manager-volume
+    spec:
+      storage:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 20G
+        storageClassName: longhorn 
+      source:
+        http:
+          url: https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
+  running: true
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: ubiquiti-manager 
+    spec:
+      domain:
+        devices:
+          disks:
+          - disk:
+              bus: virtio
+            name: datavolumevolume
+        machine:
+          type: ""
+        resources:
+          requests:
+            memory: 2G
+      terminationGracePeriodSeconds: 180
+      volumes:
+      - dataVolume:
+          name: ubiquiti-manager-volume 
+        name: datavolumevolume
+      - cloudInitNoCloud:
+          userData: |-
+            #cloud-config
+            # The default username is: ubuntu
+            ssh_authorized_keys:
+              - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEqvp+XbCqCMFZiflp+2gkRjORFp2RkN5o+LvRb2kjL9 celes@esnixi
+            password: changeme
+            chpasswd: { expire: False }
+            ssh_pwauth: True
+            runcmd:
+              - sudo apt update
+              - sudo apt upgrade -y
+              - sudo apt-get install gnupg curl wget
+              - curl -fsSL https://www.mongodb.org/static/pgp/server-7.0.asc | sudo gpg -o /usr/share/keyrings/mongodb-server-7.0.gpg --dearmor
+              - echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+              - sudo apt update
+              - wget https://dl.ui.com/unifi/8.3.32/unifi_sysvinit_all.deb
+              - sudo apt install ./unifi_sysvinit_all.deb -y
+        name: cloudinit
+status: {}

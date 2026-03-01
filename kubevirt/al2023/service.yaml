@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: amazon-linux-ssh 
+spec:
+  ports:
+    - nodePort: 31903
+      port: 2223 
+      protocol: TCP
+      targetPort: 22
+  selector:
+    kubevirt.io/vm: amazon-linux
+  sessionAffinity: None
+  type: LoadBalancer
+status:
+  loadBalancer: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: amazon-linux-node-exporter
+  labels:
+    prometheus.kubevirt.io: "node-exporter"
+spec:
+  ports:
+  - name: metrics
+    port: 9100
+    targetPort: 9100
+    protocol: TCP
+  selector:
+    prometheus.kubevirt.io: "node-exporter"

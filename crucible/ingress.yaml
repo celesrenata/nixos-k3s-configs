@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: landingpage
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.middlewares: default-https-redirect@kubernetescrd
+    cert-manager.io/cluster-issuer: ca-issuer
+  labels:
+    app: flame
+spec:
+  rules:
+    - host: landing.celestium.life
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: flame
+                port:
+                  number: 5005
+  tls:
+    - hosts:
+        - landing.celestium.life
+      secretName: landing-cert

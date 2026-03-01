@@ -1,0 +1,39 @@
+{{- if and (eq .Values.jellyfin.storage.media.storageClass "") .Values.jellyfin.storage.media.nfs.server }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ include "clusterjellyfin.fullname" . }}-media-nfs
+  labels:
+    {{- include "clusterjellyfin.labels" . | nindent 4 }}
+spec:
+  capacity:
+    storage: {{ .Values.jellyfin.storage.media.size }}
+  accessModes:
+    - {{ .Values.jellyfin.storage.media.accessMode }}
+  nfs:
+    server: {{ .Values.jellyfin.storage.media.nfs.server }}
+    path: {{ .Values.jellyfin.storage.media.nfs.path }}
+  claimRef:
+    namespace: {{ .Release.Namespace }}
+    name: {{ include "clusterjellyfin.fullname" . }}-media
+{{- end }}
+---
+{{- if and (eq .Values.jellyfin.storage.config.storageClass "") .Values.jellyfin.storage.config.nfs.server }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ include "clusterjellyfin.fullname" . }}-config-nfs
+  labels:
+    {{- include "clusterjellyfin.labels" . | nindent 4 }}
+spec:
+  capacity:
+    storage: {{ .Values.jellyfin.storage.config.size }}
+  accessModes:
+    - {{ .Values.jellyfin.storage.config.accessMode }}
+  nfs:
+    server: {{ .Values.jellyfin.storage.config.nfs.server }}
+    path: {{ .Values.jellyfin.storage.config.nfs.path }}
+  claimRef:
+    namespace: {{ .Release.Namespace }}
+    name: {{ include "clusterjellyfin.fullname" . }}-config
+{{- end }}

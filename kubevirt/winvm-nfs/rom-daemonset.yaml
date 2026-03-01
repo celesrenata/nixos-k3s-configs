@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: rom-copier
+  namespace: vms
+spec:
+  selector:
+    matchLabels:
+      name: rom-copier
+  template:
+    metadata:
+      labels:
+        name: rom-copier
+    spec:
+      containers:
+      - name: rom-copier
+        image: busybox
+        command: ['sh', '-c', 'mkdir -p /shared/kvm && cp /host/usr/share/kvm/intelgopdriver_desktop.bin /shared/kvm/ && chmod 644 /shared/kvm/intelgopdriver_desktop.bin && chown 107:107 /shared/kvm/intelgopdriver_desktop.bin && sleep infinity']
+        volumeMounts:
+        - mountPath: /host
+          name: host-root
+          readOnly: true
+        - mountPath: /shared
+          name: shared-location
+        securityContext:
+          privileged: true
+      volumes:
+      - name: host-root
+        hostPath:
+          path: /
+      - name: shared-location
+        hostPath:
+          path: /var/run
+          type: DirectoryOrCreate
+      hostNetwork: true
+      tolerations:
+      - operator: Exists

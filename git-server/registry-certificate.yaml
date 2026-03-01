@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: registry-tls
+  namespace: git-server
+spec:
+  secretName: registry-tls
+  dnsNames:
+  - registry.celestium.life
+  issuerRef:
+    name: splinter-le-production
+    kind: ClusterIssuer

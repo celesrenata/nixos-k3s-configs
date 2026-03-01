@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: vm-windows-longhorn
+spec:
+  ports:
+    - nodePort: 31307
+      name: ssh
+      port: 2306
+      protocol: TCP
+      targetPort: 22
+  selector:
+    kubevirt.io/vm: vm-windows-longhorn
+  sessionAffinity: None
+  type: LoadBalancer
+status:
+  loadBalancer: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vm-windows-longhorn-node-exporter
+  labels:
+    prometheus.kubevirt.io: "node-exporter"
+spec:
+  ports:
+  - name: metrics
+    port: 9100
+    targetPort: 9100
+    protocol: TCP
+  selector:
+    prometheus.kubevirt.io: "node-exporter"

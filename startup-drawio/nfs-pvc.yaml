@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: startup-drawio-data-pvc
+spec:
+  volumeName: startup-drawio-data
+  storageClassName: ""
+  accessModes:
+    - ReadWriteOnce
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+status: {}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: startup-drawio-config-pvc
+spec:
+  volumeName: startup-drawio-config
+  storageClassName: ""
+  accessModes:
+    - ReadWriteOnce
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+status: {}

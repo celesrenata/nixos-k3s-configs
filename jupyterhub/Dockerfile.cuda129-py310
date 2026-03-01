@@ -1,0 +1,40 @@
+FROM nvidia/cuda:12.9.1-runtime-ubuntu22.04
+
+USER root
+
+# Install minimal system packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3.10 \
+    python3-pip \
+    curl \
+    git \
+    wget \
+    libspeexdsp-dev \
+    portaudio19-dev \
+    gcc \
+    python3-dev \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# Install only essential packages
+RUN pip3 install --no-cache-dir \
+    jupyterhub==5.4.3 \
+    notebook==7.3.1 \
+    jupyterlab==4.3.5 \
+    ipykernel \
+    openwakeword \
+    pyaudio \
+    numpy \
+    && pip3 cache purge
+
+# Install torch separately (large layer)
+RUN pip3 install --no-cache-dir torch && pip3 cache purge
+
+# Create jovyan user
+RUN useradd -m -s /bin/bash -N jovyan
+
+USER jovyan
+WORKDIR /home/jovyan
+
+CMD ["jupyterhub-singleuser"]

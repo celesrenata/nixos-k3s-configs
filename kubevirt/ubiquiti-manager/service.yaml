@@ -1,0 +1,41 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: ServersTransport
+metadata:
+  name: selfsigned-transport
+spec:
+  insecureSkipVerify: true # Skip SSL verification
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ubiquiti-manager-http
+spec:
+  ports:
+    - port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    kubevirt.io/vm: ubiquiti-manager
+  type: ClusterIP
+status:
+  loadBalancer: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ubiquiti-manager-https
+  annotations:
+    traefik.ingress.kubernetes.io/service.serversscheme: https # Set backend is HTTPS
+    traefik.ingress.kubernetes.io/service.serverstransport: selfsigned-transport@kubernetescrd
+spec:
+  ports:
+    - port: 8443
+      protocol: TCP
+      targetPort: 8443
+  selector:
+    kubevirt.io/vm: ubiquiti-manager 
+  type: ClusterIP
+status:
+  loadBalancer: {}
+
