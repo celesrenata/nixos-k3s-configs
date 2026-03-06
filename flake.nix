@@ -35,15 +35,6 @@
               nvidia.enable = nvidia;
             };
             powerManagement.cpuFreqGovernor = pkgs.lib.mkForce "userspace";
-            systemd.services.disable-turbo = {
-              description = "Disable CPU Turbo Boost";
-              wantedBy = [ "multi-user.target" ];
-              script = "echo 0 > /sys/devices/system/cpu/cpufreq/boost";
-              serviceConfig = {
-                Type = "oneshot";
-                RemainAfterExit = true;
-              };
-            };
           }
           # External Modules
           # Conditionally include kubernetes and monitoring based on resetMode
