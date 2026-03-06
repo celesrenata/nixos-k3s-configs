@@ -21,6 +21,7 @@
         modules = [
           sops-nix.nixosModules.sops
           { nixpkgs.config.allowUnfree = true; }
+          { nixpkgs.overlays = [ (import ./overlays/lmstudio.nix) ]; }
           ./hosts/${hostname}/configuration.nix
           ./modules/common.nix
           ./modules/graphics.nix

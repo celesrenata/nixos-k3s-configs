@@ -13,21 +13,27 @@
           Name = "bond0";
         };
         bondConfig = {
-          Mode = "active-backup";
+          Mode = "802.3ad";
+          LACPTransmitRate = "fast";
           TransmitHashPolicy = "layer3+4";
         };
       };
     };
     # Configure Bonds to utilize both 2.5Gbps ports
     networks = {
-      "30-enp170s0" = {
-        matchConfig.Name = "enp170s0";
-        networkConfig.Bond = "bond0";
-      };
-  
       "30-enp171s0" = {
         matchConfig.Name = "enp171s0";
         networkConfig.Bond = "bond0";
+      };
+  
+      "30-enp172s0" = {
+        matchConfig.Name = "enp172s0";
+        networkConfig.Bond = "bond0";
+      };
+      
+      "40-bond0" = {
+        matchConfig.Name = "bond0";
+        networkConfig.DHCP = "yes";
       };
     };
   };

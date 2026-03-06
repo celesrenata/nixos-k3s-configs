@@ -9,6 +9,8 @@
 
   # Make sure the same influx binaries are available in your shell
   environment.systemPackages = with pkgs; [
+    lmstudio
+    steam-run
     influxdb2
     influxdb2-cli
     jq
