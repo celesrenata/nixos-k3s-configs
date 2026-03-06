@@ -21,13 +21,8 @@
     };
     # Configure Bonds to utilize both 2.5Gbps ports
     networks = {
-      "30-enp171s0" = {
-        matchConfig.Name = "enp171s0";
-        networkConfig.Bond = "bond0";
-      };
-  
-      "30-enp172s0" = {
-        matchConfig.Name = "enp172s0";
+      "30-eth0" = {
+        matchConfig.Name = "enp17*";
         networkConfig.Bond = "bond0";
       };
       
