@@ -3,37 +3,37 @@ let
   allMachines = [
     {
       hostName = "gremlin-1";
-      system = "x86_64-linux";
+      systems = [ "x86_64-linux" "i686-linux" ];
       protocol = "ssh";
-      maxJobs = 11;
-      speedFactor = 3;
+      maxJobs = 16;
+      speedFactor = 2;
       supportedFeatures = [ "nixos-test" "benchmark" "big-parallel" "kvm" ];
       mandatoryFeatures = [ ];
     }
     {
       hostName = "gremlin-2";
-      system = "x86_64-linux";
+      systems = [ "x86_64-linux" "i686-linux" ];
       protocol = "ssh";
-      maxJobs = 11;
-      speedFactor = 3;
+      maxJobs = 16;
+      speedFactor = 2;
       supportedFeatures = [ "nixos-test" "benchmark" "big-parallel" "kvm" ];
       mandatoryFeatures = [ ];
     }
     {
       hostName = "gremlin-3";
-      system = "x86_64-linux";
+      systems = [ "x86_64-linux" "i686-linux" ];
       protocol = "ssh";
-      maxJobs = 11;
-      speedFactor = 3;
+      maxJobs = 16;
+      speedFactor = 2;
       supportedFeatures = [ "nixos-test" "benchmark" "big-parallel" "kvm" ];
       mandatoryFeatures = [ ];
     }
     {
       hostName = "gremlin-4";
-      system = "x86_64-linux";
+      systems = [ "x86_64-linux" "i686-linux" ];
       protocol = "ssh";
-      maxJobs = 11;
-      speedFactor = 3;
+      maxJobs = 16;
+      speedFactor = 2;
       supportedFeatures = [ "nixos-test" "benchmark" "big-parallel" "kvm" ];
       mandatoryFeatures = [ ];
     }
