@@ -19,7 +19,7 @@ in
   boot.initrd.kernelModules = [ "vmd" "md_mod" "raid0" ];
   boot.kernelPackages = pkgs.linuxPackages_6_19_sriov;
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
-  boot.kernelModules = [ "xe" "vfio" "vfio_pci" "vfio_iommu_type1" ];
+  boot.kernelModules = [ "i915" "vfio" "vfio_pci" "vfio_iommu_type1" ];
   boot.supportedFilesystems = [ "nfs" ];
   
   boot.kernelParams = [
@@ -36,10 +36,10 @@ in
 #    "processor.max_cstate=1"
 #    "intel_pstate.max_perf_pct=50"
   ] ++ lib.optionals (config.gremlin.graphics.intel.sriov) [
-    "xe.enable_guc=3"
-    "xe.max_vfs=7"
-    "xe.force_probe=7d55"
-    "module_blacklist=i915"
+    "i915.enable_guc=3"
+    "i915.max_vfs=7"
+    "i915.force_probe=7d55"
+    "module_blacklist=xe"
   ];
 
   boot.kernel.sysctl."fs.inotify.max_user_instances" = 2147483647;

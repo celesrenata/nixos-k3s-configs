@@ -23,7 +23,7 @@ let
   #};
 in {
   imports = [
-    ./xe-sriov.nix
+    ./i915-sriov.nix
   ];
 
   options.gremlin.graphics = {
