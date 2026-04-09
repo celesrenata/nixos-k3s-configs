@@ -5,16 +5,12 @@ let
   
   #base-nvidia-package = config.boot.kernelPackages.nvidiaPackages.mkDriver ({
   nvidia-package = config.boot.kernelPackages.nvidiaPackages.mkDriver ({
-    version = "580.126.18";
-    sha256_64bit = "sha256-p3gbLhwtZcZYCRTHbnntRU0ClF34RxHAMwcKCSqatJ0=";
+    version = "595.58.03";
+    sha256_64bit = "sha256-jA1Plnt5MsSrVxQnKu6BAzkrCnAskq+lVRdtNiBYKfk=";
     sha256_aarch64 = "";
-    openSha256 = "sha256-1Q2wuDdZ6KiA/2L3IDN4WXF8t63V/4+JfrFeADI1Cjg=";
-    settingsSha256 = "sha256-QMx4rUPEGp/8Mc+Bd8UmIet/Qr0GY8bnT/oDN8GAoEI=";
-    persistencedSha256 = "sha256-ZBfPZyQKW9SkVdJ5cy0cxGap2oc7kyYRDOeM0XyfHfI=";
-    #postPatch = ''
-    #  substituteInPlace kernel-open/nvidia-uvm/uvm_va_range_device_p2p.c \
-    #    --replace 'get_dev_pagemap(page_to_pfn(page), NULL)' 'get_dev_pagemap(page_to_pfn(page))'
-    #'';
+    openSha256 = "sha256-6LvJyT0cMXGS290Dh8hd9rc+nYZqBzDIlItOFk8S4n8=";
+    settingsSha256 = "sha256-2vLF5Evl2D6tRQJo0uUyY3tpWqjvJQ0/Rpxan3NOD3c=";
+    persistencedSha256 = "sha256-AtjM/ml/ngZil8DMYNH+P111ohuk9mWw5t4z7CHjPWw=";
   });
   
   #nvidia-package = base-nvidia-package // {
