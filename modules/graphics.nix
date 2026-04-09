@@ -24,6 +24,7 @@ let
 in {
   imports = [
     ./i915-sriov.nix
+    ./i915-sriov-simple-fix.nix
   ];
 
   options.gremlin.graphics = {
