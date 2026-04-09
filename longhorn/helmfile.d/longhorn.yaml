@@ -9,13 +9,27 @@ releases:
   - name: longhorn
     namespace: longhorn-system
     chart: longhorn/longhorn
-    version: 1.8.1
+    version: 1.11.1
+    values: []
     needs:
       - kyverno/kyverno
+      - longhorn-system/longhorn-admission-hooks
+    hooks:
+      - events: ["presync"]
+        showlogs: true
+        command: "sh"
+        args: ["-c", "echo 'Waiting 60 seconds for cluster to be ready...' && sleep 60"]
   - name: kyverno
     namespace: kyverno
     chart: kyverno/kyverno
-    version: 3.3.5
+    #version: 3.2.6
+    #version: 3.4.5
+    version: 3.7.1
+    hooks:
+      - events: ["postsync"]
+        showlogs: true
+        command: "sh"
+        args: ["-c", "echo 'Waiting 60 seconds for Kyverno CRDs...' && sleep 60"]
   - name: longhorn-admission-hooks
     namespace: longhorn-system
     chart: bedag/raw
@@ -65,3 +79,13 @@ releases:
                               - configMapRef:
                                   name: longhorn-nixos-path
 
+      - manager:
+        extraVolumes:
+          - name: host-bin
+            hostPath:
+              path: /run/current-system/sw/bin
+              type: Directory
+            extraVolumeMounts:
+              - name: host-bin
+                mountPath: /usr/local/bin
+                readOnly: true

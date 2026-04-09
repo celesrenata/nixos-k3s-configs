@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Add kubernetes-dashboard repository
-helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
-# Deploy a Helm Release named "kubernetes-dashboard" using the kubernetes-dashboard chart
-helm upgrade --install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard --create-namespace --namespace kubernetes-dashboard
-kubectl apply -f ../dashboard
+# Add headlamp repository (official replacement for kubernetes-dashboard)
+helm repo add headlamp https://kubernetes-sigs.github.io/headlamp/
+helm repo update
+# Deploy Headlamp
+helm upgrade --install headlamp headlamp/headlamp --create-namespace --namespace kube-system --version 0.40.0
+kubectl apply -f .

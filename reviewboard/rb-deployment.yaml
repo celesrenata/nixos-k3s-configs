@@ -36,7 +36,7 @@ spec:
           - name: DATABASE_TYPE
             value: mysql
           - name: DATABASE_SERVER
-            value: 10.1.1.2
+            value: 10.1.1.12
           - name: DATABASE_USERNAME
             value: reviewboard
           - name: DATABASE_PASSWORD
@@ -47,7 +47,6 @@ spec:
             value: "memcached-service.docker-reviewboard.svc.cluster.local:11211"
           ports:
             - containerPort: 8080
-              hostPort: 8080
               protocol: TCP
           volumeMounts:
             - mountPath: /site

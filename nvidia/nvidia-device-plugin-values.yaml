@@ -1,0 +1,15 @@
+deviceListStrategy: envvar
+securityContext:
+  privileged: true
+  allowPrivilegeEscalation: true
+config:
+  map:
+    default: |-
+      version: v1
+      flags:
+        deviceDiscoveryStrategy: nvml
+      sharing:
+        timeSlicing:
+          resources:
+          - name: nvidia.com/gpu
+            replicas: 10

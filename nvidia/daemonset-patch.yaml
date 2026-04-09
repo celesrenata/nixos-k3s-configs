@@ -1,0 +1,42 @@
+spec:
+  template:
+    spec:
+      initContainers:
+      - name: nvidia-device-plugin-init
+        env:
+        - name: NVIDIA_DISABLE_REQUIRE
+          value: "true"
+        - name: LD_LIBRARY_PATH
+          value: /host-libs
+        volumeMounts:
+        - name: nvidia-libs
+          mountPath: /host-libs
+          readOnly: true
+        - name: ld-so-conf
+          mountPath: /etc/ld.so.conf.d/lib64.conf
+          subPath: lib64.conf
+          readOnly: true
+      containers:
+      - name: nvidia-device-plugin-ctr
+        env:
+        - name: NVIDIA_DISABLE_REQUIRE
+          value: "true"
+        - name: LD_LIBRARY_PATH
+          value: /host-libs
+        volumeMounts:
+        - name: nvidia-libs
+          mountPath: /host-libs
+          readOnly: true
+        - name: ld-so-conf
+          mountPath: /etc/ld.so.conf.d/lib64.conf
+          subPath: lib64.conf
+          readOnly: true
+      volumes:
+      - name: nvidia-libs
+        hostPath:
+          path: /usr/local/nvidia/lib64
+          type: Directory
+      - name: ld-so-conf
+        hostPath:
+          path: /etc/ld.so.conf.d
+          type: Directory

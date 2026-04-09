@@ -11,7 +11,7 @@ spec:
     - ReadWriteMany
   storageClassName: ""
   nfs:
-    path: /volume2/Kubernetes/reviewboard/data     # The path to your media
+    path: /volume1/Kubernetes/reviewboard/data     # The path to your media
     server: 192.168.42.8     # Your NFS server with Media
   mountOptions:
     - vers=4

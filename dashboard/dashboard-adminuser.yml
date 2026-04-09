@@ -2,4 +2,4 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: celes-admin
-  namespace: kubernetes-dashboard
+  namespace: kube-system
