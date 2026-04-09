@@ -48,7 +48,7 @@
         [ -d "$vf" ] || continue
         vf_pci=$(basename $(readlink $vf))
         echo "vfio-pci" > /sys/bus/pci/devices/$vf_pci/driver_override
-        echo $vf_pci > /sys/bus/pci/drivers/xe/unbind 2>/dev/null || true
+        echo $vf_pci > /sys/bus/pci/drivers/i915/unbind 2>/dev/null || true
         echo $vf_pci > /sys/bus/pci/drivers/vfio-pci/bind 2>/dev/null || true
       done
     '';
