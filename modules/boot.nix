@@ -26,8 +26,6 @@ in
     "intel_iommu=on"
     "iommu=pt"
     "boot.shell_on_fail"
-    "hugepagesz=1G"
-    "hugepages=8"
     "hugepagesz=2M"
     "hugepages=2048"
     "nmi_watchdog=0"
