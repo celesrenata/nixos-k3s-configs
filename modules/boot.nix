@@ -27,7 +27,7 @@ in
     "iommu=pt"
     "boot.shell_on_fail"
     "hugepagesz=1G"
-    "hugepages=2"
+    "hugepages=8"
     "hugepagesz=2M"
     "hugepages=512"
     "nmi_watchdog=0"
