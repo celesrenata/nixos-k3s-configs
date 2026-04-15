@@ -138,6 +138,11 @@
     name = "${config.networking.hostName}-initiatorhost"; 
   };
 
+  # Longhorn expects iscsiadm at a standard FHS path via nsenter
+  systemd.tmpfiles.rules = [
+    "L+ /usr/sbin/iscsiadm - - - - /run/current-system/sw/bin/iscsiadm"
+  ];
+
   # Common user accounts
   users.users.celes = {
     isNormalUser = true;

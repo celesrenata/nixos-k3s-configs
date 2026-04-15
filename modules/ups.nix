@@ -12,9 +12,10 @@ let
   isUpsServer = (config.networking.hostName == "gremlin-1");
 in
 {
-  # at some point something will make a /var/state/ups directory,
-  # chown that to nut:
-  # $ sudo chown nut:nut /var/state/ups
+  # Ensure /var/state/ups exists with correct ownership
+  systemd.tmpfiles.rules = [
+    "d /var/state/ups 0750 nut nut -"
+  ];
   power.ups = {
     enable = true;
     
@@ -28,7 +29,7 @@ in
     
     mode = if isUpsServer then "netserver" else "netclient";
     
-    schedulerRules = lib.mkIf isUpsServer "/etc/nixos/.config/nut/upssched.conf";
+    schedulerRules = "/etc/nixos/.config/nut/upssched.conf";
     
     upsmon.monitor.apcsmx1500-a = {
       powerValue = 1;
@@ -101,5 +102,25 @@ in
       port = 3493;
     }
   ];
+
+
+
+  environment.etc."nut/upssched-cmd" = {
+    text = ''
+      #!/bin/sh
+      case $1 in
+        onbatt)
+          logger -t upssched-cmd "UPS on battery for 15 seconds, initiating shutdown"
+          /run/current-system/sw/bin/upsmon -c fsd
+          ;;
+        *)
+          logger -t upssched-cmd "Unrecognized command: $1"
+          ;;
+      esac
+    '';
+    mode = "0750";
+    user = "root";
+    group = "nut";
+  };
 }
 
