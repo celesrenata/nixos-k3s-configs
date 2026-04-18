@@ -60,6 +60,14 @@ in
   };
 
   systemd.services = lib.mkMerge [
+    # Proxy configuration for container image pulls
+    {
+      k3s.environment = {
+        HTTP_PROXY = "http://192.168.42.1:3128";
+        HTTPS_PROXY = "http://192.168.42.1:3128";
+        NO_PROXY = "10.0.0.0/8,192.168.0.0/16,127.0.0.1,localhost,.svc,.cluster.local";
+      };
+    }
     {
       k3s-containerd-setup = {
         serviceConfig.Type = "oneshot";
