@@ -158,6 +158,8 @@ EOF
             ${pkgs.nvidia-container-toolkit}/bin/nvidia-ctk cdi generate \
               --mode=nvml \
               --driver-root=/ \
+              --dev-root=/ \
+              --device-name-strategy=uuid \
               --library-search-path=${config.hardware.nvidia.package}/lib \
               --csv.file=/etc/nvidia-container-runtime/host-files-for-container.d/binaries.csv \
               --output=/var/run/cdi/nvidia.yaml
