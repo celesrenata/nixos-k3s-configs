@@ -27,6 +27,18 @@ let
 in
 {
   # System Packages
+  # k3s registries config - trust system CA for SSL bump
+  environment.etc."rancher/k3s/registries.yaml".text = ''
+    mirrors:
+      docker.io:
+        endpoint:
+          - "https://registry-1.docker.io"
+    configs:
+      "registry-1.docker.io":
+        tls:
+          ca_file: /etc/ssl/certs/ca-certificates.crt
+  '';
+
   environment.systemPackages = with pkgs; [
     runc
     k3s 
@@ -60,12 +72,19 @@ in
   };
 
   systemd.services = lib.mkMerge [
-    # Proxy configuration for container image pulls
+    # Proxy and SSL configuration for container image pulls
     {
       k3s.environment = {
         HTTP_PROXY = "http://192.168.42.1:3128";
         HTTPS_PROXY = "http://192.168.42.1:3128";
         NO_PROXY = "10.0.0.0/8,192.168.0.0/16,127.0.0.1,localhost,.svc,.cluster.local";
+        SSL_CERT_FILE = "/etc/ssl/certs/ca-certificates.crt";
+      };
+      containerd.environment = {
+        HTTP_PROXY = "http://192.168.42.1:3128";
+        HTTPS_PROXY = "http://192.168.42.1:3128";
+        NO_PROXY = "10.0.0.0/8,192.168.0.0/16,127.0.0.1,localhost,.svc,.cluster.local";
+        SSL_CERT_FILE = "/etc/ssl/certs/ca-certificates.crt";
       };
     }
     {
