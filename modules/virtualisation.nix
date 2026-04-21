@@ -70,6 +70,21 @@ in
   };
   networking.firewall.allowedTCPPorts = lib.mkIf isGremlin1 [ 7000 7500 24000 2375 ];
 
+  # Registry mirror: try Harbor proxy cache first, fall back to Docker Hub
+  # Applied to all nodes so containerd (K8s) pulls go through Harbor
+  environment.etc."containerd/certs.d/docker.io/hosts.toml".text = ''
+server = "https://registry-1.docker.io"
+
+[host."https://registry.celestium.life/v2/dockerhub-cache"]
+  capabilities = ["pull", "resolve"]
+  dial_timeout = "3s"
+  response_header_timeout = "3s"
+  override_path = true
+
+[host."https://registry-1.docker.io"]
+  capabilities = ["pull", "resolve"]
+  '';
+
   # Intel GPU ROM file for SR-IOV passthrough
   systemd.tmpfiles.rules = [
     "d /usr/share/kvm 0755 qemu qemu -"
