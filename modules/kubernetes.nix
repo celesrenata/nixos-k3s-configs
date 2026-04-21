@@ -155,20 +155,33 @@ bin,${config.hardware.nvidia.package.bin}/bin/nvidia-smi
 lib,${pkgs.glibc}/lib/ld-linux-x86-64.so.2
 EOF
             
+            # Generate CDI spec with index naming (gives "0" and "all" devices)
             ${pkgs.nvidia-container-toolkit}/bin/nvidia-ctk cdi generate \
+              --format=json \
               --mode=nvml \
               --driver-root=/ \
               --dev-root=/ \
+              --device-name-strategy=index \
+              --disable-hook create-symlinks \
+              --library-search-path=${config.hardware.nvidia.package}/lib \
+              --ldconfig-path=${pkgs.glibc.bin}/bin/ldconfig \
+              --nvidia-cdi-hook-path=${pkgs.nvidia-container-toolkit.tools}/bin/nvidia-cdi-hook \
+              --output=/var/run/cdi/nvidia-container-toolkit.json
+
+            # Add GPU UUID device name so pods requesting by UUID also work
+            GPU_UUID=$(${pkgs.nvidia-container-toolkit}/bin/nvidia-ctk cdi generate \
+              --format=json --mode=nvml --driver-root=/ --dev-root=/ \
               --device-name-strategy=uuid \
               --library-search-path=${config.hardware.nvidia.package}/lib \
-              --csv.file=/etc/nvidia-container-runtime/host-files-for-container.d/binaries.csv \
-              --output=/var/run/cdi/nvidia.yaml
-            
-            # Fix all symlinks - resolve /run/current-system and /run/opengl-driver to actual Nix store paths
-            ${pkgs.gnused}/bin/sed -i \
-              -e 's|/run/current-system/sw/bin/nvidia-smi|${config.hardware.nvidia.package.bin}/bin/nvidia-smi|g' \
-              -e 's|/run/opengl-driver/lib|${config.hardware.nvidia.package}/lib|g' \
-              /var/run/cdi/nvidia.yaml
+              --ldconfig-path=${pkgs.glibc.bin}/bin/ldconfig \
+              --nvidia-cdi-hook-path=${pkgs.nvidia-container-toolkit.tools}/bin/nvidia-cdi-hook \
+              2>/dev/null | ${pkgs.jq}/bin/jq -r '.devices[0].name')
+            if [ -n "$GPU_UUID" ] && [ "$GPU_UUID" != "null" ]; then
+              ${pkgs.jq}/bin/jq --arg uuid "$GPU_UUID" \
+                '.devices += [{"name": $uuid, "containerEdits": .devices[0].containerEdits}]' \
+                /var/run/cdi/nvidia-container-toolkit.json > /tmp/cdi-merged.json
+              cp /tmp/cdi-merged.json /var/run/cdi/nvidia-container-toolkit.json
+            fi
           '';
         };
       };
