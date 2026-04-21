@@ -1,5 +1,5 @@
 
-{ config, lib, ... }:
+{ config, lib, pkgs, ... }:
 let
   vid = "051D";
   pid = "0002";
@@ -10,6 +10,25 @@ let
   # gremlin-1 has the physical UPS and acts as server
   # gremlin-2 and gremlin-3 are clients
   isUpsServer = (config.networking.hostName == "gremlin-1");
+
+  # upssched.conf content - shared by all nodes
+  upsschedConf = pkgs.writeText "upssched.conf" ''
+    CMDSCRIPT /etc/nut/upssched-cmd
+    PIPEFN /var/state/ups/upssched.pipe
+    LOCKFN /var/state/ups/upssched.lock
+
+    # When on battery, wait 60 seconds before starting shutdown
+    AT ONBATT * START-TIMER onbatt 60
+    # If power returns, cancel the shutdown
+    AT ONLINE * CANCEL-TIMER onbatt
+    # On comms lost, wait 60 seconds (covers brief network blips)
+    AT COMMBAD * START-TIMER commbad 60
+    AT COMMOK * CANCEL-TIMER commbad
+    # Low battery = shut down immediately (no delay, battery is critical)
+    AT LOWBATT * EXECUTE lowbatt
+    # FSD from server = shut down immediately
+    AT FSD * EXECUTE fsd
+  '';
 in
 {
   # Ensure /var/state/ups exists with correct ownership
@@ -29,12 +48,14 @@ in
     
     mode = if isUpsServer then "netserver" else "netclient";
     
-    schedulerRules = "/etc/nixos/.config/nut/upssched.conf";
+    # Point all nodes to the same upssched config
+    schedulerRules = "${upsschedConf}";
     
     upsmon.monitor.apcsmx1500-a = {
       powerValue = 1;
       user = "nutmaster";
       passwordFile = "/etc/nixos/.config/PasswordFiles/apc.pass";
+      type = if isUpsServer then "primary" else "secondary";
       # For clients, specify the remote system
       system = lib.mkIf (!isUpsServer) "apcsmx1500-a@10.1.1.12:3493";
     };
@@ -70,8 +91,6 @@ in
     users.nut = {
       isSystemUser = true;
       group = "nut";
-      # it does not seem to do anything with this directory
-      # but something errored without it, so whatever
       home = "/var/lib/nut";
       createHome = true;
     };
@@ -103,14 +122,25 @@ in
     }
   ];
 
-
-
+  # upssched command script - handles timer expiry events
   environment.etc."nut/upssched-cmd" = {
     text = ''
       #!/bin/sh
       case $1 in
         onbatt)
-          logger -t upssched-cmd "UPS on battery for 15 seconds, initiating shutdown"
+          logger -t upssched-cmd "UPS on battery for 60 seconds, initiating shutdown"
+          /run/current-system/sw/bin/upsmon -c fsd
+          ;;
+        commbad)
+          logger -t upssched-cmd "UPS comms lost for 60 seconds, initiating shutdown"
+          /run/current-system/sw/bin/upsmon -c fsd
+          ;;
+        lowbatt)
+          logger -t upssched-cmd "UPS battery critically low, immediate shutdown"
+          /run/current-system/sw/bin/upsmon -c fsd
+          ;;
+        fsd)
+          logger -t upssched-cmd "Forced shutdown received from UPS server"
           /run/current-system/sw/bin/upsmon -c fsd
           ;;
         *)
