@@ -136,25 +136,47 @@ in
       };
     }
     (lib.mkIf hasNvidia {
+      # Disable the NixOS-provided CDI generator — it fails on NixOS without --dev-root=/
+      # Our nvidia-cdi-setup service handles CDI spec generation correctly.
+      nvidia-container-toolkit-cdi-generator.enable = false;
+
       # Ensure CDI directory exists and generate CDI specs
+      # Waits for /dev/nvidia0 to appear before generating, with retries
       nvidia-cdi-setup = {
         description = "Setup NVIDIA CDI directory and generate specs";
         wantedBy = [ "multi-user.target" ];
-        after = [ "nvidia-persistenced.service" ];
+        after = [ "nvidia-persistenced.service" "systemd-udev-settle.service" ];
         requires = [ "nvidia-persistenced.service" ];
         before = [ "k3s.service" ];
         serviceConfig = {
           Type = "oneshot";
           RemainAfterExit = true;
           ExecStart = pkgs.writeShellScript "nvidia-cdi-setup" ''
+            set -euo pipefail
+
+            # Wait for GPU device nodes (up to 120s)
+            for i in $(seq 1 60); do
+              if [ -e /dev/nvidia0 ] && [ -e /dev/nvidiactl ]; then
+                echo "GPU device nodes ready after $((i*2))s"
+                break
+              fi
+              if [ "$i" -eq 60 ]; then
+                echo "ERROR: /dev/nvidia0 not found after 120s, aborting"
+                exit 1
+              fi
+              sleep 2
+            done
+
+            # Extra settle time for driver initialization
+            sleep 2
+
             mkdir -p /var/run/cdi /etc/nvidia-container-runtime/host-files-for-container.d
-            
-            # Create CSV for binaries and glibc - NO SPACE after comma
+
             cat > /etc/nvidia-container-runtime/host-files-for-container.d/binaries.csv << EOF
 bin,${config.hardware.nvidia.package.bin}/bin/nvidia-smi
 lib,${pkgs.glibc}/lib/ld-linux-x86-64.so.2
 EOF
-            
+
             # Generate CDI spec with index naming (gives "0" and "all" devices)
             ${pkgs.nvidia-container-toolkit}/bin/nvidia-ctk cdi generate \
               --format=json \
@@ -182,6 +204,53 @@ EOF
                 /var/run/cdi/nvidia-container-toolkit.json > /tmp/cdi-merged.json
               cp /tmp/cdi-merged.json /var/run/cdi/nvidia-container-toolkit.json
             fi
+
+            echo "CDI spec generated successfully"
+          '';
+        };
+      };
+
+      # Clean up stale pods after reboot (Unknown/UnexpectedAdmissionError)
+      k3s-gpu-pod-cleanup = {
+        description = "Clean up stale GPU pods after reboot";
+        wantedBy = [ "multi-user.target" ];
+        after = [ "k3s.service" "nvidia-cdi-setup.service" ];
+        requires = [ "k3s.service" ];
+        serviceConfig = {
+          Type = "oneshot";
+          RemainAfterExit = true;
+          ExecStart = pkgs.writeShellScript "k3s-gpu-pod-cleanup" ''
+            export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+            export PATH=${pkgs.k3s}/bin:$PATH
+
+            # Wait for k3s API to be ready (up to 120s)
+            for i in $(seq 1 60); do
+              if kubectl get nodes &>/dev/null; then
+                break
+              fi
+              sleep 2
+            done
+
+            # Give pods time to settle into their final state
+            sleep 15
+
+            # Delete pods stuck in Unknown (orphaned from pre-reboot)
+            for ns_pod in $(kubectl get pods --all-namespaces --field-selector=status.phase=Unknown -o jsonpath='{range .items[*]}{.metadata.namespace}/{.metadata.name}{"\n"}{end}' 2>/dev/null); do
+              ns="''${ns_pod%%/*}"
+              pod="''${ns_pod##*/}"
+              echo "Deleting Unknown pod: $ns/$pod"
+              kubectl delete pod -n "$ns" "$pod" --force --grace-period=0 2>/dev/null || true
+            done
+
+            # Delete pods with UnexpectedAdmissionError
+            for ns_pod in $(kubectl get pods --all-namespaces -o jsonpath='{range .items[?(@.status.reason=="UnexpectedAdmissionError")]}{.metadata.namespace}/{.metadata.name}{"\n"}{end}' 2>/dev/null); do
+              ns="''${ns_pod%%/*}"
+              pod="''${ns_pod##*/}"
+              echo "Deleting UnexpectedAdmissionError pod: $ns/$pod"
+              kubectl delete pod -n "$ns" "$pod" --force --grace-period=0 2>/dev/null || true
+            done
+
+            echo "Pod cleanup complete"
           '';
         };
       };
@@ -244,6 +313,7 @@ EOF
     enable = true;
     mount-nvidia-executables = true; 
   };
+
 
   virtualisation = {
     containerd = {
