@@ -27,7 +27,7 @@ in
         urls = [ "http://10.1.1.12:8086" ];
         organization = "celestium.life";
         bucket = "influx";
-        token = "$INFLUX_TOKEN";
+        token = "\${INFLUX_TOKEN}";
       };
     };
   };
