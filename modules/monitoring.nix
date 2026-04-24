@@ -10,6 +10,9 @@ in
 
   users.users.telegraf.extraGroups = [ "video" ];
 
+  systemd.services.telegraf.serviceConfig.AmbientCapabilities = [ "CAP_PERFMON" ];
+  systemd.services.telegraf.serviceConfig.CapabilityBoundingSet = [ "CAP_PERFMON" ];
+
   services.telegraf = {
     enable = true;
     environmentFiles = [ "/etc/nixos/.config/PasswordFiles/influx.env" ];
