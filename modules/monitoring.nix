@@ -10,11 +10,9 @@ in
 
   users.users.telegraf.extraGroups = [ "video" ];
 
-  systemd.services.telegraf.serviceConfig.EnvironmentFile =
-    "/etc/nixos/.config/PasswordFiles/influx.env";
-
   services.telegraf = {
     enable = true;
+    environmentFiles = [ "/etc/nixos/.config/PasswordFiles/influx.env" ];
     extraConfig = {
       inputs.exec = {
         commands = [ "${intel-gpu-stats}" ];
