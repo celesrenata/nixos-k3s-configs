@@ -8,6 +8,8 @@ in
 {
   environment.systemPackages = [ pkgs.intel-gpu-tools ];
 
+  users.users.telegraf.extraGroups = [ "video" ];
+
   systemd.services.telegraf.serviceConfig.EnvironmentFile =
     "/etc/nixos/.config/PasswordFiles/influx.env";
 
