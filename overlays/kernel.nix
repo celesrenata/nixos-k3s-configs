@@ -1,5 +1,5 @@
 final: prev: {
-  linux_6_19_sriov = (prev.linuxPackages_6_19.kernel.override {
+  linux_7_0_sriov = (prev.linuxPackages_7_0.kernel.override {
     argsOverride = {
       kernelPatches = [
         {
@@ -10,5 +10,5 @@ final: prev: {
     };
   });
   
-  linuxPackages_6_19_sriov = prev.linuxPackagesFor final.linux_6_19_sriov;
+  linuxPackages_7_0_sriov = prev.linuxPackagesFor final.linux_7_0_sriov;
 }

@@ -6,7 +6,7 @@
     nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-25.11";
     # exo.url = "github:celesrenata/exo/ipex";
     sops-nix.url = "github:Mic92/sops-nix";
-    i915-sriov.url = "github:strongtz/i915-sriov-dkms";
+    i915-sriov.url = "github:strongtz/i915-sriov-dkms/kernel-v7.0";
   };
 
   outputs = { self, nixpkgs, nixpkgs-stable, sops-nix, i915-sriov, ... }@inputs: 
