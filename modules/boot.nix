@@ -10,11 +10,6 @@ in
   boot.loader = {
     systemd-boot.enable = true;
     efi.canTouchEfiVariables = false;
-    grub = {
-      efiSupport = true;
-      efiInstallAsRemovable = true;
-      device = "nodev";
-    };
   };
   boot.initrd.kernelModules = [ "vmd" "md_mod" "raid0" ];
   boot.kernelPackages = pkgs.linuxPackages_7_0_sriov;
@@ -26,21 +21,11 @@ in
     "intel_iommu=on"
     "iommu=pt"
     "boot.shell_on_fail"
-    "hugepagesz=2M"
-    "hugepages=2048"
     "nmi_watchdog=0"
     "softlockup_panic=0"
-#    "intel_pstate=passive"
-#    "processor.max_cstate=1"
-#    "intel_pstate.max_perf_pct=50"
-  ] ++ lib.optionals (config.gremlin.graphics.intel.sriov) [
-    "i915.enable_guc=3"
-    "i915.max_vfs=7"
-    "i915.force_probe=7d55"
-    "module_blacklist=xe"
   ];
 
-  boot.kernel.sysctl."fs.inotify.max_user_instances" = 2147483647;
+  boot.kernel.sysctl."fs.inotify.max_user_instances" = 65536;
   
   powerManagement.cpuFreqGovernor = "ondemand";
 }

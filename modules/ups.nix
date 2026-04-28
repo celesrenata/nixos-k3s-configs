@@ -4,8 +4,6 @@ let
   vid = "051D";
   pid = "0002";
   upsname = "apcsmx1500-a";
-  pass-master = "masterMonitorPassword"; # master password for nut
-  pass-local = "localMonitorPassword"; # slave/local password for nut
   
   # gremlin-1 has the physical UPS and acts as server
   # gremlin-2 and gremlin-3 are clients

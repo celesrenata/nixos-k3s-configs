@@ -1,8 +1,16 @@
 keys:
   - &admin age1mpdp73dg6ndc8vq55qmnsfzu7qz6dkaft6awg475pgr6lr7kevyqj9hlgc
+  - &gremlin1 age1tq6dgjsaref54dmkf5efg3upeut6nt3t9jtqjgw4qcd20pjumqms8l20xz
+  - &gremlin2 age1hsz5fxr2z6h37ghlm7jjnqq3uv0zjz4yd0w3fwm520c9fwwwqyns7ugxr9
+  - &gremlin3 age1s07248ck6epfhqccgf5trgvf7mny0f8axa4afnqm8p4hj3q0l3hsj65raz
+  - &gremlin4 age17lasg5kt6p879a2q6qsshhd7jaa8zyw7aqpz0lgld3psukwr4g4q6c3u7f
 
 creation_rules:
   - path_regex: secrets/.*\.yaml$
     key_groups:
       - age:
           - *admin
+          - *gremlin1
+          - *gremlin2
+          - *gremlin3
+          - *gremlin4

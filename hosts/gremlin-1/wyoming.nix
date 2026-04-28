@@ -1,8 +1,7 @@
 { config, pkgs, lib, ... }:
 {
-  nixpkgs.config.allowUnfree = true;
   nixpkgs.config.cudaSupport = true;
-  
+
   nixpkgs.overlays = [
     (final: prev: {
       python3Packages = prev.python3Packages.override {
@@ -31,6 +30,4 @@
       uri = "tcp://0.0.0.0:10200";
     };
   };
-
-  networking.firewall.allowedTCPPorts = [ 10200 10300 ];
 }

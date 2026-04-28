@@ -83,7 +83,7 @@ in {
         nvidiaPersistenced = true;
         powerManagement.enable = false;
         open = true;
-        nvidiaSettings = true;
+        nvidiaSettings = false;
         modesetting.enable = config.services.xserver.enable;
         prime.offload.enable = false;
       };

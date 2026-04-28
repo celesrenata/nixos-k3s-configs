@@ -40,6 +40,23 @@
   };
   services.rpcbind.enable = true;
   services.openssh.enable = true;
-  services.openssh.settings.PermitRootLogin = "yes";
-  networking.firewall.enable = false;
+  services.openssh.settings.PermitRootLogin = "prohibit-password";
+  networking.firewall.enable = true;
+  networking.firewall.allowedTCPPorts = [
+    22      # SSH
+    6443    # K3s API
+    2379    # etcd client
+    2380    # etcd peer
+    10250   # kubelet
+    3493    # NUT UPS
+    3632    # DistCC
+    8086    # InfluxDB
+    8472    # flannel VXLAN
+    9100    # node-exporter
+    10200   # Wyoming piper
+    10300   # Wyoming whisper
+  ];
+  networking.firewall.allowedUDPPorts = [
+    8472    # flannel VXLAN
+  ];
 }

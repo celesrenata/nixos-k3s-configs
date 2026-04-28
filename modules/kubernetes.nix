@@ -61,7 +61,7 @@ in
   services.k3s = {
     enable = true;
     role = "server";
-    token = "532a3cf6ea";
+    tokenFile = config.sops.secrets.k3s_token.path;
     # Only gremlin-4 initializes the cluster, others join it
     clusterInit = (config.networking.hostName == "gremlin-4");
     # Non-leader servers need to know where to connect
@@ -305,7 +305,7 @@ EOF
           ExecStart = [
             "${pkgs.coreutils}/bin/mkdir -p /var/run/intel-gpu"
             # Fix permissions for Intel GPU devices specifically
-            "${pkgs.coreutils}/bin/chmod 666 /dev/dri/renderD128"
+            "${pkgs.coreutils}/bin/chmod 0660 /dev/dri/renderD128"
             "${pkgs.coreutils}/bin/chgrp video /dev/dri/renderD128"
           ];
         };
@@ -339,7 +339,7 @@ EOF
               }
               (lib.mkIf hasNvidia {
                 runtimes.nvidia = {
-                  priviledged_without_host_devices = false;
+                  privileged_without_host_devices = false;
                   runtime_type = "io.containerd.runc.v2"; 
                   options = {
                     BinaryName = "${pkgs.nvidia-container-toolkit.tools}/bin/nvidia-container-runtime";
@@ -373,7 +373,7 @@ EOF
   # Enhanced udev rules for Intel GPU
   services.udev.extraRules = lib.mkIf hasIntel ''
     # Intel GPU devices - specific to renderD128 (Intel Arc)
-    SUBSYSTEM=="drm", KERNEL=="renderD128", GROUP="video", MODE="0666"
+    SUBSYSTEM=="drm", KERNEL=="renderD128", GROUP="video", MODE="0660"
     SUBSYSTEM=="drm", KERNEL=="card0", ATTRS{vendor}=="0x8086", GROUP="video", MODE="0664"
   '';
 

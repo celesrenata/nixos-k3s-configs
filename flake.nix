@@ -29,13 +29,13 @@
           ./modules/networking.nix
           ./modules/virtualisation.nix
           ./modules/ups.nix 
+          ./modules/sops.nix
           {
             gremlin.graphics = {
               intel.enable = intel;
               intel.sriov = intel && sriov;
               nvidia.enable = nvidia;
             };
-            powerManagement.cpuFreqGovernor = pkgs.lib.mkForce "userspace";
           }
           # External Modules
           # Conditionally include kubernetes and monitoring based on resetMode

@@ -12,7 +12,6 @@
   # Enable Flakes
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   nix.settings.cores = 16;
-  nix.settings.require-sigs = false;
   nixpkgs.config.allowUnfree = true;
 
   # Increase file descriptor limits for build processes
@@ -23,14 +22,14 @@
   
   systemd.settings.Manager.DefaultLimitNOFILE = 65536;
 
-  # Common overlays for all systems (removed intel-firmware overlay)
+  # Common overlays for all systems
   nixpkgs.overlays = [
     (import ../overlays/kernel.nix)
   ];
 
   # SR-IOV setup service (driver is handled in graphics modules)
   systemd.services.i915-sriov-setup = lib.mkIf (config.gremlin.graphics.intel.sriov) {
-    description = "Setup Intel xe SR-IOV Virtual Functions";
+    description = "Setup Intel i915 SR-IOV Virtual Functions";
     after = [ "systemd-modules-load.service" ];
     wantedBy = [ "multi-user.target" ];
     
@@ -54,7 +53,6 @@
     '';
     
     preStop = ''
-      # Disable SR-IOV VFs
       echo 0 > /sys/devices/pci0000:00/0000:00:02.0/sriov_numvfs || true
     '';
   };
@@ -85,19 +83,13 @@
   };
 
   # Disable standalone etcd - K3s uses its own embedded etcd cluster
-  # This prevents port conflicts on 2380 between standalone etcd and K3s embedded etcd
   services.etcd.enable = false;
 
-  nix.extraOptions = ''
-    require-sigs = false
-  '';
-  
   time.timeZone = "America/Los_Angeles";
 
   # Common system packages
   environment.systemPackages = with pkgs; [
     vim
-    wpa_supplicant
     curl
     git
     nmap
@@ -122,21 +114,9 @@
     jack.enable = true;
   };
 
-  #   services.exo = {
-  #     enable = true;
-  #     accelerator = "cpu";  # Changed from "cuda" to "cpu" for Linux compatibility
-  #     port = 52415;
-  #     openFirewall = true;
-  #   };
-
   # Storage Management
   nix.optimise.automatic = true;
   nix.optimise.dates = [ "03:45" ];
-  
-  services.openiscsi = {
-    enable = true;
-    name = "${config.networking.hostName}-initiatorhost"; 
-  };
 
   # Longhorn expects iscsiadm at a standard FHS path via nsenter
   systemd.tmpfiles.rules = [
