@@ -80,16 +80,47 @@ in
     # Proxy and SSL configuration for container image pulls
     {
       k3s.environment = {
-        # HTTP_PROXY = "http://192.168.42.1:3128"; # disabled - SSL filtering off
-        #         HTTPS_PROXY = "http://192.168.42.1:3128";
-        #         NO_PROXY = "10.0.0.0/8,192.168.0.0/16,127.0.0.1,localhost,.svc,.cluster.local,.celestium.life";
         SSL_CERT_FILE = "/etc/ssl/certs/ca-certificates.crt";
       };
+      # Graceful shutdown: drain node before stopping k3s
+      k3s.serviceConfig.ExecStop = pkgs.writeShellScript "k3s-graceful-stop" ''
+        export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+        export PATH=${pkgs.k3s}/bin:$PATH
+        NODE=$(hostname)
+        echo "Cordoning $NODE..."
+        kubectl cordon "$NODE" 2>/dev/null || true
+        echo "Draining $NODE (grace 60s, skip daemonsets)..."
+        kubectl drain "$NODE" \
+          --ignore-daemonsets \
+          --delete-emptydir-data \
+          --grace-period=60 \
+          --timeout=90s \
+          2>/dev/null || true
+        echo "Drain complete, stopping k3s..."
+      '';
+      k3s.serviceConfig.TimeoutStopSec = "180s";
       containerd.environment = {
-        # HTTP_PROXY = "http://192.168.42.1:3128"; # disabled - SSL filtering off
-        #         HTTPS_PROXY = "http://192.168.42.1:3128";
-        #         NO_PROXY = "10.0.0.0/8,192.168.0.0/16,127.0.0.1,localhost,.svc,.cluster.local,.celestium.life";
         SSL_CERT_FILE = "/etc/ssl/certs/ca-certificates.crt";
+      };
+      # Uncordon node after k3s starts back up
+      k3s-uncordon = {
+        description = "Uncordon node after k3s restart";
+        wantedBy = [ "multi-user.target" ];
+        after = [ "k3s.service" ];
+        requires = [ "k3s.service" ];
+        serviceConfig = {
+          Type = "oneshot";
+          RemainAfterExit = true;
+          ExecStart = pkgs.writeShellScript "k3s-uncordon" ''
+            export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+            export PATH=${pkgs.k3s}/bin:$PATH
+            for i in $(seq 1 30); do
+              kubectl get nodes &>/dev/null && break
+              sleep 2
+            done
+            kubectl uncordon "$(hostname)" 2>/dev/null || true
+          '';
+        };
       };
     }
     {
