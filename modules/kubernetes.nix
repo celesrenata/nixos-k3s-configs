@@ -73,6 +73,7 @@ in
       "--container-runtime-endpoint unix:///run/containerd/containerd.sock"
       "--node-ip ${nodeIp}"
       "--flannel-iface bond0"
+      "--resolv-conf /etc/k3s-resolv.conf"
     ]); 
   };
 

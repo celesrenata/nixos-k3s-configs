@@ -34,6 +34,8 @@
       "40-bond0" = {
         matchConfig.Name = "bond0";
         networkConfig.DHCP = "no";
+        networkConfig.DNS = [ "192.168.42.1" "1.1.1.1" ];
+        networkConfig.Domains = [ "~celestium.life" ];
         linkConfig.RequiredForOnline = "routable";
       };
     };
@@ -59,4 +61,10 @@
   networking.firewall.allowedUDPPorts = [
     8472    # flannel VXLAN
   ];
+
+  # Static resolv.conf for k3s CoreDNS (avoids systemd-resolved stub)
+  environment.etc."k3s-resolv.conf".text = ''
+    nameserver 192.168.42.1
+    nameserver 1.1.1.1
+  '';
 }
