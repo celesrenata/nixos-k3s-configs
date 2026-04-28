@@ -131,6 +131,18 @@
   };
 
   # Longhorn expects iscsiadm at a standard FHS path via nsenter
+  # Disable btrfs CoW on Longhorn data dir (avoids double-CoW penalty)
+  systemd.services.longhorn-nocow = {
+    description = "Set nocow on Longhorn data directory";
+    wantedBy = [ "multi-user.target" ];
+    before = [ "k3s.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = "${pkgs.e2fsprogs}/bin/chattr +C /var/lib/longhorn";
+    };
+  };
+
   systemd.tmpfiles.rules = [
     "L+ /usr/sbin/iscsiadm - - - - /run/current-system/sw/bin/iscsiadm"
   ];
