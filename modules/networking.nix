@@ -1,7 +1,7 @@
 { ... }:
 {
   # DNS Configuration
-  networking.nameservers = [ "192.168.42.1" "1.1.1.1" ];
+  networking.nameservers = [ "192.168.42.1" ];
   networking.useDHCP = false;
   
   # Networking
@@ -34,7 +34,7 @@
       "40-bond0" = {
         matchConfig.Name = "bond0";
         networkConfig.DHCP = "no";
-        networkConfig.DNS = [ "192.168.42.1" "1.1.1.1" ];
+        networkConfig.DNS = [ "192.168.42.1" ];
         networkConfig.Domains = [ "~celestium.life" ];
         linkConfig.RequiredForOnline = "routable";
       };
@@ -65,6 +65,5 @@
   # Static resolv.conf for k3s CoreDNS (avoids systemd-resolved stub)
   environment.etc."k3s-resolv.conf".text = ''
     nameserver 192.168.42.1
-    nameserver 1.1.1.1
   '';
 }
