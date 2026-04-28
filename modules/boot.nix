@@ -9,6 +9,7 @@ in
   boot.initrd.systemd.enable = true;
   boot.loader = {
     systemd-boot.enable = true;
+    systemd-boot.configurationLimit = 10;
     efi.canTouchEfiVariables = false;
   };
   boot.initrd.kernelModules = [ "vmd" "md_mod" "raid0" ];

@@ -118,6 +118,18 @@
   nix.optimise.automatic = true;
   nix.optimise.dates = [ "03:45" ];
 
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 14d";
+  };
+
+  services.btrfs.autoScrub = {
+    enable = true;
+    interval = "monthly";
+    fileSystems = [ "/" ];
+  };
+
   # Longhorn expects iscsiadm at a standard FHS path via nsenter
   systemd.tmpfiles.rules = [
     "L+ /usr/sbin/iscsiadm - - - - /run/current-system/sw/bin/iscsiadm"

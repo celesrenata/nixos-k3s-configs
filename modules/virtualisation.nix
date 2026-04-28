@@ -36,14 +36,9 @@ in
     nvidia-container-toolkit
   ]);
   
-  # Fix Docker service PATH to use dynamic store paths
-  systemd.services.docker = lib.mkIf isGremlin1 {
-    environment.PATH = pkgs.lib.mkForce "${pkgs.nvidia-container-toolkit.tools}/bin:${pkgs.lib.makeBinPath (with pkgs; [ kmod coreutils findutils gnugrep gnused systemd ])}";
-  };
 
   # HARP for Nextcloud ExApps - only on gremlin-1
-  services.frp = lib.mkIf isGremlin1 {
-    enable = true;
+  services.frp.instances.harp = lib.mkIf isGremlin1 {
     role = "server";
     settings = {
       bindPort = 7000;
@@ -56,7 +51,7 @@ in
   };
 
   # Override frp config with sops template containing the real token
-  systemd.services.frp = lib.mkIf isGremlin1 {
+  systemd.services.frp-harp = lib.mkIf isGremlin1 {
     serviceConfig.ExecStart = lib.mkForce "${pkgs.frp}/bin/frps --strict_config -c ${config.sops.templates."frp.toml".path}";
   };
 
@@ -84,8 +79,8 @@ in
   # HARP Agent for ExApp management - only on gremlin-1
   systemd.services.harp-agent = lib.mkIf isGremlin1 {
     description = "HARP Agent for Nextcloud ExApps";
-    after = [ "docker.service" "frp.service" ];
-    wants = [ "docker.service" "frp.service" ];
+    after = [ "docker.service" "frp-harp.service" ];
+    wants = [ "docker.service" "frp-harp.service" ];
     wantedBy = [ "multi-user.target" ];
     serviceConfig = {
       EnvironmentFile = config.sops.templates."harp.env".path;
