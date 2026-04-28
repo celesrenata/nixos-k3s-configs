@@ -66,8 +66,13 @@ in
     clusterInit = (config.networking.hostName == "gremlin-4");
     # Non-leader servers need to know where to connect
     serverAddr = lib.mkIf (config.networking.hostName != "gremlin-4") "https://10.1.1.15:6443";
-    extraFlags = (toString [
+    extraFlags = let
+      bondAddr = builtins.head config.systemd.network.networks."40-bond0".address;
+      nodeIp = lib.removeSuffix "/24" bondAddr;
+    in (toString [
       "--container-runtime-endpoint unix:///run/containerd/containerd.sock"
+      "--node-ip ${nodeIp}"
+      "--flannel-iface bond0"
     ]); 
   };
 

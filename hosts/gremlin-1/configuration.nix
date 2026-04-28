@@ -30,11 +30,15 @@
   };
 
   # K3s node configuration - NVIDIA GPU only
-  services.k3s.extraFlags = lib.mkForce (toString [
+  services.k3s.extraFlags = lib.mkForce (let
+    bondAddr = builtins.head config.systemd.network.networks."40-bond0".address;
+    nodeIp = lib.removeSuffix "/24" bondAddr;
+  in toString [
     "--container-runtime-endpoint unix:///run/containerd/containerd.sock"
+    "--node-ip ${nodeIp}"
+    "--flannel-iface bond0"
     "--node-label gpu=nvidia"
     "--node-label workload=gpu-only"
   ]);
 
 }
-

@@ -2,6 +2,7 @@
 {
   # DNS Configuration
   networking.nameservers = [ "192.168.42.1" "1.1.1.1" ];
+  networking.useDHCP = false;
   
   # Networking
   systemd.network = {
@@ -23,12 +24,17 @@
     networks = {
       "30-eth0" = {
         matchConfig.Name = "enp17*";
-        networkConfig.Bond = "bond0";
+        networkConfig = {
+          Bond = "bond0";
+          DHCP = "no";
+        };
+        linkConfig.RequiredForOnline = "enslaved";
       };
       
       "40-bond0" = {
         matchConfig.Name = "bond0";
-        networkConfig.DHCP = "yes";
+        networkConfig.DHCP = "no";
+        linkConfig.RequiredForOnline = "routable";
       };
     };
   };
