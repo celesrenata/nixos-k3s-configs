@@ -37,6 +37,12 @@
       options = [ "compress=zstd" "subvol=varlib" ];
     };
 
+  fileSystems."/var/lib/longhorn" =
+    { device = "/dev/disk/by-uuid/b57f84c5-d934-41fd-ac04-b1dddf306ee2";
+      fsType = "btrfs";
+      options = [ "noatime" "subvol=varlib/longhorn" ];
+    };
+
   fileSystems."/boot" =
     { device = "/dev/disk/by-uuid/B861-1E8C";
       fsType = "vfat";
