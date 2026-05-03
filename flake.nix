@@ -42,68 +42,14 @@
           ./modules/kubernetes.nix
           ./modules/monitoring.nix
         ]) ++ (if exoDistributed then [
-          ({ pkgs, ... }: {
-            # Packages needed for exo to run from source
-            environment.systemPackages = with pkgs; [ uv git nodejs ];
-            programs.nix-ld.enable = true;
-
-            systemd.services.exo = {
-              description = "exo Distributed AI Inference Service";
-              wantedBy = [ "multi-user.target" ];
-              after = [ "network-online.target" ];
-              wants = [ "network-online.target" ];
-
-              path = with pkgs; [ uv python312 git nodejs bash coreutils gcc gnumake pkg-config openssl ];
-
-              environment = {
-                MASTER_ADDR = "10.1.1.12";
-                MASTER_PORT = "29500";
-                LD_LIBRARY_PATH = builtins.concatStringsSep ":" [
-                  "${pkgs.stdenv.cc.cc.lib}/lib"
-                  "/run/opengl-driver/lib"
-                  # Intel GPU runtime for torch.xpu (Level Zero + compute runtime)
-                  "${pkgs.intel-compute-runtime.drivers}/lib"
-                  "${pkgs.level-zero}/lib"
-                  # OpenCL runtime — oneDNN needs this for SDPA and other kernels
-                  "${pkgs.intel-compute-runtime}/lib/intel-opencl"
-                ];
-                UV_PYTHON_PREFERENCE = "only-system";
-                UV_PYTHON = "python3.12";
-                HOME = "/root";
-                # OpenCL ICD vendor path for oneDNN
-                OCL_ICD_VENDORS = "${pkgs.intel-compute-runtime}/etc/OpenCL/vendors";
-              };
-
-              serviceConfig = {
-                Type = "simple";
-                WorkingDirectory = "/opt/exo";
-                ExecStartPre = "${pkgs.writeShellScript "exo-prepare" ''
-                  set -euo pipefail
-                  EXO_DIR=/opt/exo
-                  if [ ! -d "$EXO_DIR/.git" ]; then
-                    ${pkgs.git}/bin/git clone --branch xpu https://github.com/celesrenata/exo.git "$EXO_DIR"
-                  else
-                    cd "$EXO_DIR"
-                    ${pkgs.git}/bin/git fetch origin xpu
-                    ${pkgs.git}/bin/git reset --hard origin/xpu
-                  fi
-                ''}";
-                ExecStart = "${pkgs.uv}/bin/uv run exo -vv";
-                Restart = "on-failure";
-                RestartSec = "10s";
-                User = "root";
-                Group = "root";
-                StandardOutput = "journal";
-                StandardError = "journal";
-                SyslogIdentifier = "exo";
-              };
+          exo.nixosModules.exo-distributed
+          {
+            services.exo.distributed = {
+              enable = true;
+              package = exo.packages.${system}.exo;
+              masterAddr = "10.1.1.12";
             };
-
-            networking.firewall.allowedTCPPortRanges = [
-              { from = 49152; to = 65535; }
-            ];
-            networking.firewall.allowedTCPPorts = [ 29500 52415 ];
-          })
+          }
         ] else []);
       };
   in {
