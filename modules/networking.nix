@@ -35,7 +35,7 @@
         matchConfig.Name = "bond0";
         networkConfig.DHCP = "no";
         networkConfig.DNS = [ "192.168.42.1" ];
-        networkConfig.Domains = [ "~celestium.life" ];
+        networkConfig.Domains = [ "celestium.life" ];
         linkConfig.RequiredForOnline = "routable";
       };
     };
