@@ -43,13 +43,17 @@
           ./modules/monitoring.nix
         ]) ++ (if exoDistributed then [
           exo.nixosModules.exo-distributed
-          {
+          ({ pkgs, lib, ... }: {
             services.exo.distributed = {
               enable = true;
               package = exo.packages.${system}.exo;
               masterAddr = "10.1.1.12";
+              intelGpuPackages = [ pkgs.intel-compute-runtime pkgs.intel-compute-runtime.drivers pkgs.level-zero ];
+              peers = [ "/ip4/10.1.1.12/tcp/4001" "/ip4/10.1.1.13/tcp/4001" "/ip4/10.1.1.14/tcp/4001" "/ip4/10.1.1.15/tcp/4001" ];
             };
-          }
+            # Add SYCL runtime for PyTorch XPU (from MordragT overlay on gremlin nodes)
+            systemd.services.exo.environment.LD_LIBRARY_PATH = lib.mkForce "/nix/store/818046bdqcis9r63lrp7p43521ikin2j-intel-llvm-nightly-2025-11-12-lib/lib:${pkgs.intel-compute-runtime}/lib/intel-opencl:${pkgs.intel-compute-runtime.drivers}/lib:${pkgs.level-zero}/lib";
+          })
         ] else []);
       };
   in {
