@@ -158,11 +158,11 @@
         "uv2nix": "uv2nix"
       },
       "locked": {
-        "lastModified": 1777930824,
-        "narHash": "sha256-vC3Uz6R2z0uy8FG0l/uANIwtQCSpQp2sMqoxlnNNazk=",
+        "lastModified": 1777947847,
+        "narHash": "sha256-wnBXRcf/fiiJCM7PbQKilDBTEI3uWELv4aNpDlfp3og=",
         "owner": "celesrenata",
         "repo": "exo",
-        "rev": "fc932df258c2309286885ab406ae75ed4f005671",
+        "rev": "02ba7d3406a9e5b9c0d4508051ba2b88e2d18252",
         "type": "github"
       },
       "original": {
