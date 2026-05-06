@@ -158,16 +158,16 @@
         "uv2nix": "uv2nix"
       },
       "locked": {
-        "lastModified": 1777947847,
-        "narHash": "sha256-wnBXRcf/fiiJCM7PbQKilDBTEI3uWELv4aNpDlfp3og=",
+        "lastModified": 1778087723,
+        "narHash": "sha256-TA0P2kpYKbGDt70/N5Extu1l0zylWdgsVrRC1d42UyE=",
         "owner": "celesrenata",
         "repo": "exo",
-        "rev": "02ba7d3406a9e5b9c0d4508051ba2b88e2d18252",
+        "rev": "038a4cb85740e7887eebb3570b8737c14ce76a88",
         "type": "github"
       },
       "original": {
         "owner": "celesrenata",
-        "ref": "xpu",
+        "ref": "tensor-parallelism",
         "repo": "exo",
         "type": "github"
       }

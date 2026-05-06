@@ -4,7 +4,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-25.11";
-    exo.url = "github:celesrenata/exo/xpu";
+    exo.url = "github:celesrenata/exo/tensor-parallelism";
     sops-nix.url = "github:Mic92/sops-nix";
     i915-sriov.url = "github:strongtz/i915-sriov-dkms/kernel-v7.0";
   };
@@ -48,7 +48,7 @@
               enable = true;
               package = exo.packages.${system}.exo;
               masterAddr = "10.1.1.12";
-              intelGpuPackages = [ pkgs.intel-compute-runtime pkgs.intel-compute-runtime.drivers pkgs.level-zero exo.packages.${system}.intel-oneapi-runtime ];
+              intelGpuPackages = [ exo.packages.${system}.intel-compute-runtime exo.packages.${system}.intel-compute-runtime-drivers exo.packages.${system}.level-zero exo.packages.${system}.intel-oneapi-runtime pkgs.unified-memory-framework ];
               peers = [ "/ip4/10.1.1.12/tcp/4001" "/ip4/10.1.1.13/tcp/4001" "/ip4/10.1.1.14/tcp/4001" "/ip4/10.1.1.15/tcp/4001" ];
             };
           })
