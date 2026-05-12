@@ -16,7 +16,7 @@
         bondConfig = {
           Mode = "802.3ad";
           LACPTransmitRate = "fast";
-          TransmitHashPolicy = "layer3+4";
+          TransmitHashPolicy = "encap3+4";
         };
       };
     };

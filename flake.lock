@@ -158,16 +158,16 @@
         "uv2nix": "uv2nix"
       },
       "locked": {
-        "lastModified": 1778087723,
-        "narHash": "sha256-TA0P2kpYKbGDt70/N5Extu1l0zylWdgsVrRC1d42UyE=",
+        "lastModified": 1778565278,
+        "narHash": "sha256-JagBcClHJpak/3jpxhM6TCk/hUhASdxoe7KuEYGYtNc=",
         "owner": "celesrenata",
         "repo": "exo",
-        "rev": "038a4cb85740e7887eebb3570b8737c14ce76a88",
+        "rev": "a20158b0017955d2b9bbce9f72439db695165553",
         "type": "github"
       },
       "original": {
         "owner": "celesrenata",
-        "ref": "tensor-parallelism",
+        "ref": "twenty-tps-research",
         "repo": "exo",
         "type": "github"
       }
