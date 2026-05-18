@@ -6,6 +6,7 @@
     ./iscsi.nix
     ./remote-build.nix
     ./rgb.nix
+    ./thunderbolt.nix
     ./distcc-triplet.nix
   ];
 
