@@ -7,6 +7,7 @@
     ./remote-build.nix
     ./rgb.nix
     ./thunderbolt.nix
+    ./rdma.nix
     ./distcc-triplet.nix
   ];
 
