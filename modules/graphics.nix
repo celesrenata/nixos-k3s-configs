@@ -5,12 +5,12 @@ let
   
   #base-nvidia-package = config.boot.kernelPackages.nvidiaPackages.mkDriver ({
   nvidia-package = config.boot.kernelPackages.nvidiaPackages.mkDriver ({
-    version = "595.58.03";
-    sha256_64bit = "sha256-jA1Plnt5MsSrVxQnKu6BAzkrCnAskq+lVRdtNiBYKfk=";
+    version = "595.80";
+    sha256_64bit = "sha256-PVTIP+B/01c/8M66hXTAYTLg9T2Hy9u1gq43K7TF1Hg=";
     sha256_aarch64 = "";
-    openSha256 = "sha256-6LvJyT0cMXGS290Dh8hd9rc+nYZqBzDIlItOFk8S4n8=";
-    settingsSha256 = "sha256-2vLF5Evl2D6tRQJo0uUyY3tpWqjvJQ0/Rpxan3NOD3c=";
-    persistencedSha256 = "sha256-AtjM/ml/ngZil8DMYNH+P111ohuk9mWw5t4z7CHjPWw=";
+    openSha256 = "sha256-nonwYYPItHeMC/5Ox/TlWhjiddMPu4PLqNhgIg+bfW8";
+    settingsSha256 = "";
+    persistencedSha256 = "sha256-WL57kKFWeRW0oPktp6afkUb5Om9MCGAvKWctk5yiyIA";
   });
   
   #nvidia-package = base-nvidia-package // {
