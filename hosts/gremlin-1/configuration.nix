@@ -24,7 +24,6 @@
         matchConfig.Name = "bond0";
         linkConfig.RequiredForOnline = "routable";
         address = [ "10.1.1.12/24" ];
-        gateway = [ "10.1.1.1" ];
       };
     };
   };

@@ -35,6 +35,10 @@
         matchConfig.Name = "bond0";
         networkConfig.DHCP = "no";
         networkConfig.DNS = [ "192.168.42.1" ];
+        gateway = [ "10.1.1.1" ];
+        routes = [
+          { routeConfig = { Destination = "192.168.42.0/24"; Gateway = "10.1.1.1"; }; }
+        ];
         networkConfig.Domains = [ "celestium.life" ];
         linkConfig.RequiredForOnline = "routable";
       };

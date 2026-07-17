@@ -13,7 +13,7 @@ in
     efi.canTouchEfiVariables = false;
   };
   boot.initrd.kernelModules = [ "vmd" "md_mod" "raid0" ];
-  boot.kernelPackages = pkgs.linuxPackages_7_0_sriov;
+  boot.kernelPackages = pkgs.linuxPackages_7_1_sriov;
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
   boot.kernelModules = [ "i915" "vfio" "vfio_pci" "vfio_iommu_type1" ];
   boot.supportedFilesystems = [ "nfs" ];
