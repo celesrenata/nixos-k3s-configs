@@ -14,6 +14,7 @@
   # Enable Flakes
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   nix.settings.cores = 16;
+  nix.settings.sandbox = "relaxed";
   nixpkgs.config.allowUnfree = true;
 
   # Increase file descriptor limits for build processes
