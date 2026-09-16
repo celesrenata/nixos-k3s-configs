@@ -23,7 +23,7 @@
         modules = [
           sops-nix.nixosModules.sops
           { nixpkgs.config.allowUnfree = true; }
-          { nixpkgs.overlays = [ (import ./overlays/lmstudio.nix) (import ./overlays/librosa.nix) ]; }
+          { nixpkgs.overlays = [ (import ./overlays/lmstudio.nix) (import ./overlays/librosa.nix) (import ./overlays/k3s-1_36.nix) ]; }
           ./hosts/${hostname}/configuration.nix
           ./modules/common.nix
           ./modules/graphics.nix
