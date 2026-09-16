@@ -73,6 +73,43 @@ def parse_content_length(head):
     return None
 
 
+def strip_transfer_encoding(head):
+    """Remove any Transfer-Encoding header line from a raw header block."""
+    lines = head.split(b"\r\n")
+    kept = [l for l in lines if not l.lower().startswith(b"transfer-encoding:")]
+    return b"\r\n".join(kept)
+
+
+def read_chunked_body(sock, leftover):
+    """Read and decode an HTTP/1.1 chunked request body into raw bytes."""
+    buf = bytearray(leftover)
+    out = bytearray()
+    while True:
+        # Ensure we have a full chunk-size line.
+        while b"\r\n" not in buf:
+            more = sock.recv(65536)
+            if not more:
+                return bytes(out)
+            buf += more
+        line, _, rest = bytes(buf).partition(b"\r\n")
+        buf = bytearray(rest)
+        size_str = line.split(b";", 1)[0].strip()
+        try:
+            size = int(size_str, 16)
+        except ValueError:
+            return bytes(out)
+        if size == 0:
+            break  # last chunk; ignore trailers
+        while len(buf) < size + 2:  # chunk data + trailing CRLF
+            more = sock.recv(65536)
+            if not more:
+                break
+            buf += more
+        out += buf[:size]
+        buf = bytearray(buf[size + 2 :])
+    return bytes(out)
+
+
 def pipe(src, dst):
     """Relay bytes from src to dst until EOF, then half-close dst."""
     try:
@@ -90,6 +127,60 @@ def pipe(src, dst):
             pass
 
 
+def read_request(sock, carry):
+    """Read one full HTTP request (head + body) from sock.
+
+    `carry` is a bytearray of bytes already read past the previous request.
+    Returns (request_bytes, is_create, rewritten_request_bytes) or None on EOF.
+    Handles Content-Length and chunked request bodies so we know exactly where
+    each request ends on a keep-alive connection.
+    """
+    # Read until we have the full header block.
+    while b"\r\n\r\n" not in carry:
+        more = sock.recv(65536)
+        if not more:
+            return None
+        carry += more
+    hidx = carry.find(b"\r\n\r\n")
+    head = bytes(carry[: hidx + 4])
+    rest = bytearray(carry[hidx + 4 :])
+
+    is_create = bool(CREATE_RE.match(head))
+    clen = parse_content_length(head)
+    chunked = b"transfer-encoding: chunked" in head.lower()
+
+    if chunked:
+        body = read_chunked_body(sock, bytes(rest))
+        # read_chunked_body consumed exactly the chunked body from rest+socket;
+        # anything it over-read is lost, but docker clients don't pipeline past
+        # a chunked body before the response, so carry resets empty.
+        leftover = bytearray()
+    else:
+        n = clen or 0
+        while len(rest) < n:
+            more = sock.recv(65536)
+            if not more:
+                break
+            rest += more
+        body = bytes(rest[:n])
+        leftover = bytearray(rest[n:])
+
+    if is_create:
+        new_body = rewrite_device_requests(body)
+        out_head = strip_transfer_encoding(head)
+        if parse_content_length(out_head) is not None:
+            out_head = re.sub(
+                rb"(?i)content-length:\s*\d+",
+                b"Content-Length: %d" % len(new_body),
+                out_head,
+            )
+        else:
+            out_head = out_head[:-2] + b"Content-Length: %d\r\n\r\n" % len(new_body)
+        return (out_head + new_body, True, leftover)
+
+    return (head + body, False, leftover)
+
+
 def handle(client):
     upstream = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     try:
@@ -98,42 +189,28 @@ def handle(client):
         client.close()
         return
 
+    # Relay responses upstream->client for the whole (keep-alive) connection.
+    resp_thread = threading.Thread(target=pipe, args=(upstream, client), daemon=True)
+    resp_thread.start()
+
+    carry = bytearray()
     try:
-        head, leftover = recv_headers(client)
-        if not head:
-            return
-
-        is_create = bool(CREATE_RE.match(head))
-
-        if is_create:
-            # Small JSON body with Content-Length; buffer, rewrite, re-send.
-            clen = parse_content_length(head)
-            body = leftover
-            if clen is not None:
-                while len(body) < clen:
-                    chunk = client.recv(65536)
-                    if not chunk:
-                        break
-                    body += chunk
-            new_body = rewrite_device_requests(body)
-            if new_body != body:
-                # Fix Content-Length to the rewritten body length.
-                head = re.sub(
-                    rb"(?i)content-length:\s*\d+",
-                    b"Content-Length: %d" % len(new_body),
-                    head,
-                )
-            upstream.sendall(head + new_body)
-            # Relay the response (may be streamed) back to the client.
-            pipe(upstream, client)
-        else:
-            # Transparent pass-through, preserving chunked bodies and streams.
-            upstream.sendall(head + leftover)
-            t = threading.Thread(target=pipe, args=(client, upstream), daemon=True)
-            t.start()
-            pipe(upstream, client)
-            t.join(timeout=5)
+        while True:
+            result = read_request(client, carry)
+            if result is None:
+                break
+            req_bytes, _is_create, leftover = result
+            carry = leftover
+            try:
+                upstream.sendall(req_bytes)
+            except OSError:
+                break
     finally:
+        try:
+            upstream.shutdown(socket.SHUT_WR)
+        except OSError:
+            pass
+        resp_thread.join(timeout=10)
         try:
             upstream.close()
         except OSError:
