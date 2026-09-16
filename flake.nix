@@ -6,7 +6,7 @@
     nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-25.11";
     exo.url = "github:celesrenata/exo/twenty-tps-research";
     sops-nix.url = "github:Mic92/sops-nix";
-    i915-sriov.url = "github:strongtz/i915-sriov-dkms/kernel-v7.1";
+    i915-sriov.url = "github:strongtz/i915-sriov-dkms";
   };
 
   outputs = { self, nixpkgs, nixpkgs-stable, exo, sops-nix, i915-sriov, ... }@inputs: 
@@ -23,7 +23,7 @@
         modules = [
           sops-nix.nixosModules.sops
           { nixpkgs.config.allowUnfree = true; }
-          { nixpkgs.overlays = [ (import ./overlays/lmstudio.nix) ]; }
+          { nixpkgs.overlays = [ (import ./overlays/lmstudio.nix) (import ./overlays/librosa.nix) ]; }
           ./hosts/${hostname}/configuration.nix
           ./modules/common.nix
           ./modules/graphics.nix
