@@ -134,10 +134,10 @@ in
     '';
   };
 
-  # HARP env file via sops template (uti nextcloud)
-  sops.templates."harp-uti.env" = lib.mkIf isGremlin1 {
+  # HARP env file via sops template (fta nextcloud)
+  sops.templates."harp-fta.env" = lib.mkIf isGremlin1 {
     content = ''
-      HP_SHARED_KEY=${config.sops.placeholder.harp_shared_key_uti}
+      HP_SHARED_KEY=${config.sops.placeholder.harp_shared_key_fta}
     '';
   };
 
@@ -155,15 +155,15 @@ in
     };
   };
 
-  # HARP Agent for ExApp management (uti.celestium.life) - only on gremlin-1
-  systemd.services.harp-agent-uti = lib.mkIf isGremlin1 {
-    description = "HARP Agent for UTI Nextcloud ExApps";
+  # HARP Agent for ExApp management (fta.celestium.life) - only on gremlin-1
+  systemd.services.harp-agent-fta = lib.mkIf isGremlin1 {
+    description = "HARP Agent for FTA Nextcloud ExApps";
     after = [ "docker.service" "frp-harp.service" "docker-gpu-proxy.service" ];
     wants = [ "docker.service" "frp-harp.service" ];
     wantedBy = [ "multi-user.target" ];
     serviceConfig = {
-      EnvironmentFile = config.sops.templates."harp-uti.env".path;
-      ExecStart = "${pkgs.docker}/bin/docker run --rm --name harp-agent-uti -e HP_SHARED_KEY -e NC_INSTANCE_URL=https://uti.celestium.life -p 8790:8780 -p 8792:8782 -v /var/run/docker-gpu.sock:/var/run/docker.sock ghcr.io/nextcloud/nextcloud-appapi-harp:release";
+      EnvironmentFile = config.sops.templates."harp-fta.env".path;
+      ExecStart = "${pkgs.docker}/bin/docker run --rm --name harp-agent-fta -e HP_SHARED_KEY -e NC_INSTANCE_URL=https://fta.celestium.life -p 8790:8780 -p 8792:8782 -v /var/run/docker-gpu.sock:/var/run/docker.sock ghcr.io/nextcloud/nextcloud-appapi-harp:release";
       Restart = "always";
       RestartSec = "10";
     };
