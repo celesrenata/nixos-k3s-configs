@@ -1,6 +1,11 @@
 { config, pkgs, lib, ... }:
 let
   isGremlin1 = config.networking.hostName == "gremlin-1";
+  dockerGpuProxy = pkgs.writeTextFile {
+    name = "docker-gpu-proxy.py";
+    text = builtins.readFile ./docker-gpu-proxy.py;
+    executable = true;
+  };
   nvidiaContainerRuntimeConfig = ''
     disable-require = false
     supported-driver-capabilities = "compat32,compute,display,graphics,ngx,utility,video"
@@ -176,7 +181,7 @@ in
     wants = [ "docker.service" ];
     wantedBy = [ "multi-user.target" ];
     serviceConfig = {
-      ExecStart = "${pkgs.python3}/bin/python3 /etc/nvidia-container-runtime/docker-gpu-proxy.py";
+      ExecStart = "${pkgs.python3}/bin/python3 ${dockerGpuProxy}";
       Restart = "always";
       RestartSec = "5";
     };
