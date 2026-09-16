@@ -151,10 +151,20 @@ in
     description = "HARP Agent for Nextcloud ExApps";
     after = [ "docker.service" "frp-harp.service" "docker-gpu-proxy.service" ];
     wants = [ "docker.service" "frp-harp.service" ];
+    # The agent bind-mounts the GPU proxy's socket; that socket inode is
+    # recreated whenever docker-gpu-proxy restarts, so the agent MUST be
+    # recycled with it or it keeps a dead socket ("connection refused").
+    bindsTo = [ "docker-gpu-proxy.service" ];
+    partOf = [ "docker-gpu-proxy.service" ];
+    restartTriggers = [ dockerGpuProxy ];
     wantedBy = [ "multi-user.target" ];
     serviceConfig = {
       EnvironmentFile = config.sops.templates."harp.env".path;
+      # docker run --rm can leave a stale container on an unclean stop, which
+      # then blocks the port bind on restart. Force-remove before starting.
+      ExecStartPre = "-${pkgs.docker}/bin/docker rm -f harp-agent";
       ExecStart = "${pkgs.docker}/bin/docker run --rm --name harp-agent -e HP_SHARED_KEY -e NC_INSTANCE_URL=https://nextcloud.celestium.life -p 8780:8780 -p 8782:8782 -v /var/run/docker-gpu.sock:/var/run/docker.sock ghcr.io/nextcloud/nextcloud-appapi-harp:release";
+      ExecStopPost = "-${pkgs.docker}/bin/docker rm -f harp-agent";
       Restart = "always";
       RestartSec = "10";
     };
@@ -165,10 +175,17 @@ in
     description = "HARP Agent for FTA Nextcloud ExApps";
     after = [ "docker.service" "frp-harp.service" "docker-gpu-proxy.service" ];
     wants = [ "docker.service" "frp-harp.service" ];
+    # See harp-agent: recycle with the GPU proxy so the bind-mounted socket
+    # is never stale after a proxy restart.
+    bindsTo = [ "docker-gpu-proxy.service" ];
+    partOf = [ "docker-gpu-proxy.service" ];
+    restartTriggers = [ dockerGpuProxy ];
     wantedBy = [ "multi-user.target" ];
     serviceConfig = {
       EnvironmentFile = config.sops.templates."harp-fta.env".path;
+      ExecStartPre = "-${pkgs.docker}/bin/docker rm -f harp-agent-fta";
       ExecStart = "${pkgs.docker}/bin/docker run --rm --name harp-agent-fta -e HP_SHARED_KEY -e NC_INSTANCE_URL=https://fta.celestium.life -p 8790:8780 -p 8792:8782 -v /var/run/docker-gpu.sock:/var/run/docker.sock ghcr.io/nextcloud/nextcloud-appapi-harp:release";
+      ExecStopPost = "-${pkgs.docker}/bin/docker rm -f harp-agent-fta";
       Restart = "always";
       RestartSec = "10";
     };
