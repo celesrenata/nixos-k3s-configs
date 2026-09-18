@@ -2,7 +2,7 @@
 let
   parser = pkgs.writeScript "intel-gpu-stats-parser" (builtins.readFile ../scripts/intel-gpu-stats-parser.py);
   intel-gpu-stats = pkgs.writeShellScript "intel-gpu-stats" ''
-    ${pkgs.intel-gpu-tools}/bin/intel_gpu_top -J -s 1000 2>/dev/null | ${pkgs.python3}/bin/python3 ${parser}
+    ${pkgs.intel-gpu-tools}/bin/intel_gpu_top -d pci:slot=0000:00:02.0 -J -s 1000 2>/dev/null | ${pkgs.python3}/bin/python3 ${parser}
   '';
 in
 {

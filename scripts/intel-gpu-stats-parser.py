@@ -9,7 +9,7 @@ for line in sys.stdin:
     depth += line.count("{") - line.count("}")
     if depth == 0 and "{" in buf:
         try:
-            obj = json.loads(buf.strip().lstrip("[,"))
+            obj = json.loads(buf.strip().lstrip("[,").rstrip(","))
             fields = []
             freq = obj.get("frequency", {})
             if freq.get("actual") is not None: fields.append(f'frequency_actual={freq["actual"]:.0f}')
