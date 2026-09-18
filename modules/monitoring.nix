@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ config, lib, pkgs, ... }:
 let
   parser = pkgs.writeScript "intel-gpu-stats-parser" (builtins.readFile ../scripts/intel-gpu-stats-parser.py);
   intel-gpu-stats = pkgs.writeShellScript "intel-gpu-stats" ''
@@ -12,6 +12,19 @@ in
 
   systemd.services.telegraf.serviceConfig.AmbientCapabilities = [ "CAP_PERFMON" ];
   systemd.services.telegraf.serviceConfig.CapabilityBoundingSet = [ "CAP_PERFMON" ];
+
+  # The APC USB UPS is attached to gremlin-1. Expose its NUT readings for
+  # Prometheus without duplicating the physical device on the other nodes.
+  services.prometheus.exporters.nut = lib.mkIf (config.networking.hostName == "gremlin-1") {
+    enable = true;
+    port = 9995;
+    nutServer = "127.0.0.1";
+    extraFlags = [
+      "--nut.vars_enable=battery.charge,battery.runtime,battery.voltage,battery.voltage.nominal,input.voltage,input.voltage.nominal,ups.load,ups.status"
+      "--web.telemetry-path=/metrics"
+      "--web.exporter-telemetry-path=/exporter_metrics"
+    ];
+  };
 
   services.telegraf = {
     enable = true;
