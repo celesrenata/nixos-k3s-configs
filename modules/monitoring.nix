@@ -39,6 +39,9 @@ in
 
       outputs.influxdb_v2 = {
         urls = [ "http://10.1.1.12:8086" ];
+        # Explicit timeout so a transient LoadBalancer/pod blip fails fast and
+        # retries on the next flush instead of stalling the agent.
+        timeout = "15s";
         organization = "celestium.life";
         bucket = "influx";
         token = "\${INFLUX_TOKEN}";

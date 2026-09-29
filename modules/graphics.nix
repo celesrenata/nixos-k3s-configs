@@ -42,8 +42,24 @@ in {
     }
 
     (lib.mkIf cfg.intel.enable {
+      # On these SR-IOV hosts the iGPU exposes 8 PCI functions (0000:00:02.0-.7).
+      # A bare `intel_gpu_top` auto-picks the first function it enumerates, which
+      # is often a VF (or a vfio-pci-bound function) with no i915 PMU, producing
+      # "Failed to detect engines!". The physical function 0000:00:02.0 (card1)
+      # is the one exposing the working PMU. This wrapper defaults the device to
+      # the PF so plain `intel_gpu_top` just works, while still honoring an
+      # explicit -d/--device passed by the user.
       environment.systemPackages = with pkgs; [
-        nvtopPackages.intel
+        nvtopPackages.full
+        (lib.hiPrio (pkgs.writeShellScriptBin "intel_gpu_top" ''
+          for a in "$@"; do
+            case "$a" in
+              -d|--device|-d*|--device=*)
+                exec ${pkgs.intel-gpu-tools}/bin/intel_gpu_top "$@" ;;
+            esac
+          done
+          exec ${pkgs.intel-gpu-tools}/bin/intel_gpu_top -d pci:slot=0000:00:02.0 "$@"
+        ''))
       ];
 
       hardware.graphics.extraPackages = with pkgs; [

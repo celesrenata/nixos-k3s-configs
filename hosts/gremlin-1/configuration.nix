@@ -4,7 +4,8 @@
   imports = [
     ./sops.nix
     ./hardware-configuration.nix
-    ./wyoming.nix
+    ./qdrant.nix
+    #./wyoming.nix
   ];
 
   # Make sure the same influx binaries are available in your shell
