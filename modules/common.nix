@@ -46,7 +46,7 @@
       sleep 5
       echo 7 > /sys/devices/pci0000:00/0000:00:02.0/sriov_numvfs
       sleep 2
-      for vf in /sys/devices/pci0000:00/0000:00:02.0/virtfn{0,1,2,3}; do
+      for vf in /sys/devices/pci0000:00/0000:00:02.0/virtfn{0,1}; do
         [ -d "$vf" ] || continue
         vf_pci=$(basename $(readlink $vf))
         echo "vfio-pci" > /sys/bus/pci/devices/$vf_pci/driver_override
