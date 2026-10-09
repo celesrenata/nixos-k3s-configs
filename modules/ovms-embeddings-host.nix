@@ -8,10 +8,13 @@
 # serving qwen3-embedding-0.6b on host port 8000. OmniRoute load-balances across
 # all four host endpoints (10.1.1.12-15:8000).
 #
-# Guarded to Intel-GPU gremlin hosts (those with the i915 SR-IOV setup). Does NOT
-# change the SR-IOV config (modules/i915-sriov.nix is untouched); it only ADDS a
-# PF-targeted host service. Container runtime is podman (daemonless, uniform
-# across nodes); the image is the same digest the old in-cluster StatefulSet used.
+# Guarded to Intel-GPU gremlin hosts. Does NOT change the SR-IOV config
+# (modules/i915-sriov.nix untouched); it only ADDS a PF-targeted host service.
+# Container runtime is podman (daemonless, uniform across nodes); image is the
+# same digest the old in-cluster StatefulSet used. The PF device group GID is
+# resolved at RUNTIME (it drifts across nodes: 26 on some, 500 on others, and a
+# live GID is not changed by a rebuild), so the container is given the correct
+# supplementary group to open /dev/dri/renderD128.
 
 let
   enabled = config.gremlin.graphics.intel.enable or false;
@@ -22,7 +25,6 @@ let
   modelName = "qwen3-embedding-0.6b";
   sourceModel = "OpenVINO/Qwen3-Embedding-0.6B-int8-ov";
   maxLength = "8192";
-  videoGid = toString config.users.groups.video.gid;
 in {
   config = lib.mkIf enabled {
     virtualisation.podman = {
@@ -35,7 +37,6 @@ in {
       "d ${modelDir} 0755 5000 5000 -"
     ];
 
-    # One-shot model pull (idempotent: skips if the 8192 graph already exists).
     systemd.services.ovms-embeddings-host-pull = {
       description = "Pull qwen3-embedding-0.6b model for host-native OVMS (PF)";
       after = [ "network-online.target" ];
@@ -69,7 +70,6 @@ in {
       '';
     };
 
-    # Host-native OVMS serving bound to the PF render node.
     systemd.services.ovms-embeddings-host = {
       description = "Host-native OVMS embeddings on the PF Intel Arc device (FEAT-001)";
       wantedBy = [ "multi-user.target" ];
@@ -80,20 +80,21 @@ in {
         Restart = "always";
         RestartSec = 5;
         ExecStartPre = "-${pkgs.podman}/bin/podman rm -f ovms-embeddings-host";
-        ExecStart = ''
-          ${pkgs.podman}/bin/podman run --rm --name ovms-embeddings-host \
-            --user 5000:5000 \
-            --device ${pfRenderNode}:${pfRenderNode} \
-            --group-add ${videoGid} \
-            -p ${toString restPort}:8000 \
-            -v ${modelDir}:/models:ro \
-            ${ovmsImage} \
-            --rest_port=8000 \
-            --model_name=${modelName} \
-            --model_path=/models/${sourceModel}
-        '';
-        ExecStop = "${pkgs.podman}/bin/podman stop ovms-embeddings-host";
       };
+      script = ''
+        DEV_GID="$(${pkgs.coreutils}/bin/stat -c %g ${pfRenderNode})"
+        echo "PF ${pfRenderNode} device GID resolved at runtime: $DEV_GID"
+        exec ${pkgs.podman}/bin/podman run --rm --name ovms-embeddings-host \
+          --user 5000:5000 \
+          --device ${pfRenderNode}:${pfRenderNode} \
+          --group-add "$DEV_GID" \
+          -p ${toString restPort}:8000 \
+          -v ${modelDir}:/models:ro \
+          ${ovmsImage} \
+          --rest_port=8000 \
+          --model_name=${modelName} \
+          --model_path=/models/${sourceModel}
+      '';
     };
 
     networking.firewall.allowedTCPPorts = [ restPort ];
