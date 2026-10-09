@@ -24,7 +24,16 @@ let
   pfRenderNode = "/dev/dri/renderD128";
   modelName = "qwen3-embedding-0.6b";
   sourceModel = "OpenVINO/Qwen3-Embedding-0.6B-int8-ov";
-  maxLength = "8192";
+  # Per-item token ceiling. FEAT-003: the user asked for 8192, but a post-fix token
+  # sweep on this MTL Arc PF proved a near-8192-token single item does not return
+  # within budget (>90s) and WEDGES the GPU (ccs0 fence-timeout). 8192 FAILED the
+  # gate; the proven-stable operating ceiling is 4096, which is also the ENFORCED
+  # OmniRoute guard (OMNIROUTE_EMBEDDING_SPLIT_MAX_ITEM_TOKENS=4096, overflow=auto:
+  # long inputs auto-split to <=4096, over-cap single items get a clean HTTP 400).
+  # Both layers carry the SAME number (4096). A larger window needs the GPU
+  # driver/firmware follow-up (i915-sriov-dkms / GuC-HuC bump) + a source-side
+  # concurrency cap. See .agents/tasks/arc-embed-ceiling-boost.
+  maxLength = "4096";
 in {
   config = lib.mkIf enabled {
     virtualisation.podman = {
