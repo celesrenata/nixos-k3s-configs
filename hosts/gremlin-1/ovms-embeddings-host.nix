@@ -22,8 +22,8 @@ let
   maxLength = "8192";              # ceiling goal; verified by post-fix sweep
 in {
   systemd.tmpfiles.rules = [
-    "d /var/lib/ovms-embeddings 0755 root root -"
-    "d ${modelDir} 0755 root root -"
+    "d /var/lib/ovms-embeddings 0755 5000 5000 -"
+    "d ${modelDir} 0755 5000 5000 -"
   ];
 
   # One-shot model pull (idempotent: skips if the graph already exists).
@@ -45,6 +45,7 @@ in {
       fi
       ${pkgs.docker}/bin/docker pull ${ovmsImage}
       ${pkgs.docker}/bin/docker run --rm \
+        --user 5000:5000 \
         -v ${modelDir}:/models \
         ${ovmsImage} \
         --pull \
@@ -72,9 +73,10 @@ in {
       ExecStartPre = "-${pkgs.docker}/bin/docker rm -f ovms-embeddings-host";
       ExecStart = ''
         ${pkgs.docker}/bin/docker run --rm --name ovms-embeddings-host \
+          --user 5000:5000 \
           --device ${pfRenderNode}:${pfRenderNode} \
-          --group-add video \
-          --group-add render \
+          --group-add 500 \
+          --group-add 303 \
           -p 127.0.0.1:${toString restPort}:8000 \
           -p ${toString restPort}:8000 \
           -v ${modelDir}:/models:ro \
