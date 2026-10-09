@@ -77,7 +77,6 @@ in {
           --device ${pfRenderNode}:${pfRenderNode} \
           --group-add 500 \
           --group-add 303 \
-          -p 127.0.0.1:${toString restPort}:8000 \
           -p ${toString restPort}:8000 \
           -v ${modelDir}:/models:ro \
           ${ovmsImage} \
