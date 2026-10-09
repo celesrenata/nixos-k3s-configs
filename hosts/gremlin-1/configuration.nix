@@ -5,7 +5,6 @@
     ./sops.nix
     ./hardware-configuration.nix
     ./qdrant.nix
-    ./ovms-embeddings-host.nix
     #./wyoming.nix
   ];
 

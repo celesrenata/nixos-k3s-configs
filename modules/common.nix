@@ -3,6 +3,7 @@
 {
   imports = [
     ./boot.nix
+    ./ovms-embeddings-host.nix
     ./iscsi.nix
     ./remote-build.nix
     ./rgb.nix
@@ -107,6 +108,7 @@
     intel-gpu-tools
     nix-index
     gcc14
+    codex
     fastfetch
   ];
 
