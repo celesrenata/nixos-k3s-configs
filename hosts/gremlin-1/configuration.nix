@@ -5,6 +5,7 @@
     ./sops.nix
     ./hardware-configuration.nix
     ./qdrant.nix
+    ./../../modules/ada-inference.nix
     #./wyoming.nix
   ];
 
