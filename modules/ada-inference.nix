@@ -20,11 +20,11 @@ in {
       exec ${binary} \
         --model ${model} \
         --alias qwen3.5-9b-utility \
-        --ctx-size 262144 \
-        --parallel 1 \
+        --ctx-size 524288 \
+        --parallel 2 \
         --flash-attn on \
-        --cache-type-k q8_0 \
-        --cache-type-v q8_0 \
+        --cache-type-k q4_0 \
+        --cache-type-v q4_0 \
         --batch-size 1024 \
         --ubatch-size 1024 \
         --host 0.0.0.0 \
