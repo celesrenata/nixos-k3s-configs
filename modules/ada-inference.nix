@@ -20,8 +20,8 @@ in {
       exec ${binary} \
         --model ${model} \
         --alias qwen3.5-9b-utility \
-        --ctx-size 65536 \
-        --parallel 1 \
+        --ctx-size 131072 \
+        --parallel 2 \
         --flash-attn on \
         --cache-type-k q8_0 \
         --cache-type-v q8_0 \
