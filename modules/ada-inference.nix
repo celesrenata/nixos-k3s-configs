@@ -32,7 +32,8 @@ in {
         --log-verbosity 4 \
         --no-webui \
         -t 16 \
-        -tb 22
+        -tb 22 \
+        --chat-template-kwargs '{"enable_thinking":false}'
     '';
 
     serviceConfig = {
