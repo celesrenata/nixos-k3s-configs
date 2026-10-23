@@ -5,7 +5,8 @@
     ./sops.nix
     ./hardware-configuration.nix
     ./qdrant.nix
-    ./../../modules/ada-inference.nix
+    # ada-inference.nix removed 2026-10-22: replaced by the granite4-rtx
+    # NixOS module (services.granite4-rtx) added in the flake for gremlin-1.
     #./wyoming.nix
   ];
 

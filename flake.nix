@@ -4,16 +4,18 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-25.11";
-    exo.url = "github:celesrenata/exo/twenty-tps-research";
+    # Replacement for the exo distributed inference cluster (decommissioned
+    # 2026-10-22): Granite 4.2 8B API service on gremlin-1.
+    granite4.url = "github:celesrenata/granite-4-rtx-4070-ti-super?ref=dcb0bb616409f17496ed830a32dbdf84700481f6";
     sops-nix.url = "github:Mic92/sops-nix";
     i915-sriov.url = "github:strongtz/i915-sriov-dkms?ref=2026.09.16";
   };
 
-  outputs = { self, nixpkgs, nixpkgs-stable, exo, sops-nix, i915-sriov, ... }@inputs: 
+  outputs = { self, nixpkgs, nixpkgs-stable, granite4, sops-nix, i915-sriov, ... }@inputs: 
   let
     system = "x86_64-linux";
 
-    mkSystem = { hostname, intel ? true, nvidia ? false, sriov ? true, resetMode ? false, exoDistributed ? false }: 
+    mkSystem = { hostname, intel ? true, nvidia ? false, sriov ? true, resetMode ? false, granite4Rtx ? false }: 
       nixpkgs.lib.nixosSystem {
         inherit system;
         specialArgs = { 
@@ -41,25 +43,26 @@
         ] ++ (if resetMode then [] else [
           ./modules/kubernetes.nix
           ./modules/monitoring.nix
-        ]) ++ (if exoDistributed then [
-          exo.nixosModules.exo-distributed
+        ]) ++ (if granite4Rtx then [
+          # Granite 4.2 8B API scaffold replaces the old exo distributed
+          # cluster + ada-inference llama.cpp server on this host.
+          granite4.nixosModules.granite4Rtx
           ({ pkgs, lib, ... }: {
-            services.exo.distributed = {
+            services.granite4-rtx = {
               enable = true;
-              package = exo.packages.${system}.exo;
-              masterAddr = "10.1.1.12";
-              intelGpuPackages = [ exo.packages.${system}.intel-compute-runtime exo.packages.${system}.intel-compute-runtime-drivers exo.packages.${system}.level-zero exo.packages.${system}.intel-oneapi-runtime pkgs.unified-memory-framework ];
-              peers = [ "/ip4/10.1.1.12/tcp/4001" "/ip4/10.1.1.13/tcp/4001" "/ip4/10.1.1.14/tcp/4001" "/ip4/10.1.1.15/tcp/4001" ];
+              package = granite4.packages.${system}.api;
+              listenAddress = "127.0.0.1";
+              listenPort = 8080;
             };
           })
         ] else []);
       };
   in {
     nixosConfigurations = {
-      gremlin-1 = mkSystem { hostname = "gremlin-1"; intel = true; nvidia = true; sriov = true; exoDistributed = true; };
-      gremlin-2 = mkSystem { hostname = "gremlin-2"; intel = true; nvidia = false; sriov = true; exoDistributed = true; };
-      gremlin-3 = mkSystem { hostname = "gremlin-3"; intel = true; nvidia = false; sriov = true; exoDistributed = true; };
-      gremlin-4 = mkSystem { hostname = "gremlin-4"; intel = true; nvidia = false; sriov = true; exoDistributed = true; };
+      gremlin-1 = mkSystem { hostname = "gremlin-1"; intel = true; nvidia = true; sriov = true; granite4Rtx = true; };
+      gremlin-2 = mkSystem { hostname = "gremlin-2"; intel = true; nvidia = false; sriov = true; };
+      gremlin-3 = mkSystem { hostname = "gremlin-3"; intel = true; nvidia = false; sriov = true; };
+      gremlin-4 = mkSystem { hostname = "gremlin-4"; intel = true; nvidia = false; sriov = true; };
       gremlin-1-reset = mkSystem { hostname = "gremlin-1"; intel = true; nvidia = true; sriov = true; resetMode = true; };
       gremlin-2-reset = mkSystem { hostname = "gremlin-2"; intel = true; nvidia = false; sriov = true; resetMode = true; };
       gremlin-3-reset = mkSystem { hostname = "gremlin-3"; intel = true; nvidia = false; sriov = true; resetMode = true; };
