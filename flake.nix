@@ -52,7 +52,7 @@
               enable = true;
               package = granite4.packages.${system}.api;
               listenAddress = "127.0.0.1";
-              listenPort = 8080;
+              listenPort = 2701;
             };
           })
         ] else []);
