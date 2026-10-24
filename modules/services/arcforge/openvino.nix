@@ -91,7 +91,7 @@ in
   #  * OCL_ICD_VENDORS pins the Intel ICD (load-bearing for the GPU plugin).
   #  * eager GPU compile at start => readiness reflects the device, not lazy.
   #  * watchdog => bounded recovery (one restart, no reset storm).
-  systemd.services.arcforge-embeddings = {
+  systemd.services.arcforge-embeddings = lib.mkIf cfg.enable {
     description = "ArcForge host-native OpenVINO GPU embeddings (PF ${renderNode})";
     after = lib.optional cfg.fetchModel.enable "arcforge-model-fetch.service" ++ [ "network.target" "arcforge-verify.service" ];
     requires = lib.optional cfg.fetchModel.enable "arcforge-model-fetch.service" ++ [ "arcforge-verify.service" ];
@@ -155,8 +155,9 @@ in
   };
 
   # Activation guard: fail loudly if the render node no longer maps to the
-  # expected PF PCI function (deterministic device selection).
-  systemd.services.arcforge-verify = {
+  # expected PF PCI function (deterministic device selection). Only created
+  # when arcforge is explicitly enabled.
+  systemd.services.arcforge-verify = lib.mkIf cfg.enable {
     description = "Verify ArcForge PF render node maps to expected PCI address";
     wantedBy = [ "multi-user.target" ];
     after = [ "network.target" ];
