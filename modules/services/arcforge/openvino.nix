@@ -19,8 +19,8 @@ let
   ]);
   appScript = pkgs.writeText "arcforge-service.py" (builtins.readFile ./service.py);
 
-  modelXml = if cfg.model.xml == "" then "${cfg.model.dir}/openvino_model.xml" else cfg.model.xml;
-  tokenizer = if cfg.model.tokenizer == "" then "${cfg.model.dir}/tokenizer.json" else cfg.model.tokenizer;
+  modelXml = if cfg.model.xml == null then "${cfg.model.dir}/openvino_model.xml" else cfg.model.xml;
+  tokenizer = if cfg.model.tokenizer == null then "${cfg.model.dir}/tokenizer.json" else cfg.model.tokenizer;
   modelRoot = cfg.model.dir;
   renderNode = cfg.device.renderNode;
 
@@ -46,8 +46,8 @@ in
   # One-shot model fetch / validation. In the common case the IR + tokenizer
   # are already on disk (pulled by the existing OVMS flow or a one-time manual
   # step); the unit then just validates and succeeds. If `source` is set, it
-  # invokes the download helper.
-  systemd.services.arcforge-model-fetch = {
+  # invokes the download helper. Only created when fetch is explicitly enabled.
+  systemd.services.arcforge-model-fetch = lib.mkIf cfg.fetchModel.enable {
     description = "Fetch / validate ArcForge model (one-time)";
     wantedBy = [ "multi-user.target" ];
     after = [ "network.target" ];
@@ -91,10 +91,11 @@ in
   #  * OCL_ICD_VENDORS pins the Intel ICD (load-bearing for the GPU plugin).
   #  * eager GPU compile at start => readiness reflects the device, not lazy.
   #  * watchdog => bounded recovery (one restart, no reset storm).
-  systemd.services.arcforge-embeddings = {
+  systemd.services.arcforge-embeddings = lib.mkIf cfg.enable {
     description = "ArcForge host-native OpenVINO GPU embeddings (PF ${renderNode})";
-    after = [ "network.target" "arcforge-model-fetch.service" "arcforge-verify.service" ];
-    requires = [ "arcforge-model-fetch.service" "arcforge-verify.service" ];
+    wantedBy = [ "multi-user.target" ];
+    after = lib.optional cfg.fetchModel.enable "arcforge-model-fetch.service" ++ [ "network.target" "arcforge-verify.service" ];
+    requires = lib.optional cfg.fetchModel.enable "arcforge-model-fetch.service" ++ [ "arcforge-verify.service" ];
 
     # Bounded restart (systemd >= 230: StartLimit* live in [Unit]).
     unitConfig = {
@@ -145,18 +146,17 @@ in
         ARCFORGE_PAD_ID = (toString cfg.model.padId);
       };
 
-      # Resource ceilings. Rendered as systemd K=V lines; per-host overrides
-      # come through cfg.rlimit (a plain attrset of K -> V).
-      ResourceLimits = (lib.mapAttrsToList (n: v: "${n}=${v}")
-        ({ MemoryMax = "16G"; } // cfg.rlimit));
-
+      # Resource ceilings. Real [Service] keys (a bare 'ResourceLimits'
+      # list is not a valid unit key and would be silently ignored);
+      # per-host overrides come through cfg.rlimit (attrset of K -> V).
       ExecStart = "${pythonEnv}/bin/python ${appScript}";
-    };
+    } // ({ MemoryMax = "16G"; } // cfg.rlimit);
   };
 
   # Activation guard: fail loudly if the render node no longer maps to the
-  # expected PF PCI function (deterministic device selection).
-  systemd.services.arcforge-verify = {
+  # expected PF PCI function (deterministic device selection). Only created
+  # when arcforge is explicitly enabled.
+  systemd.services.arcforge-verify = lib.mkIf cfg.enable {
     description = "Verify ArcForge PF render node maps to expected PCI address";
     wantedBy = [ "multi-user.target" ];
     after = [ "network.target" ];
