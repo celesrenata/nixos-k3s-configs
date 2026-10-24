@@ -3,6 +3,7 @@
 {
   imports = [
     ./hardware-configuration.nix
+    ./arcforge-slice.nix
   ];
 
   # System-specific networking (assuming next IP in sequence)
