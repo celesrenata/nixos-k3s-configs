@@ -93,6 +93,7 @@ in
   #  * watchdog => bounded recovery (one restart, no reset storm).
   systemd.services.arcforge-embeddings = lib.mkIf cfg.enable {
     description = "ArcForge host-native OpenVINO GPU embeddings (PF ${renderNode})";
+    wantedBy = [ "multi-user.target" ];
     after = lib.optional cfg.fetchModel.enable "arcforge-model-fetch.service" ++ [ "network.target" "arcforge-verify.service" ];
     requires = lib.optional cfg.fetchModel.enable "arcforge-model-fetch.service" ++ [ "arcforge-verify.service" ];
 
@@ -145,13 +146,11 @@ in
         ARCFORGE_PAD_ID = (toString cfg.model.padId);
       };
 
-      # Resource ceilings. Rendered as systemd K=V lines; per-host overrides
-      # come through cfg.rlimit (a plain attrset of K -> V).
-      ResourceLimits = (lib.mapAttrsToList (n: v: "${n}=${v}")
-        ({ MemoryMax = "16G"; } // cfg.rlimit));
-
+      # Resource ceilings. Real [Service] keys (a bare 'ResourceLimits'
+      # list is not a valid unit key and would be silently ignored);
+      # per-host overrides come through cfg.rlimit (attrset of K -> V).
       ExecStart = "${pythonEnv}/bin/python ${appScript}";
-    };
+    } // ({ MemoryMax = "16G"; } // cfg.rlimit);
   };
 
   # Activation guard: fail loudly if the render node no longer maps to the
