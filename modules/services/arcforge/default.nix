@@ -24,6 +24,7 @@
 
 {
   imports = [
+    ./rerank.nix
     ./openvino.nix
     ./security.nix
     ./metrics.nix
@@ -59,14 +60,14 @@
     description = "On-disk IR + tokenizer directory.";
   };
   options.services.arcforge.model.xml = lib.mkOption {
-    type = lib.types.path;
-    default = "";
-    description = "IR .xml path; defaults to <dir>/openvino_model.xml when empty.";
+    type = lib.types.nullOr lib.types.path;
+    default = null;
+    description = "IR .xml path; defaults to <dir>/openvino_model.xml when null.";
   };
   options.services.arcforge.model.tokenizer = lib.mkOption {
-    type = lib.types.path;
-    default = "";
-    description = "Tokenizer path; defaults to <dir>/tokenizer.json when empty.";
+    type = lib.types.nullOr lib.types.path;
+    default = null;
+    description = "Tokenizer path; defaults to <dir>/tokenizer.json when null.";
   };
   options.services.arcforge.model.name = lib.mkOption {
     type = lib.types.str;
@@ -153,6 +154,66 @@
   options.services.arcforge.metrics.scrapePath = lib.mkOption {
     type = lib.types.str;
     default = "/metrics";
+  };
+
+  # ── Reranker (Qwen3-Reranker-0.6B, causal-LM yes/no logit) ──────────────────
+  options.services.arcforge-rerank.enable =
+    lib.mkEnableOption "ArcForge host-native OpenVINO reranker service";
+  options.services.arcforge-rerank.port = lib.mkOption {
+    type = lib.types.int;
+    default = 8101;
+    description = "Port on which the reranker listens (separate from embeddings 8100).";
+  };
+  options.services.arcforge-rerank.bindAddress = lib.mkOption {
+    type = lib.types.str;
+    default = "0.0.0.0";
+  };
+  options.services.arcforge-rerank.device.renderNode = lib.mkOption {
+    type = lib.types.str;
+    default = "/dev/dri/renderD128";
+  };
+  options.services.arcforge-rerank.device.pciAddress = lib.mkOption {
+    type = lib.types.str;
+    default = "0000:00:02.0";
+  };
+  options.services.arcforge-rerank.model.dir = lib.mkOption {
+    type = lib.types.path;
+    default = "/var/lib/arcforge/reranker";
+    description = "On-disk reranker IR + tokenizer directory.";
+  };
+  options.services.arcforge-rerank.model.name = lib.mkOption {
+    type = lib.types.str;
+    default = "qwen3-reranker-0.6b";
+  };
+  options.services.arcforge-rerank.model.version = lib.mkOption {
+    type = lib.types.str;
+    default = "qwen3-reranker-0.6b-int8";
+  };
+  options.services.arcforge-rerank.model.maxLength = lib.mkOption {
+    type = lib.types.int;
+    default = 4096;
+    description = "Max sequence length. Causal-LM logits are [B,T,V] f32 on a ~4GiB single-allocation device, so 4096 keeps batch=1 under the cap; the service chunks longer batches adaptively.";
+  };
+  options.services.arcforge-rerank.model.padId = lib.mkOption {
+    type = lib.types.int;
+    default = 151643;
+  };
+  options.services.arcforge-rerank.inference.concurrency = lib.mkOption {
+    type = lib.types.int;
+    default = 4;
+  };
+  options.services.arcforge-rerank.inference.batchLimit = lib.mkOption {
+    type = lib.types.int;
+    default = 64;
+  };
+  options.services.arcforge-rerank.inference.inferTimeoutSec = lib.mkOption {
+    type = lib.types.int;
+    default = 120;
+  };
+  options.services.arcforge-rerank.rlimit = lib.mkOption {
+    type = with lib.types; attrsOf (oneOf [ int str ]);
+    default = { };
+    description = "Resource limits for the reranker service.";
   };
 
   config = lib.mkIf config.services.arcforge.enable {
