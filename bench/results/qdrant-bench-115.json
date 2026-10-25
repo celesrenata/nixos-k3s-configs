@@ -1,0 +1,162 @@
+{
+  "gates": {
+    "int8": {
+      "fp_baseline_recall10": 0.9979,
+      "pass": false,
+      "ratio": 0.9019,
+      "recall10": 0.9
+    },
+    "int8-rescore": {
+      "fp_baseline_recall10": 0.9979,
+      "pass": true,
+      "ratio": 0.9979,
+      "recall10": 0.9958
+    }
+  },
+  "meta": {
+    "corpus_size": 1500,
+    "dims": 1024,
+    "ef_search": 10,
+    "ground_truth": "exact full-scan collection, top-10",
+    "hnsw": {
+      "ef_construct": 512,
+      "indexing_threshold": 512,
+      "m": 64
+    },
+    "qdrant_version": "1.15.5",
+    "queries": 48,
+    "seed": 1337,
+    "source_base": "http://10.1.1.12:6333",
+    "source_collection": "ws-b6528982be5d5164",
+    "target_base": "http://10.1.1.12:6333",
+    "timestamp": "2026-10-25T06:54:12Z"
+  },
+  "variants": {
+    "fp": {
+      "collection": "qdrant-bench-fp",
+      "concurrent_reads": {
+        "p50_ms": 5.351,
+        "p95_ms": 8.377,
+        "qps": 1420.7,
+        "requests": 240,
+        "workers": 8
+      },
+      "create_ms": 87.7,
+      "disk_bytes": 14729216,
+      "filter_correctness": {
+        "checks": 10,
+        "hits_checked": 190,
+        "violations": 0
+      },
+      "index_build_seconds": 0.61,
+      "indexed_vectors": 1500,
+      "ingest_pts_per_s": 2273.4,
+      "ingest_seconds": 0.66,
+      "memory_allocated_bytes": {
+        "after": 137571784.0,
+        "before": 139544264.0
+      },
+      "points": 1500,
+      "recall": {
+        "k10": 0.9979,
+        "k5": 1.0
+      },
+      "search": {
+        "mean_ms": 1.176,
+        "n": 48,
+        "p50_ms": 1.092,
+        "p95_ms": 1.656,
+        "p99_ms": 2.123
+      },
+      "wall_seconds": 1.6
+    },
+    "int8": {
+      "collection": "qdrant-bench-int8",
+      "concurrent_reads": {
+        "p50_ms": 5.219,
+        "p95_ms": 7.947,
+        "qps": 1474.2,
+        "requests": 240,
+        "workers": 8
+      },
+      "create_ms": 85.5,
+      "disk_bytes": 16347136,
+      "filter_correctness": {
+        "checks": 10,
+        "hits_checked": 192,
+        "violations": 0
+      },
+      "gate": {
+        "fp_baseline_recall10": 0.9979,
+        "pass": false,
+        "ratio": 0.9019,
+        "recall10": 0.9
+      },
+      "index_build_seconds": 0.61,
+      "indexed_vectors": 1500,
+      "ingest_pts_per_s": 2288.0,
+      "ingest_seconds": 0.66,
+      "memory_allocated_bytes": {
+        "after": 133786216.0,
+        "before": 133589872.0
+      },
+      "points": 1500,
+      "recall": {
+        "k10": 0.9,
+        "k5": 0.9458
+      },
+      "search": {
+        "mean_ms": 1.123,
+        "n": 48,
+        "p50_ms": 1.131,
+        "p95_ms": 1.394,
+        "p99_ms": 1.483
+      },
+      "wall_seconds": 1.6
+    },
+    "int8-rescore": {
+      "collection": "qdrant-bench-int8-rescore",
+      "concurrent_reads": {
+        "p50_ms": 5.213,
+        "p95_ms": 8.062,
+        "qps": 1487.6,
+        "requests": 240,
+        "workers": 8
+      },
+      "create_ms": 86.7,
+      "disk_bytes": 16359424,
+      "filter_correctness": {
+        "checks": 10,
+        "hits_checked": 200,
+        "violations": 0
+      },
+      "gate": {
+        "fp_baseline_recall10": 0.9979,
+        "pass": true,
+        "ratio": 0.9979,
+        "recall10": 0.9958
+      },
+      "index_build_seconds": 0.61,
+      "indexed_vectors": 1500,
+      "ingest_pts_per_s": 2318.0,
+      "ingest_seconds": 0.65,
+      "memory_allocated_bytes": {
+        "after": 133847856.0,
+        "before": 132702496.0
+      },
+      "points": 1500,
+      "recall": {
+        "k10": 0.9958,
+        "k5": 1.0
+      },
+      "search": {
+        "mean_ms": 1.374,
+        "n": 48,
+        "p50_ms": 1.135,
+        "p95_ms": 2.516,
+        "p99_ms": 4.608
+      },
+      "wall_seconds": 1.6
+    }
+  }
+}

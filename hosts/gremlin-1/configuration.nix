@@ -5,6 +5,8 @@
     ./sops.nix
     ./hardware-configuration.nix
     ./qdrant.nix
+    # Qdrant 1.20 TurboQuant sidecar (bench/experiments) on 6433/6434.
+    ./qdrant-turbo.nix
     # ArcForge host-native PF inference vertical slice (canary on port 8100,
     # coexists with the proven podman OVMS on 8000 for A/B validation).
     ./arcforge-slice.nix
