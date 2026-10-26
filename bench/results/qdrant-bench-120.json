@@ -1,0 +1,312 @@
+{
+  "gates": {
+    "int8": {
+      "fp_baseline_recall10": 0.9979,
+      "pass": false,
+      "ratio": 0.8956,
+      "recall10": 0.8937
+    },
+    "int8-rescore": {
+      "fp_baseline_recall10": 0.9979,
+      "pass": true,
+      "ratio": 0.9896,
+      "recall10": 0.9875
+    },
+    "turbo4": {
+      "fp_baseline_recall10": 0.9979,
+      "pass": false,
+      "ratio": 0.9708,
+      "recall10": 0.9688
+    },
+    "turbo4-rescore": {
+      "fp_baseline_recall10": 0.9979,
+      "pass": true,
+      "ratio": 0.9938,
+      "recall10": 0.9917
+    },
+    "turbo4dtype": {
+      "fp_baseline_recall10": 0.9979,
+      "pass": false,
+      "ratio": 0.9624,
+      "recall10": 0.9604
+    }
+  },
+  "meta": {
+    "corpus_size": 2000,
+    "dims": 1024,
+    "ef_search": 10,
+    "ground_truth": "exact full-scan collection, top-10",
+    "hnsw": {
+      "ef_construct": 512,
+      "indexing_threshold": 512,
+      "m": 64
+    },
+    "qdrant_version": "1.20.0",
+    "queries": 48,
+    "seed": 1337,
+    "source_base": "http://10.1.1.12:6333",
+    "source_collection": "ws-b6528982be5d5164",
+    "target_base": "http://127.0.0.1:6433",
+    "timestamp": "2026-10-25T06:53:56Z"
+  },
+  "variants": {
+    "fp": {
+      "collection": "qdrant-bench-fp",
+      "concurrent_reads": {
+        "p50_ms": 5.501,
+        "p95_ms": 8.357,
+        "qps": 1403.5,
+        "requests": 240,
+        "workers": 8
+      },
+      "create_ms": 62.1,
+      "disk_bytes": 30027776,
+      "filter_correctness": {
+        "checks": 10,
+        "hits_checked": 200,
+        "violations": 0
+      },
+      "index_build_seconds": 0.21,
+      "indexed_vectors": 2000,
+      "ingest_pts_per_s": 2343.6,
+      "ingest_seconds": 0.85,
+      "memory_allocated_bytes": {
+        "after": 92716664.0,
+        "before": 88791200.0
+      },
+      "points": 2000,
+      "recall": {
+        "k10": 0.9979,
+        "k5": 1.0
+      },
+      "search": {
+        "mean_ms": 1.13,
+        "n": 48,
+        "p50_ms": 1.165,
+        "p95_ms": 1.47,
+        "p99_ms": 1.523
+      },
+      "wall_seconds": 1.4
+    },
+    "int8": {
+      "collection": "qdrant-bench-int8",
+      "concurrent_reads": {
+        "p50_ms": 5.206,
+        "p95_ms": 7.657,
+        "qps": 1481.8,
+        "requests": 240,
+        "workers": 8
+      },
+      "create_ms": 61.8,
+      "disk_bytes": 32591872,
+      "filter_correctness": {
+        "checks": 10,
+        "hits_checked": 200,
+        "violations": 0
+      },
+      "gate": {
+        "fp_baseline_recall10": 0.9979,
+        "pass": false,
+        "ratio": 0.8956,
+        "recall10": 0.8937
+      },
+      "index_build_seconds": 0.2,
+      "indexed_vectors": 2000,
+      "ingest_pts_per_s": 2342.7,
+      "ingest_seconds": 0.85,
+      "memory_allocated_bytes": {
+        "after": 97913392.0,
+        "before": 91099120.0
+      },
+      "points": 2000,
+      "recall": {
+        "k10": 0.8937,
+        "k5": 0.9458
+      },
+      "search": {
+        "mean_ms": 1.288,
+        "n": 48,
+        "p50_ms": 1.195,
+        "p95_ms": 1.919,
+        "p99_ms": 2.379
+      },
+      "wall_seconds": 1.4
+    },
+    "int8-rescore": {
+      "collection": "qdrant-bench-int8-rescore",
+      "concurrent_reads": {
+        "p50_ms": 5.395,
+        "p95_ms": 8.453,
+        "qps": 1417.9,
+        "requests": 240,
+        "workers": 8
+      },
+      "create_ms": 59.8,
+      "disk_bytes": 32591872,
+      "filter_correctness": {
+        "checks": 10,
+        "hits_checked": 200,
+        "violations": 0
+      },
+      "gate": {
+        "fp_baseline_recall10": 0.9979,
+        "pass": true,
+        "ratio": 0.9896,
+        "recall10": 0.9875
+      },
+      "index_build_seconds": 0.21,
+      "indexed_vectors": 2000,
+      "ingest_pts_per_s": 2372.0,
+      "ingest_seconds": 0.84,
+      "memory_allocated_bytes": {
+        "after": 99467960.0,
+        "before": 93677376.0
+      },
+      "points": 2000,
+      "recall": {
+        "k10": 0.9875,
+        "k5": 1.0
+      },
+      "search": {
+        "mean_ms": 1.088,
+        "n": 48,
+        "p50_ms": 1.029,
+        "p95_ms": 1.651,
+        "p99_ms": 1.915
+      },
+      "wall_seconds": 1.4
+    },
+    "turbo4": {
+      "collection": "qdrant-bench-turbo4",
+      "concurrent_reads": {
+        "p50_ms": 4.994,
+        "p95_ms": 7.829,
+        "qps": 1499.2,
+        "requests": 240,
+        "workers": 8
+      },
+      "create_ms": 79.5,
+      "disk_bytes": 32940032,
+      "filter_correctness": {
+        "checks": 10,
+        "hits_checked": 200,
+        "violations": 0
+      },
+      "gate": {
+        "fp_baseline_recall10": 0.9979,
+        "pass": false,
+        "ratio": 0.9708,
+        "recall10": 0.9688
+      },
+      "index_build_seconds": 0.2,
+      "indexed_vectors": 2000,
+      "ingest_pts_per_s": 2248.0,
+      "ingest_seconds": 0.89,
+      "memory_allocated_bytes": {
+        "after": 99525368.0,
+        "before": 95166728.0
+      },
+      "points": 2000,
+      "recall": {
+        "k10": 0.9688,
+        "k5": 1.0
+      },
+      "search": {
+        "mean_ms": 1.083,
+        "n": 48,
+        "p50_ms": 1.098,
+        "p95_ms": 1.331,
+        "p99_ms": 1.459
+      },
+      "wall_seconds": 1.4
+    },
+    "turbo4-rescore": {
+      "collection": "qdrant-bench-turbo4-rescore",
+      "concurrent_reads": {
+        "p50_ms": 5.0,
+        "p95_ms": 7.958,
+        "qps": 1480.6,
+        "requests": 240,
+        "workers": 8
+      },
+      "create_ms": 82.2,
+      "disk_bytes": 32940032,
+      "filter_correctness": {
+        "checks": 10,
+        "hits_checked": 200,
+        "violations": 0
+      },
+      "gate": {
+        "fp_baseline_recall10": 0.9979,
+        "pass": true,
+        "ratio": 0.9938,
+        "recall10": 0.9917
+      },
+      "index_build_seconds": 0.2,
+      "indexed_vectors": 2000,
+      "ingest_pts_per_s": 2297.2,
+      "ingest_seconds": 0.87,
+      "memory_allocated_bytes": {
+        "after": 100387712.0,
+        "before": 96248464.0
+      },
+      "points": 2000,
+      "recall": {
+        "k10": 0.9917,
+        "k5": 1.0
+      },
+      "search": {
+        "mean_ms": 1.047,
+        "n": 48,
+        "p50_ms": 1.048,
+        "p95_ms": 1.303,
+        "p99_ms": 1.431
+      },
+      "wall_seconds": 1.4
+    },
+    "turbo4dtype": {
+      "collection": "qdrant-bench-turbo4dtype",
+      "concurrent_reads": {
+        "p50_ms": 4.955,
+        "p95_ms": 8.36,
+        "qps": 1427.3,
+        "requests": 240,
+        "workers": 8
+      },
+      "create_ms": 60.9,
+      "disk_bytes": 12021760,
+      "filter_correctness": {
+        "checks": 10,
+        "hits_checked": 187,
+        "violations": 0
+      },
+      "gate": {
+        "fp_baseline_recall10": 0.9979,
+        "pass": false,
+        "ratio": 0.9624,
+        "recall10": 0.9604
+      },
+      "index_build_seconds": 0.0,
+      "indexed_vectors": 0,
+      "ingest_pts_per_s": 2343.5,
+      "ingest_seconds": 0.85,
+      "memory_allocated_bytes": {
+        "after": 97801216.0,
+        "before": 96485984.0
+      },
+      "points": 2000,
+      "recall": {
+        "k10": 0.9604,
+        "k5": 0.9958
+      },
+      "search": {
+        "mean_ms": 1.138,
+        "n": 48,
+        "p50_ms": 1.112,
+        "p95_ms": 1.591,
+        "p99_ms": 1.861
+      },
+      "wall_seconds": 1.2
+    }
+  }
+}

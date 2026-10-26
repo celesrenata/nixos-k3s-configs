@@ -5,9 +5,13 @@
     ./sops.nix
     ./hardware-configuration.nix
     ./qdrant.nix
+    # Qdrant 1.20 TurboQuant sidecar (bench/experiments) on 6433/6434.
+    ./qdrant-turbo.nix
     # ArcForge host-native PF inference vertical slice (canary on port 8100,
     # coexists with the proven podman OVMS on 8000 for A/B validation).
     ./arcforge-slice.nix
+    # ArcForge reranker (Qwen3-Reranker-0.6B) on the same PF, port 8101.
+    ./arcforge-rerank-slice.nix
     # ada-inference.nix removed 2026-10-22: replaced by the granite4-rtx
     # NixOS module (services.granite4-rtx) added in the flake for gremlin-1.
     #./wyoming.nix

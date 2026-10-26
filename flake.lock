@@ -5,11 +5,11 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1792769174,
-        "narHash": "sha256-PISGkEYyGARdGBv3B/y8piMPv+FvbW4Sad9j16JXHSk=",
+        "lastModified": 1792737784,
+        "narHash": "sha256-Oq3TvzZmriZA8Ap7n0hlf6d4Ig6YnK/c25nPUFgmC3I=",
         "owner": "celesrenata",
         "repo": "granite-4-rtx-4070-ti-super",
-        "rev": "4a950a9f883bca268134f04377cc035b716e55bc",
+        "rev": "44a731e44803f6d3383218182da406b0da31c330",
         "type": "github"
       },
       "original": {
