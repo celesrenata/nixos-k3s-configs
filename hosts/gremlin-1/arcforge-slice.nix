@@ -34,5 +34,4 @@
   services.arcforge.metrics.scrapePath = "/metrics";
 
   services.arcforge.fetchModel.enable = false;
-  services.arcforge.verify.enable = true;
 }
