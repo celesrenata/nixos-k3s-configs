@@ -140,6 +140,8 @@ in
         ARCFORGE_CONCURRENCY = (toString cfg.inference.concurrency);
         ARCFORGE_BATCH_LIMIT = (toString cfg.inference.batchLimit);
         ARCFORGE_INFER_TIMEOUT_S = (toString cfg.inference.inferTimeoutSec);
+        ARCFORGE_PROBE_INTERVAL_S = (toString cfg.inference.probeIntervalSec);
+        ARCFORGE_PROBE_TIMEOUT_S = (toString cfg.inference.probeTimeoutSec);
         ARCFORGE_PORT = (toString cfg.port);
         ARCFORGE_HOST = cfg.bindAddress;
         ARCFORGE_NORMALIZE = cfg.model.normalize;

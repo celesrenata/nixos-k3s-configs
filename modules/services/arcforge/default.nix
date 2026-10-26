@@ -112,8 +112,28 @@
   };
   options.services.arcforge.inference.inferTimeoutSec = lib.mkOption {
     type = lib.types.ints.positive;
-    default = 120;
-    description = "Circuit-breaker timeout for a single inference.";
+    default = 60;
+    description = ''
+      Hard wall-clock bound on a single GPU inference. A wedged i915 device
+      blocks inside req.infer() forever, so this is enforced by running the call
+      on a disposable thread (a post-hoc elapsed-time check can never fire on a
+      hang). On expiry the GPU breaker opens, /ready flips to 503 and systemd
+      restarts the unit within watchdogSec.
+    '';
+  };
+  options.services.arcforge.inference.probeIntervalSec = lib.mkOption {
+    type = lib.types.ints.unsigned;
+    default = 30;
+    description = ''
+      Idle-device liveness probe interval. Every N seconds, while a worker is
+      idle, one token goes through a real GPU stream; a hang trips the breaker
+      and drains the node before a user request lands on it. 0 disables it.
+    '';
+  };
+  options.services.arcforge.inference.probeTimeoutSec = lib.mkOption {
+    type = lib.types.ints.positive;
+    default = 10;
+    description = "Wall-clock bound for one idle-device probe (a token is ~15 ms).";
   };
 
   options.services.arcforge.watchdogSec = lib.mkOption {
@@ -208,7 +228,23 @@
   };
   options.services.arcforge-rerank.inference.inferTimeoutSec = lib.mkOption {
     type = lib.types.int;
-    default = 120;
+    default = 60;
+    description = "Hard wall-clock bound on a single rerank GPU call (see the embedding option).";
+  };
+  options.services.arcforge-rerank.inference.probeIntervalSec = lib.mkOption {
+    type = lib.types.int;
+    default = 30;
+    description = "Idle-device liveness probe interval; 0 disables it.";
+  };
+  options.services.arcforge-rerank.inference.probeTimeoutSec = lib.mkOption {
+    type = lib.types.int;
+    default = 10;
+    description = "Wall-clock bound for one idle-device probe.";
+  };
+  options.services.arcforge-rerank.watchdogSec = lib.mkOption {
+    type = lib.types.ints.positive;
+    default = 30;
+    description = "systemd WatchdogSec; the reranker pings every 1s and stops when the GPU breaker opens.";
   };
   options.services.arcforge-rerank.rlimit = lib.mkOption {
     type = with lib.types; attrsOf (oneOf [ int str ]);

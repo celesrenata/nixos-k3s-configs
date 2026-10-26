@@ -37,7 +37,7 @@
     inference = {
       concurrency = 4;
       batchLimit = 64;
-      inferTimeoutSec = 120;
+      inferTimeoutSec = 60;
     };
 
     # (Firewall: the shared rerank.nix module opens the port centrally,
