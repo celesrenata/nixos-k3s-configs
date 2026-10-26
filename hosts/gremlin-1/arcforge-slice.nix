@@ -28,7 +28,7 @@
   services.arcforge.inference.inferTimeoutSec = 60;
   services.arcforge.inference.probeIntervalSec = 10;
   services.arcforge.inference.probeTimeoutSec = 5;
-  services.arcforge.inference.cache = "/var/cache/arcforge";
+  services.arcforge.inference.cache = "arcforge";
 
   services.arcforge.metrics.enable = false;
 
