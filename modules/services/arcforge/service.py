@@ -308,6 +308,15 @@ class Engine:
             out = np.stack([h[i, lens[i] - 1] for i in range(len(texts))])
             if NORMALIZE:
                 out = out / np.linalg.norm(out, axis=1, keepdims=True)
+            # A wedged or freshly-reset GPU can return garbage INSTEAD of
+            # hanging: NaN/Inf pass through every timeout check and then die in
+            # JSON serialization ("Out of range float values are not JSON
+            # compliant"). A non-finite vector is by definition a broken device,
+            # so treat it exactly like a hang: trip the breaker, fail this
+            # request clean, let systemd restart the unit.
+            if not np.isfinite(out).all():
+                BREAKER.trip("non-finite inference output (NaN/Inf) — device wedged")
+                raise RuntimeError("GPU returned non-finite output")
             return out.astype(np.float32)
         finally:
             if BREAKER.open:
@@ -342,6 +351,13 @@ class Engine:
             _run_bounded(
                 lambda: self._run_infer(worker, ids, mask), PROBE_TIMEOUT_S, "watchdog probe"
             )
+            # A wedged device can return garbage INSTEAD of hanging: a probe
+            # whose output is not finite means the device is not alive, even
+            # though the call came back in time.
+            data = worker[1].output_tensors[0].data
+            if data is not None and not np.isfinite(
+                    np.asarray(data, dtype=np.float32)).all():
+                raise RuntimeError("watchdog probe returned non-finite output")
             PROBES.labels(outcome="ok").inc()
         finally:
             if not BREAKER.open:

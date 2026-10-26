@@ -300,6 +300,13 @@ class Engine:
                 BREAKER.trip(f"inference exception: {type(e).__name__}: {e}")
                 raise
             logits = np.asarray(worker.output_tensors[0].data, dtype=np.float32)
+            # A wedged or freshly-reset GPU can return garbage INSTEAD of
+            # hanging: non-finite logits pass every timeout check, softmax them
+            # into NaN scores, and the response then dies in JSON serialization.
+            # Treat it exactly like a hang.
+            if not np.isfinite(logits).all():
+                BREAKER.trip("non-finite inference output (NaN/Inf) — device wedged")
+                raise RuntimeError("GPU returned non-finite output")
             last = logits[:, -1, :]  # [B, V] — P(yes) at the last real token
             yes = last[:, self._yes_id]
             no = last[:, self._no_id]
@@ -326,6 +333,12 @@ class Engine:
             _run_bounded(
                 lambda: self._run_infer(worker, ids, mask, pos), PROBE_TIMEOUT_S, "watchdog probe"
             )
+            # Same as the request path: a non-finite logits tensor means the
+            # device wedged, even though the probe call returned in time.
+            data = worker.output_tensors[0].data
+            if data is not None and not np.isfinite(
+                    np.asarray(data, dtype=np.float32)).all():
+                raise RuntimeError("watchdog probe returned non-finite output")
             PROBES.labels(outcome="ok").inc()
         finally:
             if not BREAKER.open:
