@@ -24,16 +24,16 @@
         "nixpkgs": "nixpkgs_2"
       },
       "locked": {
-        "lastModified": 1789569076,
-        "narHash": "sha256-MJDR3r/OeCo0Uc4yrk7G2jlzVy5p7JMsJh7E2j74hJw=",
+        "lastModified": 1792813055,
+        "narHash": "sha256-YDYKIc3WgwNFpwBZMtEgsEspzQeeyc2LqnLAMU4/iWY=",
         "owner": "strongtz",
         "repo": "i915-sriov-dkms",
-        "rev": "b42c0f87643c07e06b4f53bbedfb3b728da222e1",
+        "rev": "ba3337ea02b6e64293ddfa294e76fc4224ae2bd9",
         "type": "github"
       },
       "original": {
         "owner": "strongtz",
-        "ref": "2026.09.16",
+        "ref": "ba3337ea02",
         "repo": "i915-sriov-dkms",
         "type": "github"
       }
