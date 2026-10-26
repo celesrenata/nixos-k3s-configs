@@ -117,6 +117,10 @@ in
       RestartSec = "5";
       TimeoutStopSec = "30";
 
+      # Writable GPU kernel blob cache, owned by the service user (see
+      # inference.cache). Keeps restarts out of the IGC JIT compiler.
+      CacheDirectory = lib.optional (cfg.inference.cache != null) cfg.inference.cache;
+
       # Deterministic PF-only device access. Closed policy means the only
       # device the process can open is the PF render node, so the OpenCL
       # loader sees exactly one GPU device — never a VF.
@@ -142,6 +146,8 @@ in
         ARCFORGE_INFER_TIMEOUT_S = (toString cfg.inference.inferTimeoutSec);
         ARCFORGE_PROBE_INTERVAL_S = (toString cfg.inference.probeIntervalSec);
         ARCFORGE_PROBE_TIMEOUT_S = (toString cfg.inference.probeTimeoutSec);
+        ARCFORGE_CACHE_DIR =
+          lib.optionalString (cfg.inference.cache != null) "/var/cache/${cfg.inference.cache}";
         ARCFORGE_PORT = (toString cfg.port);
         ARCFORGE_HOST = cfg.bindAddress;
         ARCFORGE_NORMALIZE = cfg.model.normalize;

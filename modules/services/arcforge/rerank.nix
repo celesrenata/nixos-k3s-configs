@@ -63,6 +63,10 @@ in
       Restart = "on-failure";
       RestartSec = "5";
 
+      # Writable GPU kernel blob cache, owned by arcforge-rerank (see
+      # arcforge-rerank.inference.cache).
+      CacheDirectory = lib.optional (cfg.inference.cache != null) cfg.inference.cache;
+
       #  * closed device policy + PF-only DeviceAllow => exactly one GPU device.
       DevicePolicy = "closed";
       DeviceAllow = [ "${renderNode} rw" ];
@@ -82,6 +86,8 @@ in
         ARCFORGE_RERANK_INFER_TIMEOUT_S = (toString cfg.inference.inferTimeoutSec);
         ARCFORGE_PROBE_INTERVAL_S = (toString cfg.inference.probeIntervalSec);
         ARCFORGE_PROBE_TIMEOUT_S = (toString cfg.inference.probeTimeoutSec);
+        ARCFORGE_CACHE_DIR =
+          lib.optionalString (cfg.inference.cache != null) "/var/cache/${cfg.inference.cache}";
         ARCFORGE_RERANK_PORT = (toString cfg.port);
         ARCFORGE_RERANK_HOST = cfg.bindAddress;
       };

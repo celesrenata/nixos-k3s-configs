@@ -77,6 +77,11 @@ INFER_TIMEOUT_S = float(os.environ.get("ARCFORGE_INFER_TIMEOUT_S", "60"))
 # that still catches a wedged device long before a user request does.
 PROBE_INTERVAL_S = float(os.environ.get("ARCFORGE_PROBE_INTERVAL_S", "30"))
 PROBE_TIMEOUT_S = float(os.environ.get("ARCFORGE_PROBE_TIMEOUT_S", "10"))
+# OpenVINO GPU kernel blob cache. Empty disables it. The cache is what keeps a
+# restart from re-entering the IGC JIT compiler for every shape the service has
+# already seen (that compiler is where the gremlin-1 aborts happened), so it
+# also cuts the cold-start compile time.
+CACHE_DIR = os.environ.get("ARCFORGE_CACHE_DIR", "")
 # Fault injection for watchdog drills (0 = off). Blocks the worker thread inside
 # the infer path exactly like a wedged driver does. Documented in README.md.
 FAULT_STALL_S = float(os.environ.get("ARCFORGE_FAULT_INFER_STALL_S", "0"))
@@ -221,6 +226,15 @@ class Engine:
         # CompiledModel + InferRequest pair (infer requests are not
         # thread-safe), dispatched from a bounded thread-safe queue.
         self._compile_cfg = {}
+        if CACHE_DIR:
+            # Blob-cache the GPU kernels: the plugin exports each compiled kernel
+            # after the first compile of a shape and imports it on the next start,
+            # so a restart does not re-enter the IGC JIT for known shapes.
+            self._compile_cfg["CACHE_DIR"] = CACHE_DIR
+            print(f"[arcforge] GPU kernel cache: {CACHE_DIR}", flush=True)
+        else:
+            print("[arcforge] GPU kernel cache disabled (ARCFORGE_CACHE_DIR unset)",
+                  flush=True)
         self._pool = queue.Queue(maxsize=CONCURRENCY)
         for i in range(CONCURRENCY):
             cm = self._core.compile_model(XML_PATH, self._device, self._compile_cfg)

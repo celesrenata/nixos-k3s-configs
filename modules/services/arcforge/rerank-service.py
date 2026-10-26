@@ -76,6 +76,9 @@ INFER_TIMEOUT_S = float(os.environ.get("ARCFORGE_RERANK_INFER_TIMEOUT_S", "60"))
 # Idle-device liveness probe (see README.md). 0 disables it.
 PROBE_INTERVAL_S = float(os.environ.get("ARCFORGE_PROBE_INTERVAL_S", "30"))
 PROBE_TIMEOUT_S = float(os.environ.get("ARCFORGE_PROBE_TIMEOUT_S", "10"))
+# OpenVINO GPU kernel blob cache (see service.py): keeps a restart from re-running
+# the IGC JIT compiler for shapes already compiled. Empty disables it.
+CACHE_DIR = os.environ.get("ARCFORGE_CACHE_DIR", "")
 # Fault injection for watchdog drills (0 = off): blocks the worker thread inside
 # the infer path exactly like a wedged driver does.
 FAULT_STALL_S = float(os.environ.get("ARCFORGE_FAULT_INFER_STALL_S", "0"))
@@ -211,6 +214,13 @@ class Engine:
         self._suf_ids = list(self._tok.encode(suf, add_special_tokens=False).ids)
         print(f"[arcforge-rerank] prefix_tokens={len(self._pre_ids)} suffix_tokens={len(self._suf_ids)}", flush=True)
         self._compile_cfg = {}
+        if CACHE_DIR:
+            # Persist JIT-compiled kernels across restarts (see service.py).
+            self._compile_cfg["CACHE_DIR"] = CACHE_DIR
+            print(f"[arcforge-rerank] GPU kernel cache: {CACHE_DIR}", flush=True)
+        else:
+            print("[arcforge-rerank] GPU kernel cache disabled (ARCFORGE_CACHE_DIR unset)",
+                  flush=True)
         self._pool = queue.Queue(maxsize=CONCURRENCY)
         t0 = _now()
         for _ in range(CONCURRENCY):

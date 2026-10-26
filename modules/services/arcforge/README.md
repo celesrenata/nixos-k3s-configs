@@ -154,6 +154,34 @@ metric is `arcforge_rerank_device_wedged`). In the measured drill a request
 during a wedge fails fast with `503 {"code":"gpu_wedged"}` (1.5 ms) and the unit
 is restarted by the same watchdog path.
 
+## GPU kernel cache (IGC / OpenCL JIT)
+
+The Intel OpenCL compiler (IGC) JIT-compiles a kernel the first time a shape is
+seen. On gremlin-1 it has crashed on its own (`CL_BUILD_PROGRAM_FAILURE` followed
+by `*** stack smashing detected ***`), taking the unit down until systemd
+restarted it. The service therefore keeps a kernel blob cache, so a restart
+re-imports what it already compiled instead of re-entering the JIT for every
+shape:
+
+```nix
+inference.cache = "arcforge";   # systemd CacheDirectory -> /var/cache/arcforge
+                                # null disables the cache
+```
+
+Each service gets its own directory (`arcforge` for embeddings,
+`arcforge-rerank` for the reranker) through `CacheDirectory=`, owned by the
+service user, exported as `ARCFORGE_CACHE_DIR`. The first compile of a genuinely
+new shape still happens in-process — the cache removes the recompiles after a
+restart, it does not remove the compile itself.
+
+**Clear the cache after an IGC / OpenVINO / driver upgrade** so an old blob is
+never imported:
+
+```bash
+systemctl stop arcforge-embeddings && rm -rf /var/cache/arcforge
+systemctl start arcforge-embeddings
+```
+
 ## Validation performed (gremlin-1)
 
 * PF confirmed: `/dev/dri/renderD128` → PCI `0000:00:02.0` (sysfs).

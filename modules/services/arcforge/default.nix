@@ -135,6 +135,18 @@
     default = 10;
     description = "Wall-clock bound for one idle-device probe (a token is ~15 ms).";
   };
+  options.services.arcforge.inference.cache = lib.mkOption {
+    type = lib.types.nullOr lib.types.str;
+    default = "arcforge";
+    description = ''
+      systemd CacheDirectory name for the OpenVINO GPU kernel blob cache. The
+      plugin exports compiled kernels here and imports them on the next start,
+      so a restart does not re-enter the IGC JIT compiler for shapes it has
+      already compiled (that compiler is where the gremlin-1 aborts happened).
+      null disables the cache. Clear /var/cache/<name> after an IGC or driver
+      upgrade so stale blobs are never imported.
+    '';
+  };
 
   options.services.arcforge.watchdogSec = lib.mkOption {
     type = lib.types.ints.positive;
@@ -240,6 +252,15 @@
     type = lib.types.int;
     default = 10;
     description = "Wall-clock bound for one idle-device probe.";
+  };
+  options.services.arcforge-rerank.inference.cache = lib.mkOption {
+    type = lib.types.nullOr lib.types.str;
+    default = "arcforge-rerank";
+    description = ''
+      systemd CacheDirectory name for the reranker's OpenVINO GPU kernel blob
+      cache (separate from the embeddings cache; the service runs as its own
+      user). null disables it. Clear it after an IGC or driver upgrade.
+    '';
   };
   options.services.arcforge-rerank.watchdogSec = lib.mkOption {
     type = lib.types.ints.positive;
