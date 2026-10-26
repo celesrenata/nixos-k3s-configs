@@ -2,6 +2,8 @@
 
 {
   imports = [
+    ./arcforge-slice.nix
+    ./arcforge-rerank-slice.nix
     ./hardware-configuration.nix
   ];
 
