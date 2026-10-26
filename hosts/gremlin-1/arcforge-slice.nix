@@ -31,7 +31,6 @@
   services.arcforge.inference.cache = "/var/cache/arcforge";
 
   services.arcforge.metrics.enable = true;
-  services.arcforge.metrics.port = 9090;
   services.arcforge.metrics.scrapePath = "/metrics";
 
   services.arcforge.fetchModel.enable = false;
