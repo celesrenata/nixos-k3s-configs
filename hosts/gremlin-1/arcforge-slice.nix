@@ -51,7 +51,12 @@ in
     };
 
     inference = {
-      concurrency = 4;
+      # 2, not 4: this node is the only one whose OpenCL JIT compiler (IGC
+      # 2.40.13) has aborted — "stack smashing detected" right after
+      # clBuildProgram failed for a new input shape. Fewer parallel worker
+      # threads means fewer simultaneous JIT compiles of a fresh shape, which
+      # is the window the crash happens in. Batching keeps throughput fine.
+      concurrency = 2;
       batchLimit = 32;
       inferTimeoutSec = 60;
     };
