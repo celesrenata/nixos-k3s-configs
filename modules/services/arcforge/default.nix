@@ -112,8 +112,40 @@
   };
   options.services.arcforge.inference.inferTimeoutSec = lib.mkOption {
     type = lib.types.ints.positive;
-    default = 120;
-    description = "Circuit-breaker timeout for a single inference.";
+    default = 60;
+    description = ''
+      Hard wall-clock bound on a single GPU inference. A wedged i915 device
+      blocks inside req.infer() forever, so this is enforced by running the call
+      on a disposable thread (a post-hoc elapsed-time check can never fire on a
+      hang). On expiry the GPU breaker opens, /ready flips to 503 and systemd
+      restarts the unit within watchdogSec.
+    '';
+  };
+  options.services.arcforge.inference.probeIntervalSec = lib.mkOption {
+    type = lib.types.ints.unsigned;
+    default = 30;
+    description = ''
+      Idle-device liveness probe interval. Every N seconds, while a worker is
+      idle, one token goes through a real GPU stream; a hang trips the breaker
+      and drains the node before a user request lands on it. 0 disables it.
+    '';
+  };
+  options.services.arcforge.inference.probeTimeoutSec = lib.mkOption {
+    type = lib.types.ints.positive;
+    default = 10;
+    description = "Wall-clock bound for one idle-device probe (a token is ~15 ms).";
+  };
+  options.services.arcforge.inference.cache = lib.mkOption {
+    type = lib.types.nullOr lib.types.str;
+    default = "arcforge";
+    description = ''
+      systemd CacheDirectory name for the OpenVINO GPU kernel blob cache. The
+      plugin exports compiled kernels here and imports them on the next start,
+      so a restart does not re-enter the IGC JIT compiler for shapes it has
+      already compiled (that compiler is where the gremlin-1 aborts happened).
+      null disables the cache. Clear /var/cache/<name> after an IGC or driver
+      upgrade so stale blobs are never imported.
+    '';
   };
 
   options.services.arcforge.watchdogSec = lib.mkOption {
@@ -208,7 +240,32 @@
   };
   options.services.arcforge-rerank.inference.inferTimeoutSec = lib.mkOption {
     type = lib.types.int;
-    default = 120;
+    default = 60;
+    description = "Hard wall-clock bound on a single rerank GPU call (see the embedding option).";
+  };
+  options.services.arcforge-rerank.inference.probeIntervalSec = lib.mkOption {
+    type = lib.types.int;
+    default = 30;
+    description = "Idle-device liveness probe interval; 0 disables it.";
+  };
+  options.services.arcforge-rerank.inference.probeTimeoutSec = lib.mkOption {
+    type = lib.types.int;
+    default = 10;
+    description = "Wall-clock bound for one idle-device probe.";
+  };
+  options.services.arcforge-rerank.inference.cache = lib.mkOption {
+    type = lib.types.nullOr lib.types.str;
+    default = "arcforge-rerank";
+    description = ''
+      systemd CacheDirectory name for the reranker's OpenVINO GPU kernel blob
+      cache (separate from the embeddings cache; the service runs as its own
+      user). null disables it. Clear it after an IGC or driver upgrade.
+    '';
+  };
+  options.services.arcforge-rerank.watchdogSec = lib.mkOption {
+    type = lib.types.ints.positive;
+    default = 30;
+    description = "systemd WatchdogSec; the reranker pings every 1s and stops when the GPU breaker opens.";
   };
   options.services.arcforge-rerank.rlimit = lib.mkOption {
     type = with lib.types; attrsOf (oneOf [ int str ]);

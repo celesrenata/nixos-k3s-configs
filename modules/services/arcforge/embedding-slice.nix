@@ -50,7 +50,7 @@ in
     inference = {
       concurrency = 4;
       batchLimit = 32;
-      inferTimeoutSec = 120;
+      inferTimeoutSec = 60;
     };
 
     # Bounded GPU-fault recovery (one restart via watchdog; no reset storm).

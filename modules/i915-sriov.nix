@@ -22,7 +22,7 @@
     # whole engine. Reversible: revert to the engine-reset default by removing
     # these two lines.
     "i915.reset=1"
-    "i915.request_timeout_ms=10000"
+    "i915.request_timeout_ms=30000"
   ];
 
   # Enable VFIO kernel modules

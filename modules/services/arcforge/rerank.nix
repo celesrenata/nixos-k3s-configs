@@ -48,7 +48,13 @@ in
     };
 
     serviceConfig = {
-      Type = "simple";
+      # Notify + watchdog: the app sends READY=1 once the model is compiled and
+      # then pings every second. When the GPU breaker opens it stops pinging, so
+      # systemd restarts the unit instead of leaving it permanently /ready=503.
+      Type = "notify";
+      NotifyAccess = "main";
+      WatchdogSec = "${toString cfg.watchdogSec}";
+      TimeoutStartSec = "180";
       User = "arcforge-rerank";
       Group = "arcforge";
       KillMode = "mixed";
@@ -56,6 +62,10 @@ in
       TimeoutStopSec = "30";
       Restart = "on-failure";
       RestartSec = "5";
+
+      # Writable GPU kernel blob cache, owned by arcforge-rerank (see
+      # arcforge-rerank.inference.cache).
+      CacheDirectory = lib.optional (cfg.inference.cache != null) cfg.inference.cache;
 
       #  * closed device policy + PF-only DeviceAllow => exactly one GPU device.
       DevicePolicy = "closed";
@@ -74,6 +84,10 @@ in
         ARCFORGE_RERANK_CONCURRENCY = (toString cfg.inference.concurrency);
         ARCFORGE_RERANK_BATCH_LIMIT = (toString cfg.inference.batchLimit);
         ARCFORGE_RERANK_INFER_TIMEOUT_S = (toString cfg.inference.inferTimeoutSec);
+        ARCFORGE_PROBE_INTERVAL_S = (toString cfg.inference.probeIntervalSec);
+        ARCFORGE_PROBE_TIMEOUT_S = (toString cfg.inference.probeTimeoutSec);
+        ARCFORGE_CACHE_DIR =
+          lib.optionalString (cfg.inference.cache != null) "/var/cache/${cfg.inference.cache}";
         ARCFORGE_RERANK_PORT = (toString cfg.port);
         ARCFORGE_RERANK_HOST = cfg.bindAddress;
       };

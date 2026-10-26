@@ -4,7 +4,12 @@
   imports = [
     ./hardware-configuration.nix
     ./arcforge-slice.nix
+    ./arcforge-rerank-slice.nix
   ];
+
+  boot = {
+    kernelParams = [ "i915.request_timeout_ms=30000" ];
+  };
 
   # System-specific networking (assuming next IP in sequence)
   networking.hostName = systemHostname;

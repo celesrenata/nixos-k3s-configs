@@ -33,6 +33,7 @@ import math
 import os
 import queue
 import signal
+import socket
 import sys
 import threading
 import time
@@ -71,7 +72,16 @@ MAX_LENGTH = int(os.environ.get("ARCFORGE_RERANK_MAX_LENGTH", "4096"))
 DEVICE = os.environ.get("ARCFORGE_DEVICE", "GPU")
 CONCURRENCY = int(os.environ.get("ARCFORGE_RERANK_CONCURRENCY", "4"))
 BATCH_LIMIT = int(os.environ.get("ARCFORGE_RERANK_BATCH_LIMIT", "64"))
-INFER_TIMEOUT_S = float(os.environ.get("ARCFORGE_RERANK_INFER_TIMEOUT_S", "120"))
+INFER_TIMEOUT_S = float(os.environ.get("ARCFORGE_RERANK_INFER_TIMEOUT_S", "60"))
+# Idle-device liveness probe (see README.md). 0 disables it.
+PROBE_INTERVAL_S = float(os.environ.get("ARCFORGE_PROBE_INTERVAL_S", "30"))
+PROBE_TIMEOUT_S = float(os.environ.get("ARCFORGE_PROBE_TIMEOUT_S", "10"))
+# OpenVINO GPU kernel blob cache (see service.py): keeps a restart from re-running
+# the IGC JIT compiler for shapes already compiled. Empty disables it.
+CACHE_DIR = os.environ.get("ARCFORGE_CACHE_DIR", "")
+# Fault injection for watchdog drills (0 = off): blocks the worker thread inside
+# the infer path exactly like a wedged driver does.
+FAULT_STALL_S = float(os.environ.get("ARCFORGE_FAULT_INFER_STALL_S", "0"))
 PORT = int(os.environ.get("ARCFORGE_RERANK_PORT", "8101"))
 HOST = os.environ.get("ARCFORGE_RERANK_HOST", "0.0.0.0")
 PAD_ID = int(os.environ.get("ARCFORGE_RERANK_PAD_ID", "151643"))
@@ -93,9 +103,43 @@ RR_COMPILE_TIME = Gauge("arcforge_rerank_compile_seconds",
     "Eager GPU compile time at startup.", registry=REG)
 INFER_TOTAL = Counter("arcforge_rerank_inference_total",
     "Inference invocations by outcome.", ["outcome"], registry=REG)
+PROBES = Counter("arcforge_rerank_watchdog_probe_total",
+    "Idle-device liveness probes by outcome.", ["outcome"], registry=REG)
+FAULT_INJECT = Gauge("arcforge_fault_injection_stall_seconds",
+    "Non-zero when the infer-path fault injection is active (never in prod).",
+    registry=REG)
 
 def _now() -> float:
     return time.time()
+
+class InferTimeout(RuntimeError):
+    """A GPU call did not return within its wall-clock bound."""
+
+def _run_bounded(fn, timeout_s: float, label: str = "inference") -> None:
+    """Run a blocking GPU call with a REAL wall-clock bound.
+
+    `req.infer()` has no timeout: on a wedged device it never returns, so the
+    old "check elapsed time after the call" guard could never fire and the unit
+    sat wedged with /ready=200. Run the call on a disposable thread and stop
+    waiting after `timeout_s`; the caller trips the breaker and systemd restarts
+    the unit within WatchdogSec.
+    """
+    outcome: list[BaseException] = []
+    done = threading.Event()
+
+    def _target() -> None:
+        try:
+            fn()
+        except BaseException as exc:  # re-raised on the caller thread
+            outcome.append(exc)
+        finally:
+            done.set()
+
+    threading.Thread(target=_target, name=f"arcforge-rerank-{label}", daemon=True).start()
+    if not done.wait(timeout_s):
+        raise InferTimeout(f"{label} did not return within {timeout_s}s")
+    if outcome:
+        raise outcome[0]
 
 # ─────────────────────────────── Inference core ───────────────────────────────
 class GpuCircuitBreaker:
@@ -170,6 +214,13 @@ class Engine:
         self._suf_ids = list(self._tok.encode(suf, add_special_tokens=False).ids)
         print(f"[arcforge-rerank] prefix_tokens={len(self._pre_ids)} suffix_tokens={len(self._suf_ids)}", flush=True)
         self._compile_cfg = {}
+        if CACHE_DIR:
+            # Persist JIT-compiled kernels across restarts (see service.py).
+            self._compile_cfg["CACHE_DIR"] = CACHE_DIR
+            print(f"[arcforge-rerank] GPU kernel cache: {CACHE_DIR}", flush=True)
+        else:
+            print("[arcforge-rerank] GPU kernel cache disabled (ARCFORGE_CACHE_DIR unset)",
+                  flush=True)
         self._pool = queue.Queue(maxsize=CONCURRENCY)
         t0 = _now()
         for _ in range(CONCURRENCY):
@@ -188,6 +239,12 @@ class Engine:
         req.set_input_tensor(0, t_ids)
         req.set_input_tensor(1, t_mask)
         req.set_input_tensor(2, t_pos)
+        if FAULT_STALL_S:
+            # Watchdog drill only (ARCFORGE_FAULT_INFER_STALL_S): block where a
+            # wedged driver would, so both detectors can be proven.
+            print(f"[arcforge-rerank] FAULT INJECTION: stalling {FAULT_STALL_S}s before infer",
+                  file=sys.stderr, flush=True)
+            time.sleep(FAULT_STALL_S)
         req.infer()
 
     def _encode_pairs(self, queries: List[str], docs: List[str]) -> List[tuple]:
@@ -233,18 +290,59 @@ class Engine:
         try:
             ids, mask, pos = self._pad_chunk(chunk)
             try:
-                self._run_infer(worker, ids, mask, pos)
+                _run_bounded(
+                    lambda: self._run_infer(worker, ids, mask, pos), INFER_TIMEOUT_S
+                )
+            except InferTimeout as e:
+                BREAKER.trip(str(e))
+                raise
             except Exception as e:
                 BREAKER.trip(f"inference exception: {type(e).__name__}: {e}")
                 raise
             logits = np.asarray(worker.output_tensors[0].data, dtype=np.float32)
+            # A wedged or freshly-reset GPU can return garbage INSTEAD of
+            # hanging: non-finite logits pass every timeout check, softmax them
+            # into NaN scores, and the response then dies in JSON serialization.
+            # Treat it exactly like a hang.
+            if not np.isfinite(logits).all():
+                BREAKER.trip("non-finite inference output (NaN/Inf) — device wedged")
+                raise RuntimeError("GPU returned non-finite output")
             last = logits[:, -1, :]  # [B, V] — P(yes) at the last real token
             yes = last[:, self._yes_id]
             no = last[:, self._no_id]
             m = np.maximum(yes, no)
             return (np.exp(yes - m) / (np.exp(yes - m) + np.exp(no - m))).tolist()
         finally:
-            self._pool.put(worker)
+            if not BREAKER.open:
+                self._pool.put(worker)
+
+    def probe(self) -> None:
+        """Score one tiny pair to prove the device still dispatches.
+
+        Only runs when a worker is idle; a busy pool already proves liveness and
+        blocking here would produce a false positive. Raises so the caller can
+        trip the breaker.
+        """
+        try:
+            worker = self._pool.get(block=False)
+        except queue.Empty:
+            PROBES.labels(outcome="skipped").inc()
+            return
+        try:
+            ids, mask, pos = self._pad_chunk(self._encode_pairs(["liveness"], ["probe"]))
+            _run_bounded(
+                lambda: self._run_infer(worker, ids, mask, pos), PROBE_TIMEOUT_S, "watchdog probe"
+            )
+            # Same as the request path: a non-finite logits tensor means the
+            # device wedged, even though the probe call returned in time.
+            data = worker.output_tensors[0].data
+            if data is not None and not np.isfinite(
+                    np.asarray(data, dtype=np.float32)).all():
+                raise RuntimeError("watchdog probe returned non-finite output")
+            PROBES.labels(outcome="ok").inc()
+        finally:
+            if not BREAKER.open:
+                self._pool.put(worker)
 
     def score(self, queries: List[str], docs: List[str]) -> List[float]:
         if len(queries) != len(docs):
@@ -266,8 +364,6 @@ class Engine:
             probs.extend(self._score_chunk(chunk))
             start += len(chunk)
         dt = _now() - t0
-        if dt > INFER_TIMEOUT_S:
-            BREAKER.trip(f"inference exceeded timeout {INFER_TIMEOUT_S}s")
         RR_INFER.labels(model=MODEL_NAME).observe(dt)
         return probs
 
@@ -354,24 +450,83 @@ def metrics():
     return Response(generate_latest(REG), media_type=CONTENT_TYPE_LATEST)
 
 # ─────────────────────────────── Watchdog + main ──────────────────────────────
+def _notify(tag: str) -> None:
+    """Send a systemd notify message (sd_notify). No-op if not under systemd."""
+    path = os.environ.get("NOTIFY_SOCKET")
+    if not path:
+        return
+    if path.startswith("@"):
+        path = "/" + path[1:]
+    try:
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+        try:
+            s.connect(path)
+            s.sendall(tag.encode())
+        finally:
+            s.close()
+    except Exception:
+        pass
+
+
 def watchdog() -> None:
+    """Ping the systemd watchdog and log status.
+
+    The reranker used to be Type=simple with no WatchdogSec, so a tripped
+    breaker left it permanently /ready=503 with nobody to restart it. It now
+    pings every second and STOPS pinging when the breaker opens, so systemd
+    restarts the unit after WatchdogSec (bounded recovery, no userspace reset).
+    """
+    ticks = 0
     while True:
-        time.sleep(60)
         if BREAKER.open:
-            print(f"[arcforge-rerank] CIRCUIT STILL OPEN: {BREAKER.reason}", file=sys.stderr, flush=True)
-        else:
-            print(f"[arcforge-rerank] uptime {_now() - START_TIME:.1f}s, device {DEVICE} OK", flush=True)
+            if ticks % 60 == 0:
+                print(f"[arcforge-rerank] CIRCUIT STILL OPEN: {BREAKER.reason}",
+                      file=sys.stderr, flush=True)
+            time.sleep(0.5)
+            ticks += 1
+            continue
+        _notify("WATCHDOG=1")
+        ticks += 1
+        if ticks % 60 == 0:
+            print(f"[arcforge-rerank] uptime {_now() - START_TIME:.1f}s, device {DEVICE} OK",
+                  flush=True)
+        time.sleep(1)
+
+
+def probe_loop() -> None:
+    """Catch a device that wedges while the service is idle (see README.md)."""
+    if PROBE_INTERVAL_S <= 0:
+        print("[arcforge-rerank] idle watchdog probe disabled (ARCFORGE_PROBE_INTERVAL_S=0)",
+              flush=True)
+        return
+    while True:
+        time.sleep(PROBE_INTERVAL_S)
+        if BREAKER.open:
+            continue
+        try:
+            get_engine().probe()
+        except InferTimeout as e:
+            BREAKER.trip(f"watchdog probe: {e}")
+        except Exception as e:
+            BREAKER.trip(f"watchdog probe exception: {type(e).__name__}: {e}")
+
 
 def main() -> None:
     print(f"[arcforge-rerank] starting {MODEL_NAME} on {DEVICE} port {PORT}", flush=True)
     try:
         engine = get_engine()
         print(f"[arcforge-rerank] initialized engine (max_length={MAX_LENGTH}, concurrency={CONCURRENCY})", flush=True)
+        _notify("READY=1")
     except Exception as e:
         print(f"[arcforge-rerank] engine init failed: {type(e).__name__}: {e}", file=sys.stderr, flush=True)
         sys.exit(1)
-    t = threading.Thread(target=watchdog, daemon=True)
-    t.start()
+    if FAULT_STALL_S:
+        FAULT_INJECT.set(FAULT_STALL_S)
+        print(f"[arcforge-rerank] WARNING: FAULT INJECTION ACTIVE — every infer stalls "
+              f"{FAULT_STALL_S}s (ARCFORGE_FAULT_INFER_STALL_S, drill only)",
+              file=sys.stderr, flush=True)
+    threading.Thread(target=watchdog, daemon=True).start()
+    threading.Thread(target=probe_loop, daemon=True).start()
     uvicorn.run(app, host=HOST, port=PORT, log_level="warning")
 
 if __name__ == "__main__":

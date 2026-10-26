@@ -6,9 +6,9 @@
     nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-25.11";
     # Replacement for the exo distributed inference cluster (decommissioned
     # 2026-10-22): Granite 4.2 8B API service on gremlin-1.
-    granite4.url = "github:celesrenata/granite-4-rtx-4070-ti-super?ref=dcb0bb616409f17496ed830a32dbdf84700481f6";
+    granite4.url = "github:celesrenata/granite-4-rtx-4070-ti-super";
     sops-nix.url = "github:Mic92/sops-nix";
-    i915-sriov.url = "github:strongtz/i915-sriov-dkms?ref=2026.09.16";
+    i915-sriov.url = "github:strongtz/i915-sriov-dkms?ref=ba3337ea02";
   };
 
   outputs = { self, nixpkgs, nixpkgs-stable, granite4, sops-nix, i915-sriov, ... }@inputs: 
@@ -31,8 +31,11 @@
           ./modules/graphics.nix
           ./modules/networking.nix
           ./modules/virtualisation.nix
-          ./modules/ups.nix 
+          ./modules/ups.nix
           ./modules/sops.nix
+          # ArcForge host-native Intel Arc (PF) inference — inert unless
+          # services.arcforge.enable is set on a host.
+          ./modules/services/arcforge
           {
             gremlin.graphics = {
               intel.enable = intel;
@@ -48,11 +51,22 @@
           # cluster + ada-inference llama.cpp server on this host.
           granite4.nixosModules.granite4Rtx
           ({ pkgs, lib, ... }: {
+            # The engine package ships the granite4-checkpoint CLI (verify +
+            # FP8 export) on the box for ops work.
+            # engine-cuda: every nixos-rebuild re-compiles the full sm_89 CUDA
+            # build (kernels, granite4-kernel-test, granite4-kernel-bench) and
+            # runs the non-GPU ctest suites; the GPU-only kernels_device run
+            # is a one-command re-verification:
+            #   granite4-kernel-test / granite4-kernel-bench  (box PATH)
+            environment.systemPackages = [
+              granite4.packages.${system}.engine
+              granite4.packages.${system}.engine-cuda
+            ];
             services.granite4-rtx = {
               enable = true;
               package = granite4.packages.${system}.api;
               listenAddress = "127.0.0.1";
-              listenPort = 8080;
+              listenPort = 2701;
             };
           })
         ] else []);

@@ -24,7 +24,6 @@ let
 in
 {
   services.arcforge = {
-    enable = true;
 
     # Dedicated canary port so the proven podman OVMS (8000) stays live for
     # A/B comparison. After validation this becomes the production port.
@@ -53,7 +52,7 @@ in
     inference = {
       concurrency = 4;
       batchLimit = 32;
-      inferTimeoutSec = 120;
+      inferTimeoutSec = 60;
     };
 
     # Bounded GPU-fault recovery (one restart via watchdog; no reset storm).
