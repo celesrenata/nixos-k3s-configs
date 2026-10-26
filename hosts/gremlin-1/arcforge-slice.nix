@@ -29,7 +29,6 @@
   services.arcforge.inference.timeoutSec = 60;
   services.arcforge.inference.memoryMax = "16G";
   services.arcforge.inference.cache = "/var/cache/arcforge";
-  services.arcforge.inference.jitCacheDir = "/var/cache/arcforge/igc_cache";
 
   services.arcforge.metrics.enable = true;
   services.arcforge.metrics.port = 9090;
