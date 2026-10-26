@@ -30,8 +30,7 @@
   services.arcforge.inference.probeTimeoutSec = 5;
   services.arcforge.inference.cache = "/var/cache/arcforge";
 
-  services.arcforge.metrics.enable = true;
-  services.arcforge.metrics.scrapePath = "/metrics";
+  services.arcforge.metrics.enable = false;
 
   services.arcforge.fetchModel.enable = false;
 }
