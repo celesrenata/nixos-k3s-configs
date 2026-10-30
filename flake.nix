@@ -8,7 +8,7 @@
     # 2026-10-22): Granite 4.2 8B API service on gremlin-1.
     granite4.url = "github:celesrenata/granite-4-rtx-4070-ti-super";
     sops-nix.url = "github:Mic92/sops-nix";
-    i915-sriov.url = "github:strongtz/i915-sriov-dkms?ref=ba3337ea02";
+    i915-sriov.url = "github:strongtz/i915-sriov-dkms?ref=2026.10.28";
   };
 
   outputs = { self, nixpkgs, nixpkgs-stable, granite4, sops-nix, i915-sriov, ... }@inputs: 
