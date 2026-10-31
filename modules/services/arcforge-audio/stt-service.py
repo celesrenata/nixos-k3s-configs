@@ -15,9 +15,12 @@ resolve the host; the model id is a catalog label, not a selector.
 from __future__ import annotations
 
 import os
+import subprocess
+import tempfile
 import time
 from typing import Optional
 
+import numpy as np
 from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.responses import JSONResponse
 from faster_whisper import WhisperModel
@@ -65,6 +68,27 @@ def models() -> dict:
     }
 
 
+def _decode_to_float32(data: bytes, sample_rate: int = 16000) -> np.ndarray:
+    """Decode arbitrary audio bytes to a 16 kHz float32 mono array.
+
+    faster-whisper's decode_audio() (pyav) chokes on raw upload bytes; the
+    system ffmpeg (on PATH via the unit) decodes everything reliably.
+    """
+    with tempfile.NamedTemporaryFile(suffix=".audio", delete=False) as tmp:
+        tmp.write(data)
+        tmp_path = tmp.name
+    try:
+        proc = subprocess.run(
+            [
+                "ffmpeg", "-v", "error", "-i", tmp_path,
+                "-f", "f32le", "-ac", "1", "-ar", str(sample_rate), "pipe:1",
+            ],
+            check=True, capture_output=True,
+        )
+        return np.frombuffer(proc.stdout, dtype=np.float32)
+    finally:
+        os.unlink(tmp_path)
+
 async def _run_transcription(
     file: UploadFile,
     language: Optional[str],
@@ -83,8 +107,18 @@ async def _run_transcription(
     model = get_model()
     lang = language or DEFAULT_LANGUAGE
     t0 = time.monotonic()
+    try:
+        audio = _decode_to_float32(data)
+    except Exception as err:
+        return {
+            "error": {
+                "message": f"audio decode failed: {err}",
+                "type": "invalid_request_error",
+                "code": "audio_decode_error",
+            }
+        }
     segments, info = model.transcribe(
-        data,
+        audio,
         language=lang,
         beam_size=BEAM_SIZE,
         vad_filter=True,

@@ -65,6 +65,12 @@ let
     [ -x "$PY" ] || PY="${ttsBaseEnv}/bin/python3"
     exec "$PY" "${ttsApp}"
   '';
+
+  # STT launcher: ffmpeg on PATH (audio decode of uploaded files).
+  sttLauncher = writeShellScript "arcforge-stt-launch.sh" ''
+    export PATH="${ffmpeg}/bin:${coreutils}/bin:$PATH"
+    exec "${sttEnv}/bin/python3" "${sttApp}"
+  '';
 in
 {
   # Option declarations.
@@ -139,7 +145,7 @@ in
           "MODEL_DIR=/var/lib/arcforge-audio/stt-models"
           "HF_HOME=/var/lib/arcforge-audio/hf-cache"
         ];
-        ExecStart = "${sttEnv}/bin/python3 ${sttApp}";
+        ExecStart = "${sttLauncher}";
         Restart = "on-failure";
         RestartSec = 5;
         TasksMax = 512;
