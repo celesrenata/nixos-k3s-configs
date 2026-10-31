@@ -1,25 +1,50 @@
 { config, pkgs, lib, system, ... }:
 
 # ArcForge audio vertical — host-native STT + TTS on the Arc nodes ("zoo").
+#
+# Plain systemd services, no GPU passthrough (CPU inference; the Arc iGPU PF
+# stays free for the reranker/embedders). Fixed ports, already in the firewall:
+#   :10300  arcforge-stt — faster-whisper (Systran/faster-whisper-large-v3)
+#                          POST /v1/audio/transcriptions
+#                          POST /v1/audio/translations
+#   :10200  arcforge-tts — kokoro-onnx (Kokoro-82M)
+#                          POST /v1/audio/speech
+#
+# Model artifacts are NOT in the nix store — they live under /var/lib/arcforge-audio
+# and are fetched by the arcforge-audio-model-fetch one-shot (idempotent).
 let
-  inherit (pkgs) writeText;
+  inherit (pkgs) writeText writeShellScript bash python314;
 
-  # Pinned nixpkgs rev.
-  nixpkgsPkgs = import (builtins.fetchTarball "https://github.com/NixOS/nixpkgs/archive/da6dc0e7b26060f2f71ce3ef7088fb56ee44fa36.tar.gz") {};
-
-  # STT env.
-  sttEnv = nixpkgsPkgs.python314.withPackages (ps: [
-    ps.faster-whisper ps.fastapi ps.uvicorn ps.numpy ps.soundfile ps.huggingface-hub
+  # STT env — faster-whisper + API server deps.
+  sttEnv = python314.withPackages (ps: [
+    ps.faster-whisper
+    ps.fastapi
+    ps.uvicorn
+    ps.numpy
+    ps.soundfile
+    ps.huggingface-hub
   ]);
 
-  # TTS base env.
-  ttsBaseEnv = nixpkgsPkgs.python314.withPackages (ps: [
-    ps.onnxruntime ps.numba ps.numpy ps.soundfile ps.huggingface-hub ps.espeak-ng ps.fastapi ps.uvicorn
+  # TTS base env — onnxruntime + espeak-ng + API server deps.
+  ttsBaseEnv = python314.withPackages (ps: [
+    ps.onnxruntime
+    ps.numba
+    ps.numpy
+    ps.soundfile
+    ps.huggingface-hub
+    ps.espeak-ng
+    ps.fastapi
+    ps.uvicorn
   ]);
 
   sttApp = writeText "arcforge-stt-service.py" (builtins.readFile ./stt-service.py);
   ttsApp = writeText "arcforge-tts-service.py" (builtins.readFile ./tts-service.py);
-  modelFetch = writeText "arcforge-audio-model-fetch.sh" (builtins.readFile ./audio-model-fetch.sh);
+
+  # The model-fetch script must be executable (systemd ExecStart runs it
+  # directly). writeText does NOT set the exec bit, so we use writeShellScript
+  # which does. The env store paths are passed in via systemd Environment
+  # (never interpolated into the script body).
+  modelFetch = writeShellScript "arcforge-audio-model-fetch.sh" (builtins.readFile ./audio-model-fetch.sh);
 in
 {
   # Option declarations.
@@ -53,13 +78,21 @@ in
       wantedBy = [ "multi-user.target" ];
       after = [ "network-online.target" ];
       wants = [ "network-online.target" ];
-      unitConfig = { StartLimitIntervalSec = "600"; StartLimitBurst = 5; };
+      unitConfig = {
+        StartLimitIntervalSec = "600";
+        StartLimitBurst = 5;
+      };
       serviceConfig = {
         Type = "oneshot";
         User = "arcforge-audio";
         Group = "arcforge-audio";
-        Environment = [ "STT_ENV=" "TTS_BASE_ENV=" "HF_HOME=/var/lib/arcforge-audio/hf-cache" ];
-        ExecStart = modelFetch;
+        Environment = [
+          "STT_ENV=${sttEnv}"
+          "TTS_BASE_ENV=${ttsBaseEnv}"
+          "MODEL_DIR=/var/lib/arcforge-audio/stt-models"
+          "HF_HOME=/var/lib/arcforge-audio/hf-cache"
+        ];
+        ExecStart = "${modelFetch}";
         RemainAfterExit = true;
       };
     };
@@ -69,16 +102,24 @@ in
       after = [ "network.target" "arcforge-audio-model-fetch.service" ];
       requires = [ "arcforge-audio-model-fetch.service" ];
       wantedBy = [ "multi-user.target" ];
-      unitConfig = { StartLimitIntervalSec = "300"; StartLimitBurst = 3; };
+      unitConfig = {
+        StartLimitIntervalSec = "300";
+        StartLimitBurst = 3;
+      };
       serviceConfig = {
         Type = "simple";
         User = "arcforge-audio";
         Group = "arcforge-audio";
         WorkingDirectory = "/var/lib/arcforge-audio";
-        Environment = "MODEL_DIR=/var/lib/arcforge-audio/stt-models";
-        ExecStart = "/bin/python3 ";
-        Restart = "on-failure"; RestartSec = 5;
-        TasksMax = 512; LimitNOFILE = 65536;
+        Environment = [
+          "MODEL_DIR=/var/lib/arcforge-audio/stt-models"
+          "HF_HOME=/var/lib/arcforge-audio/hf-cache"
+        ];
+        ExecStart = "${sttEnv}/bin/python3 ${sttApp}";
+        Restart = "on-failure";
+        RestartSec = 5;
+        TasksMax = 512;
+        LimitNOFILE = 65536;
       };
     };
 
@@ -87,16 +128,25 @@ in
       after = [ "network.target" "arcforge-audio-model-fetch.service" ];
       requires = [ "arcforge-audio-model-fetch.service" ];
       wantedBy = [ "multi-user.target" ];
-      unitConfig = { StartLimitIntervalSec = "300"; StartLimitBurst = 3; };
+      unitConfig = {
+        StartLimitIntervalSec = "300";
+        StartLimitBurst = 3;
+      };
       serviceConfig = {
         Type = "simple";
         User = "arcforge-audio";
         Group = "arcforge-audio";
         WorkingDirectory = "/var/lib/arcforge-audio";
-        Environment = "KOKORO_HOME=/var/lib/arcforge-audio/tts-models";
-        ExecStart = "/var/lib/arcforge-audio/tts-venv/bin/python ";
-        Restart = "on-failure"; RestartSec = 5;
-        TasksMax = 256; LimitNOFILE = 65536;
+        Environment = [
+          "KOKORO_HOME=/var/lib/arcforge-audio/tts-models"
+          "HF_HOME=/var/lib/arcforge-audio/hf-cache"
+        ];
+        # kokoro-onnx is pip-installed into the writable venv by model-fetch.
+        ExecStart = "/var/lib/arcforge-audio/tts-venv/bin/python ${ttsApp}";
+        Restart = "on-failure";
+        RestartSec = 5;
+        TasksMax = 256;
+        LimitNOFILE = 65536;
       };
     };
   };
