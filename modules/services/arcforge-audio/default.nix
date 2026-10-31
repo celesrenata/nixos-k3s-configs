@@ -55,11 +55,15 @@ let
   # reads espeak-ng dictionaries from a fixed path) and ffmpeg (pydub mp3
   # export). espeak-ng + coreutils + ffmpeg are plain NixOS packages, not
   # python packages, so they go on PATH, not in the python env.
+  # The kokoro-onnx + pydub venv is created by model-fetch; prefer it when
+  # present, fall back to the read-only nix base env.
   ttsLauncher = writeShellScript "arcforge-tts-launch.sh" ''
     export PATH="${espeakNg}/bin:${coreutils}/bin:${ffmpeg}/bin:$PATH"
     export LD_LIBRARY_PATH="${espeakNg}/lib:$LD_LIBRARY_PATH"
     export ESPEAK_DATA="${espeakNg}/share/espeak-ng-data"
-    exec "${ttsBaseEnv}/bin/python3" "${ttsApp}"
+    PY="/var/lib/arcforge-audio/tts-venv/bin/python"
+    [ -x "$PY" ] || PY="${ttsBaseEnv}/bin/python3"
+    exec "$PY" "${ttsApp}"
   '';
 in
 {
