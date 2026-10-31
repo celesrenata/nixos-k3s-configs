@@ -20,14 +20,48 @@ let
   sttApp = writeText "arcforge-stt-service.py" (builtins.readFile ./stt-service.py);
   ttsApp = writeText "arcforge-tts-service.py" (builtins.readFile ./tts-service.py);
   modelFetch = writeText "arcforge-audio-model-fetch.sh" (builtins.readFile ./audio-model-fetch.sh);
-in
-{
-  # Option declarations.
   options.services.arcforge-audio = {
     enable = lib.mkOption {
       type = lib.types.bool;
       default = false;
       description = "Enable ArcForge audio services (STT/TTS on CPU).";
+    };
+  };
+
+in
+{
+  users.users.arcforge-audio = lib.mkIf config.services.arcforge-audio.enable {
+    isSystemUser = true;
+    group = "arcforge-audio";
+    description = "ArcForge host-native audio (STT/TTS)";
+    useDefaultShell = false;
+  };
+
+  systemd.tmpfiles.rules = lib.mkIf config.services.arcforge-audio.enable [
+    "d /var/lib/arcforge-audio 0755 arcforge-audio arcforge-audio - -"
+    "d /var/lib/arcforge-audio/stt-models 0755 arcforge-audio arcforge-audio - -"
+    "d /var/lib/arcforge-audio/tts-models 0755 arcforge-audio arcforge-audio - -"
+    "d /var/lib/arcforge-audio/tts-venv 0755 arcforge-audio arcforge-audio - -"
+  ];
+
+  # One-shot, idempotent model fetch. Passes the nix env store paths via env
+  # (never interpolated into the script body).
+  systemd.services.arcforge-audio-model-fetch = lib.mkIf config.services.arcforge-audio.enable {
+    description = "ArcForge audio model fetch (one-shot, idempotent)";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "network-online.target" ];
+    wants = [ "network-online.target" ];
+    unitConfig = {
+      StartLimitIntervalSec = "600";
+      StartLimitBurst = 5;
+    };
+    serviceConfig = {
+      Type = "oneshot";
+      User = "arcforge-audio";
+      Group = "arcforge-audio";
+      Environment = [ "STT_ENV=${sttEnv}" "TTS_BASE_ENV=${ttsBaseEnv}" "HF_HOME=/var/lib/arcforge-audio/hf-cache" ];
+      ExecStart = "${modelFetch}";
+      RemainAfterExit = true;
     };
   };
 
