@@ -12,6 +12,7 @@
     ./arcforge-slice.nix
     # ArcForge reranker (Qwen3-Reranker-0.6B) on the same PF, port 8101.
     ./arcforge-rerank-slice.nix
+    ./arcforge-audio-slice.nix
     # ada-inference.nix removed 2026-10-22: replaced by the granite4-rtx
     # NixOS module (services.granite4-rtx) added in the flake for gremlin-1.
     #./wyoming.nix
