@@ -36,7 +36,6 @@
           # ArcForge host-native Intel Arc (PF) inference — inert unless
           # services.arcforge.enable is set on a host.
           ./modules/services/arcforge
-          ./modules/services/arcforge-audio
           {
             gremlin.graphics = {
               intel.enable = intel;
