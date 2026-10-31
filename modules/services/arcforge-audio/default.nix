@@ -102,8 +102,10 @@ in
           "TTS_BASE_ENV=${ttsBaseEnv}"
           "MODEL_DIR=/var/lib/arcforge-audio/stt-models"
           "HF_HOME=/var/lib/arcforge-audio/hf-cache"
-          # kokoro-onnx load-sanity shells out to `espeak` for phonemization.
+          # kokoro-onnx load-sanity shells out to espeak for phonemization.
           "PATH=${espeakNg}/bin:${coreutils}/bin"
+          "ESPEAK_LIB=${espeakNg}/lib/libespeak-ng.so"
+          "ESPEAK_DATA=${espeakNg}/share/espeak-ng-data"
         ];
         ExecStart = "${modelFetch}";
         RemainAfterExit = true;
@@ -151,8 +153,9 @@ in
         Group = "arcforge-audio";
         WorkingDirectory = "/var/lib/arcforge-audio";
         Environment = [
-          "KOKORO_HOME=/var/lib/arcforge-audio/tts-models"
           "HF_HOME=/var/lib/arcforge-audio/hf-cache"
+          "ESPEAK_LIB=${espeakNg}/lib/libespeak-ng.so"
+          "ESPEAK_DATA=${espeakNg}/share/espeak-ng-data"
         ];
         ExecStart = "${ttsLauncher}";
         Restart = "on-failure";
