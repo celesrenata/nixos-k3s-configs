@@ -51,10 +51,10 @@ fi
 if [ -x "$TTS_VENV/bin/python" ] && "$TTS_VENV/bin/python" -c "import kokoro_onnx, pydub" >/dev/null 2>&1; then
   echo "[arcforge-audio-model-fetch] tts venv already present"
 else
-  echo "[arcforge-audio-model-fetch] creating tts venv + pip install kokoro-onnx pydub"
+  echo "[arcforge-audio-model-fetch] creating tts venv + pip install kokoro-onnx pydub audioop-lts"
   rm -rf "$TTS_VENV"
   "$TTS_BASE_ENV/bin/python3" -m venv --system-site-packages "$TTS_VENV"
-  "$TTS_VENV/bin/python" -m pip install --quiet --no-input kokoro-onnx pydub
+  "$TTS_VENV/bin/python" -m pip install --quiet --no-input kokoro-onnx pydub audioop-lts
 fi
 
 # ---------------------------------------------------------------- sanity

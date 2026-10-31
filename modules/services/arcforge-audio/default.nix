@@ -16,6 +16,7 @@ let
   inherit (pkgs) writeText writeShellScript bash python314;
   espeakNg = pkgs."espeak-ng";
   coreutils = pkgs.coreutils;
+  ffmpeg = pkgs.ffmpeg;
 
   # STT env — faster-whisper + API server deps.
   sttEnv = python314.withPackages (ps: [
@@ -50,10 +51,14 @@ let
   # directly) — writeText does not set the exec bit, so use writeShellScript.
   modelFetch = writeShellScript "arcforge-audio-model-fetch.sh" (builtins.readFile ./audio-model-fetch.sh);
 
-  # TTS launcher: espeak-ng on PATH (kokoro-onnx shells out to `espeak` for
-  # phonemization), then exec the service.
+  # The TTS service must be able to reach the espeak-ng data files (phonemizer
+  # reads espeak-ng dictionaries from a fixed path) and ffmpeg (pydub mp3
+  # export). espeak-ng + coreutils + ffmpeg are plain NixOS packages, not
+  # python packages, so they go on PATH, not in the python env.
   ttsLauncher = writeShellScript "arcforge-tts-launch.sh" ''
-    export PATH="${espeakNg}/bin:${coreutils}/bin:$PATH"
+    export PATH="${espeakNg}/bin:${coreutils}/bin:${ffmpeg}/bin:$PATH"
+    export LD_LIBRARY_PATH="${espeakNg}/lib:$LD_LIBRARY_PATH"
+    export ESPEAK_DATA="${espeakNg}/share/espeak-ng-data"
     exec "${ttsBaseEnv}/bin/python3" "${ttsApp}"
   '';
 in
