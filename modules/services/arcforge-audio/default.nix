@@ -14,6 +14,8 @@
 # and are fetched by the arcforge-audio-model-fetch one-shot (idempotent).
 let
   inherit (pkgs) writeText writeShellScript bash python314;
+  espeakNg = pkgs."espeak-ng";
+  coreutils = pkgs.coreutils;
 
   # STT env — faster-whisper + API server deps.
   sttEnv = python314.withPackages (ps: [
@@ -25,14 +27,17 @@ let
     ps.huggingface-hub
   ]);
 
-  # TTS base env — onnxruntime + espeak-ng + API server deps.
+  # TTS base env — kokoro-onnx itself is pip-installed into a writable venv at
+  # /var/lib/arcforge-audio/tts-venv by model-fetch (not packaged for this
+  # nixpkgs pin). espeak-ng is a SYSTEM package (binary), not a Python one —
+  # it is added to the service PATH, not to this env.
   ttsBaseEnv = python314.withPackages (ps: [
     ps.onnxruntime
     ps.numba
     ps.numpy
     ps.soundfile
     ps.huggingface-hub
-    ps.espeak-ng
+    ps.pydantic
     ps.fastapi
     ps.uvicorn
   ]);
@@ -41,10 +46,15 @@ let
   ttsApp = writeText "arcforge-tts-service.py" (builtins.readFile ./tts-service.py);
 
   # The model-fetch script must be executable (systemd ExecStart runs it
-  # directly). writeText does NOT set the exec bit, so we use writeShellScript
-  # which does. The env store paths are passed in via systemd Environment
-  # (never interpolated into the script body).
+  # directly) — writeText does not set the exec bit, so use writeShellScript.
   modelFetch = writeShellScript "arcforge-audio-model-fetch.sh" (builtins.readFile ./audio-model-fetch.sh);
+
+  # TTS launcher: espeak-ng on PATH (kokoro-onnx shells out to `espeak` for
+  # phonemization), then exec the service.
+  ttsLauncher = writeShellScript "arcforge-tts-launch.sh" ''
+    export PATH="${espeakNg}/bin:${coreutils}/bin:$PATH"
+    exec "${ttsBaseEnv}/bin/python3" "${ttsApp}"
+  '';
 in
 {
   # Option declarations.
@@ -91,6 +101,8 @@ in
           "TTS_BASE_ENV=${ttsBaseEnv}"
           "MODEL_DIR=/var/lib/arcforge-audio/stt-models"
           "HF_HOME=/var/lib/arcforge-audio/hf-cache"
+          # kokoro-onnx load-sanity shells out to `espeak` for phonemization.
+          "PATH=${espeakNg}/bin:${coreutils}/bin"
         ];
         ExecStart = "${modelFetch}";
         RemainAfterExit = true;
@@ -141,8 +153,7 @@ in
           "KOKORO_HOME=/var/lib/arcforge-audio/tts-models"
           "HF_HOME=/var/lib/arcforge-audio/hf-cache"
         ];
-        # kokoro-onnx is pip-installed into the writable venv by model-fetch.
-        ExecStart = "/var/lib/arcforge-audio/tts-venv/bin/python ${ttsApp}";
+        ExecStart = "${ttsLauncher}";
         Restart = "on-failure";
         RestartSec = 5;
         TasksMax = 256;
