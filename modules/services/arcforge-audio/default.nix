@@ -20,14 +20,6 @@ let
   sttApp = writeText "arcforge-stt-service.py" (builtins.readFile ./stt-service.py);
   ttsApp = writeText "arcforge-tts-service.py" (builtins.readFile ./tts-service.py);
   modelFetch = writeText "arcforge-audio-model-fetch.sh" (builtins.readFile ./audio-model-fetch.sh);
-  options.services.arcforge-audio = {
-    enable = lib.mkOption {
-      type = lib.types.bool;
-      default = false;
-      description = "Enable ArcForge audio services (STT/TTS on CPU).";
-    };
-  };
-
 in
 {
   users.users.arcforge-audio = lib.mkIf config.services.arcforge-audio.enable {
@@ -59,7 +51,9 @@ in
       Type = "oneshot";
       User = "arcforge-audio";
       Group = "arcforge-audio";
-      Environment = [ "STT_ENV=${sttEnv}" "TTS_BASE_ENV=${ttsBaseEnv}" "HF_HOME=/var/lib/arcforge-audio/hf-cache" ];
+      Environment = "STT_ENV=${sttEnv}";
+      Environment = "TTS_BASE_ENV=${ttsBaseEnv}";
+      Environment = "HF_HOME=/var/lib/arcforge-audio/hf-cache";
       ExecStart = "${modelFetch}";
       RemainAfterExit = true;
     };
