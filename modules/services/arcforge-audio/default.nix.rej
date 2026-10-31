@@ -1,0 +1,13 @@
+--- modules/services/arcforge-audio/default.nix
++++ modules/services/arcforge-audio/default.nix
+@@ -84,9 +84,7 @@ in
+     };
+     serviceConfig = {
+       Type = "oneshot";
+       User = "arcforge-audio";
+       Group = "arcforge-audio";
+-      Environment = "STT_ENV=";
+-      Environment = "TTS_BASE_ENV=";
+-      Environment = "HF_HOME=/var/lib/arcforge-audio/hf-cache";
++      Environment = [ "STT_ENV=" "TTS_BASE_ENV=" "HF_HOME=/var/lib/arcforge-audio/hf-cache" ];
+       ExecStart = "";
