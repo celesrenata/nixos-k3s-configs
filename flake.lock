@@ -5,10 +5,10 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1793833743,
+        "lastModified": 1793834910,
         "owner": "celesrenata",
         "repo": "granite-4-rtx-4070-ti-super",
-        "rev": "e091ccd66aeb738a234ed4daafce6d3330864fc4",
+        "rev": "d677667161d215b484a55f8e45f6ff68a7d1ee1b",
         "type": "github"
       },
       "original": {
