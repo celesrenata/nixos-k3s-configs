@@ -4,6 +4,9 @@
   imports = [
     ./sops.nix
     ./hardware-configuration.nix
+    # Open the granite4-rtx API port on the LAN (firewall is scoped here;
+    # the service itself is configured in the flake: services.granite4-rtx).
+    ./granite4-rtx.nix
     ./qdrant.nix
     # Qdrant 1.20 TurboQuant sidecar (bench/experiments) on 6433/6434.
     ./qdrant-turbo.nix
