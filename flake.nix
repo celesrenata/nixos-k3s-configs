@@ -48,7 +48,7 @@
           ./modules/kubernetes.nix
           ./modules/monitoring.nix
         ]) ++ (if granite4Rtx then [
-          # Granite 4.2 8B API scaffold replaces the old exo distributed
+          # Granite 4.2 8B API (GPU engine) replaces the old exo distributed
           # cluster + ada-inference llama.cpp server on this host.
           granite4.nixosModules.granite4Rtx
           ({ pkgs, lib, ... }: {
@@ -63,9 +63,15 @@
               granite4.packages.${system}.engine
               granite4.packages.${system}.engine-cuda
             ];
+            # GPU serving: every start runs the parity gate on the GPU
+            # (teacher-forced vs the shipped transformers reference); a pass
+            # enables chat completions through one resident engine process.
             services.granite4-rtx = {
               enable = true;
               package = granite4.packages.${system}.api;
+              enginePackage = granite4.packages.${system}.engine-cuda;
+              checkpoint = "/opt/granite4-rtx-4070-ti-super/ckpt";
+              maxContext = 8192;
               listenAddress = "127.0.0.1";
               listenPort = 2701;
             };

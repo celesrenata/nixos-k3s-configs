@@ -4,13 +4,33 @@ let
   cfg = config.gremlin.graphics;
   
   #base-nvidia-package = config.boot.kernelPackages.nvidiaPackages.mkDriver ({
-  nvidia-package = config.boot.kernelPackages.nvidiaPackages.mkDriver ({
+  base-driver = config.boot.kernelPackages.nvidiaPackages.mkDriver ({
     version = "615.78.08";
     sha256_64bit = "sha256-Pj9t3cLudnoIGFMAr3vjyyhuznZpjS3eNSRZl4LQf/4=";
     sha256_aarch64 = "";
     openSha256 = "sha256-HBINiOjL0ZJLIAJeNIBYHBnwgUXtNwPPtnFpAI1YwF4=";
     settingsSha256 = "";
     persistencedSha256 = "sha256-RzeR6Ldct6MUxjnXRyThdh5Y3jjMehTVg85MtwuWNX4=";
+  });
+
+  # nvidia-smi / nvidia-powerd / nvidia-cuda-mps-control segfault in ld.so
+  # ("error 7" writing DT_DEBUG at 0x401568) when patched by patchelf >= 0.18:
+  # the rewrite leaves .dynamic in a read-only LOAD segment. Re-patch the
+  # untouched origBin copies with patchelf 0.15 (nixpkgs-stable) at the end of
+  # fixup. Only the -bin output changes; the kernel module is untouched.
+  stable-patchelf = nixpkgs-stable.legacyPackages.x86_64-linux.patchelf;
+  nvidia-package = base-driver.overrideAttrs (old: {
+    postFixup = (old.postFixup or "") + ''
+      for i in nvidia-cuda-mps-control nvidia-cuda-mps-server nvidia-smi nvidia-debugdump nvidia-powerd; do
+        if [ -e "$bin/origBin/$i" ]; then
+          rpath=$(${stable-patchelf}/bin/patchelf --print-rpath "$bin/bin/$i")
+          install -m755 "$bin/origBin/$i" "$bin/bin/$i"
+          ${stable-patchelf}/bin/patchelf \
+            --interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" \
+            --set-rpath "$rpath" "$bin/bin/$i"
+        fi
+      done
+    '';
   });
   
   #nvidia-package = base-nvidia-package // {
