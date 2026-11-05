@@ -16,6 +16,15 @@
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   nix.settings.cores = 16;
   nix.settings.sandbox = "relaxed";
+
+  # Disable store-path signature verification. Untrusted binary caches were
+  # repeatedly failing builds with "cannot add path ... because it lacks a
+  # signature by a trusted key" (e.g. hyprutils from hypr-sh's cache) — see
+  # <https://nixos.wiki/wiki/Nix/settings/require-sigs>. Trade-off: any binary
+  # substituted from an untrusted cache is now trusted unconditionally
+  # (content-addressed store paths are unaffected); accepted per operator on
+  # 2026-11-04.
+  nix.settings.require-sigs = false;
   nixpkgs.config.allowUnfree = true;
 
   # Increase file descriptor limits for build processes
