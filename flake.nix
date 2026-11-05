@@ -71,7 +71,7 @@
               package = granite4.packages.${system}.api;
               enginePackage = granite4.packages.${system}.engine-cuda;
               checkpoint = "/opt/granite4-rtx-4070-ti-super/ckpt";
-              maxContext = 8192;
+              maxContext = 32768;  # measured ceiling ~32768 pool on this 16 GiB card (docs/memory.md)
               listenAddress = "0.0.0.0";
               listenPort = 2701;
               # Speculative decoding: r8 EAGLE draft head (union of both
