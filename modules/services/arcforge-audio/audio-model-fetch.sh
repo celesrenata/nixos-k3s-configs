@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # ArcForge audio model fetch — one-shot, idempotent.
 # Runs as arcforge-audio. Stores:
-#   $STT_ENV        nix store path of the faster-whisper python env
+#   $STT_ENV        nix store path of the OpenVINO python env
 #   $TTS_BASE_ENV   nix store path of the tts base env (onnxruntime + ...)
-#   $MODEL_DIR      where the whisper large-v3 weights live
+#   $MODEL_DIR      stt-models root (holds the tokenizer.json + legacy CT2 dir)
+#   $HF_HOME        huggingface cache
 set -euo pipefail
 
 ROOT=/var/lib/arcforge-audio
@@ -11,22 +12,35 @@ STT_MODELS=$ROOT/stt-models
 TTS_MODELS=$ROOT/tts-models
 TTS_VENV=$ROOT/tts-venv
 WHISPER_DIR=$STT_MODELS/faster-whisper-large-v3
+# The STT engine is whisper-turbo INT8 on the Arc GPU (OpenVINO IR, ~785MB,
+# built locally: encoder+decoder INT8 + config + generation_config). It is NOT
+# on Hugging Face, so this fetch only verifies it is present — it does not
+# download it. The mel FeatureExtractor is a pure function (no weights), and
+# only tokenizer.json is needed for token encode/decode.
+OV_STT_DIR=$ROOT/ov/whisper-turbo-int8
 
 echo "[arcforge-audio-model-fetch] starting"
 
 # ---------------------------------------------------------------- STT model
-if [ -f "$WHISPER_DIR/model.bin" ]; then
-  echo "[arcforge-audio-model-fetch] whisper large-v3 already present"
+if [ -f "$OV_STT_DIR/openvino_encoder_model.xml" ] && [ -f "$OV_STT_DIR/openvino_decoder_model.xml" ]; then
+  echo "[arcforge-audio-model-fetch] whisper-turbo INT8 (OpenVINO) present"
 else
-  echo "[arcforge-audio-model-fetch] downloading faster-whisper-large-v3 (~1.6GB)"
+  echo "[arcforge-audio-model-fetch] WARNING: whisper-turbo INT8 IR missing at $OV_STT_DIR (built locally; not auto-fetched)"
+fi
+
+# Tokenizer (small). Needed for the OpenVINO backend's token id encode/decode.
+if [ -f "$WHISPER_DIR/tokenizer.json" ]; then
+  echo "[arcforge-audio-model-fetch] whisper tokenizer already present"
+else
+  echo "[arcforge-audio-model-fetch] downloading whisper tokenizer.json (~2MB)"
   "$STT_ENV/bin/python3" - <<'PY'
-from huggingface_hub import snapshot_download
-p = snapshot_download(
+from huggingface_hub import hf_hub_download
+p = hf_hub_download(
     repo_id="Systran/faster-whisper-large-v3",
+    filename="tokenizer.json",
     local_dir="/var/lib/arcforge-audio/stt-models/faster-whisper-large-v3",
-    allow_patterns=["model.bin", "*.json", "vocabulary.txt", "*.txt"],
 )
-print("whisper model ->", p)
+print("whisper tokenizer ->", p)
 PY
 fi
 

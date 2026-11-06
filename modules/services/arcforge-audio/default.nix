@@ -2,13 +2,18 @@
 
 # ArcForge audio vertical — host-native STT + TTS on the Arc nodes ("zoo").
 #
-# Plain systemd services, no GPU passthrough (CPU inference; the Arc iGPU PF
-# stays free for the reranker/embedders). Fixed ports, already in the firewall:
-#   :10300  arcforge-stt — faster-whisper (Systran/faster-whisper-large-v3)
+# Plain systemd services, fixed ports, already in the firewall:
+#   :10300  arcforge-stt — whisper-turbo INT8 on the Arc iGPU (OpenVINO GPU EP)
 #                          POST /v1/audio/transcriptions
 #                          POST /v1/audio/translations
 #   :10200  arcforge-tts — kokoro-onnx (Kokoro-82M)
 #                          POST /v1/audio/speech
+#
+# STT runs on the Arc iGPU PF (renderD128), time-sharing it with the reranker
+# and embedders. The render node is shared; DevicePolicy=closed pins exactly
+# that PF so no SR-IOV VF is ever seen. The OpenVINO GPU plugin needs the
+# Intel OpenCL ICD loader pointed at the Intel Compute Runtime (OCL_ICD_VENDORS),
+# or it maps an invalid driver and fails at buffer-map time (CL_INVALID_VALUE).
 #
 # Model artifacts are NOT in the nix store — they live under /var/lib/arcforge-audio
 # and are fetched by the arcforge-audio-model-fetch one-shot (idempotent).
@@ -18,8 +23,22 @@ let
   coreutils = pkgs.coreutils;
   ffmpeg = pkgs.ffmpeg;
 
-  # STT env — faster-whisper + API server deps.
+  # OpenVINO GPU EP support. The Python `openvino` package dlopens the native
+  # runtime (libopenvino + the intel_gpu_plugin, pulled in transitively by
+  # python314.pkgs.openvino). The GPU plugin also needs the Intel OpenCL ICD
+  # loader pointed at the Intel Compute Runtime; without it the runtime maps an
+  # invalid driver and fails at buffer-map time (clEnqueueMapBuffer
+  # CL_INVALID_VALUE). This mirrors the arcforge (embeddings/rerank) module.
+  icr = pkgs.intel-compute-runtime;
+  icd = pkgs.writeText "arcforge-audio-intel.icd"
+    "${icr}/lib/intel-opencl/libigdrcl.so\n";
+
+  # STT env — OpenVINO (GPU EP) inference + the reference mel FeatureExtractor
+  # (faster-whisper, used only for feature extraction — not the CT2 model) +
+  # API server deps.
   sttEnv = python314.withPackages (ps: [
+    ps.openvino
+    ps.tokenizers
     ps.faster-whisper
     ps.fastapi
     ps.uvicorn
@@ -66,9 +85,13 @@ let
     exec "$PY" "${ttsApp}"
   '';
 
-  # STT launcher: ffmpeg on PATH (audio decode of uploaded files).
+  # STT launcher: ffmpeg on PATH (audio decode of uploaded files), the Intel
+  # OpenCL ICD pinned to the Intel Compute Runtime (GPU EP), and a writable
+  # OpenVINO compile cache (keeps restarts out of the IGC JIT compiler).
   sttLauncher = writeShellScript "arcforge-stt-launch.sh" ''
     export PATH="${ffmpeg}/bin:${coreutils}/bin:$PATH"
+    export OCL_ICD_VENDORS="${icd}"
+    export INTEL_OPENVINO_CACHE="/var/lib/arcforge-audio/ov-cache"
     exec "${sttEnv}/bin/python3" "${sttApp}"
   '';
 in
@@ -95,6 +118,8 @@ in
     systemd.tmpfiles.rules = [
       "d /var/lib/arcforge-audio 0755 arcforge-audio arcforge-audio - -"
       "d /var/lib/arcforge-audio/stt-models 0755 arcforge-audio arcforge-audio - -"
+      "d /var/lib/arcforge-audio/ov 0755 arcforge-audio arcforge-audio - -"
+      "d /var/lib/arcforge-audio/ov-cache 0755 arcforge-audio arcforge-audio - -"
       "d /var/lib/arcforge-audio/tts-models 0755 arcforge-audio arcforge-audio - -"
       "d /var/lib/arcforge-audio/tts-venv 0755 arcforge-audio arcforge-audio - -"
     ];
@@ -128,7 +153,7 @@ in
     };
 
     systemd.services.arcforge-stt = {
-      description = "ArcForge host-native faster-whisper STT";
+      description = "ArcForge host-native STT — whisper-turbo INT8 on the Arc GPU (OpenVINO)";
       after = [ "network.target" "arcforge-audio-model-fetch.service" ];
       requires = [ "arcforge-audio-model-fetch.service" ];
       wantedBy = [ "multi-user.target" ];
@@ -141,10 +166,24 @@ in
         User = "arcforge-audio";
         Group = "arcforge-audio";
         WorkingDirectory = "/var/lib/arcforge-audio";
+
+        # The OpenCL ICD loader + the writable OpenVINO compile cache are set in
+        # the launcher (OCL_ICD_VENDORS, INTEL_OPENVINO_CACHE).
         Environment = [
           "MODEL_DIR=/var/lib/arcforge-audio/stt-models"
           "HF_HOME=/var/lib/arcforge-audio/hf-cache"
+          "ARC_FORGE_STT_OV_DIR=/var/lib/arcforge-audio/ov/whisper-turbo-int8"
+          "ARC_FORGE_STT_TOKENIZER=/var/lib/arcforge-audio/stt-models/faster-whisper-large-v3/tokenizer.json"
+          "ARC_FORGE_STT_DEVICE=GPU"
         ];
+
+        # Arc iGPU PF, shared with the reranker + embedders. Closed policy means
+        # the only device this process can open is renderD128 — an SR-IOV VF is
+        # never seen. Supplementary video group grants access to the 0660 node.
+        DevicePolicy = "closed";
+        DeviceAllow = [ "/dev/dri/renderD128 rw" ];
+        SupplementaryGroups = [ "video" ];
+
         ExecStart = "${sttLauncher}";
         Restart = "on-failure";
         RestartSec = 5;
