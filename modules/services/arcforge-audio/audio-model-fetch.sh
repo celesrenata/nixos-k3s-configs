@@ -72,11 +72,21 @@ else
 fi
 
 # ---------------------------------------------------------------- sanity
+# Device-agnostic: compile the INT8 IR on the CPU (this one-shot runs as
+# arcforge-audio WITHOUT renderD128 access — the STT unit has it) and verify
+# the tokenizer + mel FeatureExtractor load. Proves the on-disk IR is valid
+# before the STT service starts; does not touch the GPU.
 "$STT_ENV/bin/python3" - <<'PY'
-from faster_whisper import WhisperModel
-import os
-m = WhisperModel(os.environ["MODEL_DIR"] + "/faster-whisper-large-v3", device="cpu", compute_type="int8")
-print("[arcforge-audio-model-fetch] whisper model loads OK")
+import openvino as ov
+import tokenizers
+from faster_whisper.feature_extractor import FeatureExtractor
+core = ov.Core()
+core.compile_model(core.read_model("/var/lib/arcforge-audio/ov/whisper-turbo-int8/openvino_encoder_model.xml"), "CPU")
+core.compile_model(core.read_model("/var/lib/arcforge-audio/ov/whisper-turbo-int8/openvino_decoder_model.xml"), "CPU")
+tok = tokenizers.Tokenizer.from_file("/var/lib/arcforge-audio/stt-models/faster-whisper-large-v3/tokenizer.json")
+vocab = tok.get_vocab_size()
+assert vocab >= 51000, f"tokenizer looks wrong (vocab={vocab})"
+print(f"[arcforge-audio-model-fetch] stt sanity OK: INT8 IR compiles, tokenizer+mel load, vocab={vocab}")
 PY
 
 "$TTS_VENV/bin/python" - <<'PY'
