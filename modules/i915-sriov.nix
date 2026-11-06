@@ -25,6 +25,23 @@
     "i915.request_timeout_ms=30000"
   ];
 
+  # xelp_enable_ccs: DELIBERATELY UNSET. Since 2026.09.16/2025.12.10.1, ccs0
+  # is off by default on Xe_LP VFs (upstream dropped it; the repo made it a
+  # tri-state opt-in — see strongtz/i915-sriov-dkms#498). LNL 7d55 is Xe_LP, so
+  # we are in scope, but we do NOT set i915.xelp_enable_ccs=1 because:
+  #   1. ccs0 on Xe_LP is a non-POR engine Intel never formally supported —
+  #      the FEAT-001 wedge above is this engine faulting, not a bug to patch.
+  #   2. Inference runs on the host PF (ovms-embeddings-host.nix / arcforge),
+  #      so no host-side component needs a VF compute engine.
+  #   3. Enabling it only re-exposes the non-POR engine to VFs; #510 shows
+  #      Xe_LP VFs still hang (GPU HANG ecode 12:1) under heavy workloads even
+  #      with CCS enabled — it is a partial, workload-dependent fix, not a
+  #      stable one.
+  # The pinned 2026.11.05 already carries the related VF-hang workarounds:
+  # the 47-bit PPGTT restriction for CCS-enabled hosts (commit b93d4c2e) and
+  # the Xe LRC workarounds for Xe_LP VFs (commit af43f687, closes #486/#506).
+  # reset=1 above remains the recovery path if a VF ever wedges anyway.
+
   # Enable VFIO kernel modules
   boot.kernelModules = [ "vfio" "vfio_iommu_type1" "vfio_pci" ];
 }
