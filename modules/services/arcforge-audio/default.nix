@@ -46,6 +46,7 @@ let
     ps.soundfile
     ps.huggingface-hub
     ps."python-multipart"
+    ps.websockets
   ]);
 
   # TTS base env — kokoro-onnx itself is pip-installed into a writable venv at

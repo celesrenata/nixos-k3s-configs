@@ -5,8 +5,26 @@ OpenAI-compatible audio API (unchanged surface, so OmniRoute's dynamic
 provider_nodes keep working against the same host + model-id label):
   POST /v1/audio/transcriptions  (multipart: file, model, language, ...)
   POST /v1/audio/translations    (same model serves both; returns transcript)
+  WS   /v1/realtime              (streaming dictation — see below)
   GET  /v1/models                (catalog: the configured STT model id)
   GET  /healthz
+
+/v1/realtime — streaming dictation (v1: endpoint-only, no partials):
+  client -> server: binary frames of PCM16 mono 16 kHz little-endian.
+                    Optional first frame: JSON config
+                    {"type":"config","sample_rate":16000,"language":"en",
+                     "silence_ms":800}. Terminate with {"type":"end"}.
+  server -> client: {"type":"ready","model":...,"sample_rate":16000,
+                    "silence_ms":...}
+                    {"type":"transcript","text":...,"utterance_ms":...,"final":true}
+                    (final:false on forced 30s window flush)
+                    {"type":"session_end"} / {"type":"error","message":...}
+
+Endpointing: RMS energy gate (same 0.005 threshold as the batch path) over a
+256 ms sliding window; an utterance ends after `silence_ms` of below-gate
+silence. Inference runs off the event loop (asyncio.to_thread, same
+_infer_lock) so /healthz stays responsive during transcription — that
+liveness surface is what OmniRoute's node-failover probes.
 
 The `model` form field is accepted but NOT used to pick a model — this node
 serves exactly one STT model, so any model id that prefix-matches the provider
@@ -24,6 +42,9 @@ VAD is needed.
 """
 from __future__ import annotations
 
+import asyncio
+import json
+import logging
 import os
 import subprocess
 import tempfile
@@ -32,7 +53,7 @@ import time
 from typing import Optional
 
 import numpy as np
-from fastapi import FastAPI, File, Form, UploadFile
+from fastapi import FastAPI, File, Form, UploadFile, WebSocket
 from fastapi.responses import JSONResponse
 import openvino as ov
 import tokenizers
@@ -70,8 +91,15 @@ TS_STEP = 0.02       # 0.02s per token -> <|30.00|> == 51865
 TS_MAX = TS_BASE + int(30.0 / TS_STEP)  # 51865
 
 app = FastAPI(title="ArcForge STT")
+_log = logging.getLogger("arcforge-stt.realtime")
 _loaded_at = 0.0
 _infer_lock = threading.Lock()  # the stateful decoder is single-context; serialize.
+
+# --- /v1/realtime (streaming dictation) tuning --------------------------------
+RT_SR = 16000                  # PCM16 mono, little-endian
+RT_MIN_UTT_MS = 120            # ignore blips shorter than this (mic clicks)
+RT_WINDOW_MS = 256             # sliding RMS window (4096 samples = 1 frame)
+RT_MAX_UTT_MS = 30_000         # force-flush cap; encoder context is 30s
 
 _core = None
 _encoder: Optional[ov.CompiledModel] = None
@@ -242,6 +270,178 @@ def _transcribe(audio: np.ndarray, language: Optional[str]):
     return all_segs, " ".join(full_parts).strip(), used_lang
 
 
+def _transcribe_utterance(audio: np.ndarray, language: Optional[str]) -> str:
+    """Transcribe a single utterance (<=30s) -> text.
+
+    Runs the existing encoder + stateful decoder under the same _infer_lock as
+    the batch path. Trailing/leading silence is harmless to whisper (it is
+    trained on it), so endpointing does not need to trim precisely.
+    """
+    _load()
+    if len(audio) == 0:
+        return ""
+    # Defensive cap: the endpointer force-flushes at 30s, but never feed the
+    # encoder more than its 3000-frame (30s) context.
+    max_samples = 30 * 16000
+    if len(audio) > max_samples:
+        audio = audio[-max_samples:]
+    prefix = _lang_prefix(language)
+    dur = len(audio) / 16000.0
+    with _infer_lock:
+        enc_hs = _encode_window(audio)
+        _segs, full = _transcribe_window(enc_hs, prefix, dur)
+    return full.strip()
+
+
+def _pcm16_to_float32(data: bytes) -> np.ndarray:
+    """PCM16 mono little-endian bytes -> float32 in [-1.0, 1.0]."""
+    if not data:
+        return np.zeros(0, dtype=np.float32)
+    if len(data) % 2:
+        data = data[: len(data) - 1]
+    return np.frombuffer(data, dtype=np.int16).astype(np.float32) / 32768.0
+
+
+@app.websocket("/v1/realtime")
+async def realtime(ws: WebSocket) -> None:
+    """Streaming dictation: PCM16 mono 16 kHz in, utterance transcripts out.
+
+    Endpointing reuses the batch path's RMS energy gate (0.005) over a 256 ms
+    sliding window. Inference runs off the event loop (asyncio.to_thread,
+    under _infer_lock) so /healthz keeps answering mid-utterance.
+    """
+    await ws.accept()
+    silence_ms = int(os.environ.get("ARC_FORGE_STT_SILENCE_MS", "800"))
+    language: Optional[str] = DEFAULT_LANGUAGE
+
+    gate = 0.005                                   # same energy gate as _transcribe
+    win = RT_WINDOW_MS * RT_SR // 1000             # 4096 samples
+    min_utt = RT_MIN_UTT_MS * RT_SR // 1000        # ~120 ms
+    max_utt = RT_MAX_UTT_MS * RT_SR // 1000        # 30 s
+    silence_target = silence_ms * RT_SR // 1000   # trailing-silence budget
+
+    stream = np.zeros(0, dtype=np.float32)         # unprocessed incoming audio
+    buf = np.zeros(0, dtype=np.float32)            # current utterance
+    in_utterance = False
+    silence = 0                                    # trailing-silence samples
+
+    async def flush(utterance: np.ndarray, final: bool = True) -> None:
+        nonlocal in_utterance, silence
+        in_utterance = False
+        silence = 0
+        if len(utterance) < min_utt:
+            return  # mic click / blip — not speech
+        try:
+            text = await asyncio.to_thread(_transcribe_utterance, utterance, language)
+        except Exception:
+            _log.exception("realtime: utterance inference failed")
+            await ws.send_text(json.dumps({"type": "error", "message": "inference failed"}))
+            return
+        if not text:
+            return
+        await ws.send_text(
+            json.dumps(
+                {
+                    "type": "transcript",
+                    "text": text,
+                    "utterance_ms": round(len(utterance) / RT_SR * 1000),
+                    "final": final,
+                }
+            )
+        )
+
+    await ws.send_text(
+        json.dumps(
+            {
+                "type": "ready",
+                "model": MODEL_ID,
+                "sample_rate": RT_SR,
+                "silence_ms": silence_ms,
+            }
+        )
+    )
+
+    try:
+        while True:
+            msg = await ws.receive()
+            if msg.get("type") == "websocket.disconnect":
+                # Client went away — nothing to flush, exit cleanly.
+                _log.info("realtime: client disconnected (code=%s)", msg.get("code"))
+                return
+            data = msg.get("bytes")
+            if data is not None:
+                stream = np.concatenate([stream, _pcm16_to_float32(data)])
+                # Process whole windows; endpoint per window.
+                while len(stream) >= win:
+                    window = stream[:win]
+                    stream = stream[win:]
+                    voiced = float(np.sqrt(np.mean(window.astype(np.float64) ** 2))) >= gate
+                    if voiced:
+                        if not in_utterance:
+                            in_utterance = True
+                            buf = np.zeros(0, dtype=np.float32)
+                        buf = np.concatenate([buf, window])
+                        silence = 0
+                        if len(buf) >= max_utt:
+                            # Force-flush long monologue; next window starts a
+                            # fresh utterance (final=False — more may follow).
+                            await flush(buf, final=False)
+                            buf = np.zeros(0, dtype=np.float32)
+                    else:
+                        if in_utterance:
+                            # Keep a short tail so the model sees the end.
+                            buf = np.concatenate([buf, window])
+                            silence += win
+                            if silence >= silence_target:
+                                await flush(buf, final=True)
+                                buf = np.zeros(0, dtype=np.float32)
+                        # else: silence before any voice — drop.
+            else:
+                text = msg.get("text")
+                if text is None:
+                    continue
+                try:
+                    ctrl = json.loads(text)
+                except json.JSONDecodeError:
+                    await ws.send_text(
+                        json.dumps({"type": "error", "message": "bad control JSON"})
+                    )
+                    continue
+                ctype = ctrl.get("type")
+                if ctype == "config":
+                    if ctrl.get("sample_rate") and int(ctrl["sample_rate"]) != RT_SR:
+                        await ws.send_text(
+                            json.dumps(
+                                {"type": "error", "message": "only 16000 Hz supported"}
+                            )
+                        )
+                        return
+                    if ctrl.get("silence_ms"):
+                        silence_target = int(ctrl["silence_ms"]) * RT_SR // 1000
+                    if ctrl.get("language"):
+                        language = ctrl["language"]
+                elif ctype == "end":
+                    # Final flush of any in-flight utterance, then close.
+                    if in_utterance and len(buf) >= min_utt:
+                        await flush(buf, final=True)
+                    await ws.send_text(json.dumps({"type": "session_end"}))
+                    # Let the client finish reading session_end, then we close.
+                    await asyncio.sleep(0.05)
+                    await ws.close()
+                    return
+                elif ctype == "ping":
+                    await ws.send_text(json.dumps({"type": "pong"}))
+    except Exception:
+        # A dead client / GPU stall must never take down the batch API on the
+        # same process — /v1/audio/transcriptions and /healthz keep serving.
+        # Log the real cause; never swallow.
+        _log.exception("realtime: session error")
+        try:
+            await ws.close()
+        except Exception:
+            pass
+
+
 @app.get("/healthz")
 def healthz() -> dict:
     return {"status": "ok"}
@@ -402,4 +602,7 @@ async def translations(
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=10300, log_level="info")
+    # ws="auto" enables the WebSocket protocol (requires the `websockets`
+    # package in the env) — needed for the /v1/realtime streaming-dictation
+    # endpoint. The batch POST routes are unaffected.
+    uvicorn.run(app, host="0.0.0.0", port=10300, log_level="info", ws="auto")
